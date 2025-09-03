@@ -6,4 +6,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TripEnjoy.Application\TripEnjoy.Application.csproj" />
+    <ProjectReference Include="..\TripEnjoy.Infrastructure.Persistence\TripEnjoy.Infrastructure.Persistence.csproj" />
+  </ItemGroup>
+
 </Project>
