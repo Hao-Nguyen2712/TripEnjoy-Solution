@@ -1,4 +1,4 @@
-﻿namespace TripEnjoy.Domain
+﻿namespace TripEnjoy.ShareKernel
 {
     public class Class1
     {

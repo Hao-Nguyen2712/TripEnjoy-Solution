@@ -6,4 +6,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TripEnjoy.Domain\TripEnjoy.Domain.csproj" />
+    <ProjectReference Include="..\TripEnjoy.ShareKernel\TripEnjoy.ShareKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Usecases\" />
+  </ItemGroup>
+
 </Project>
