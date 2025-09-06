@@ -7,9 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Aggregates\" />
     <Folder Include="Common\Errors\" />
-    <Folder Include="ValueObjects\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TripEnjoy.ShareKernel\TripEnjoy.ShareKernel.csproj" />
   </ItemGroup>
 
 </Project>

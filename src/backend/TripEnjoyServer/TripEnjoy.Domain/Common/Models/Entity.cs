@@ -1,12 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace TripEnjoy.Domain.Common.Models
+﻿namespace TripEnjoy.Domain.Common.Models
 {
     public abstract class Entity<TId> : IEquatable<Entity<TId>>
         where TId : notnull
     {
-
-        [ForeignKey("Id")]
         public TId Id { get; protected set; }
 
         protected Entity(TId id)
