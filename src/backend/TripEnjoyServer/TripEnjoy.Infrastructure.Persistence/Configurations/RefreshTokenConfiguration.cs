@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TripEnjoy.Domain.Account.Entities;
@@ -36,7 +32,7 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
             builder.Property(rt => rt.ExpireDate).IsRequired();
             builder.Property(rt => rt.CreatedAt).IsRequired();
             builder.Property(rt => rt.RevokeAt).IsRequired(false);
-            
+
             builder.Ignore(rt => rt.IsUsed);
 
         }

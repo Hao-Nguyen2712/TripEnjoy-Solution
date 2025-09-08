@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TripEnjoy.Domain.Account.Entities;
 using TripEnjoy.Domain.Common.Errors;
 
 namespace TripEnjoy.Domain.Common.Models
@@ -44,5 +45,10 @@ namespace TripEnjoy.Domain.Common.Models
         public static Result<TValue> Success(TValue value) => new(value);
         public new static Result<TValue> Failure(Error[] errors) => new(false, errors);
         public new static Result<TValue> Failure(Error error) => new(false, new[] { error });
+
+        internal static Result<User> Failure(object fullNameRequired)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

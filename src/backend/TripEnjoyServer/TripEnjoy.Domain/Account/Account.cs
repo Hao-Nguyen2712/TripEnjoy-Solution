@@ -36,6 +36,25 @@ namespace TripEnjoy.Domain.Account
             UpdatedAt = DateTime.UtcNow;
         }
 
+        public Result AddUserInformation(string fullName)
+        {
+             var userResult = Domain.Account.Entities.User.Create(this.Id, fullName);
+            if (userResult.IsFailure)
+            {
+                return Result.Failure(userResult.Errors);
+            }
+            User = userResult.Value;
+            return Result.Success();
+        }
+
+        public Result AddRefreshToken(string token, DateTime expiryDate)
+        {
+            var refreshToken = RefreshToken.Create(Id, token, expiryDate);
+            _refreshTokens.Add(refreshToken);
+            return Result.Success();
+        }
+
+
         public void MarkAsDeleted()
         {
             IsDeleted = true;

@@ -24,6 +24,8 @@ namespace TripEnjoy.Domain.Common.Errors
         Failure,
         Validation,
         NotFound,
-        Conflict
+        Conflict,
+        Unauthorized,
+        Forbidden
     }
 }

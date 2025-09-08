@@ -30,5 +30,10 @@ namespace TripEnjoy.Domain.Account.Entities
             CreatedAt = DateTime.UtcNow;
             IsUsed = false;
         }
+
+          public static RefreshToken Create(AccountId accountId, string token, DateTime expiryDate)
+        {
+            return new RefreshToken(RefreshTokenId.CreateUnique(), accountId, token, expiryDate);
+        }
     }
 }

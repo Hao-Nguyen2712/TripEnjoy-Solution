@@ -1,12 +1,15 @@
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using TripEnjoy.Application;
 using TripEnjoy.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
 // Add services to the container.
+builder.Services.AddApplication(configuration);
 builder.Services.AddInfrastructure(configuration);
 
 builder.Services.AddAuthentication(options =>
@@ -28,6 +31,20 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]))
     };
 });
+
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true; // Gửi header "api-supported-versions" trong response
+});
+
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV"; // Định dạng tên group trong Swagger: v1, v2...
+    options.SubstituteApiVersionInUrl = true;
+});
+
 
 
 builder.Services.AddControllers();

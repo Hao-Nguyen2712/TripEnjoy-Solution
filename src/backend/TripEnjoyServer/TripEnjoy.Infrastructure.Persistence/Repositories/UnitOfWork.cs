@@ -3,17 +3,20 @@ using TripEnjoy.Application.Interfaces.Persistence;
 
 namespace TripEnjoy.Infrastructure.Persistence.Repositories
 {
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     {
         private readonly TripEnjoyDbContext _dbContext;
         private Hashtable? _repositories;
+        private IAccountRepository? _accountRepository;
 
-         public UnitOfWork(TripEnjoyDbContext dbContext)
+        public UnitOfWork(TripEnjoyDbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-         public IGenericRepository<T> Repository<T>() where T : class
+        public IAccountRepository AccountRepository => _accountRepository ??= new AccountRepository(_dbContext);
+
+        public IGenericRepository<T> Repository<T>() where T : class
         {
             _repositories ??= new Hashtable();
 
@@ -31,12 +34,12 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {
-             return _dbContext.SaveChangesAsync(cancellationToken);
+            return _dbContext.SaveChangesAsync(cancellationToken);
         }
 
         public ValueTask DisposeAsync()
         {
-           return _dbContext.DisposeAsync();
+            return _dbContext.DisposeAsync();
         }
     }
 }
