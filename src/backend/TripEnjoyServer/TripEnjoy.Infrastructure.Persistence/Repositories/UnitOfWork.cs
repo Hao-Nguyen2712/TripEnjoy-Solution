@@ -21,7 +21,7 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
 
         /// <summary>
         /// Gets a cached generic repository for the entity type <typeparamref name="T"/>.
-        — Returns a lazily created <see cref="IGenericRepository{T}"/> instance and caches it for reuse.
+        /// Returns a lazily created <see cref="IGenericRepository{T}"/> instance and caches it for reuse.
         /// </summary>
         /// <typeparam name="T">The entity type the repository will manage.</typeparam>
         /// <returns>An <see cref="IGenericRepository{T}"/> for <typeparamref name="T"/>. The instance is created on first request and then reused.</returns>

@@ -65,7 +65,7 @@ namespace TripEnjoy.Domain.Account.Entities
             var age = today.Year - DateOfBirth.Value.Year;
             return Result<int>.Success(age);
         }
-         /// <summary>
+        /// <summary>
         /// Creates a new User with a generated unique UserId after validating required fields.
         /// </summary>
         /// <param name="accountId">The account identifier that will own the user.</param>
@@ -83,7 +83,7 @@ namespace TripEnjoy.Domain.Account.Entities
             {
                 return Result<User>.Failure(DomainError.User.FullNameRequired);
             }
-            
+
             var user = new User(UserId.CreateUnique(), accountId, fullName, phoneNumber, address, dateOfBirth);
             return Result<User>.Success(user);
         }
