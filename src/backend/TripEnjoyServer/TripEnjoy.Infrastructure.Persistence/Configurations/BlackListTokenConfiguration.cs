@@ -12,6 +12,17 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
 {
     public class BlackListTokenConfiguration : IEntityTypeConfiguration<BlackListToken>
     {
+        /// <summary>
+        /// Configures the EF Core mapping for the BlackListToken entity.
+        /// </summary>
+        /// <remarks>
+        /// Maps the entity to the "BlackListTokens" table, sets the primary key, and configures column conversions and constraints:
+        /// - Id: not database-generated; persisted using BlackListTokenId.Id and reconstructed via BlackListTokenId.Create(...).
+        /// - AccountId: required; persisted using AccountId.Id and reconstructed via AccountId.Create(...).
+        /// - Token: required; maximum length 500.
+        /// - Expiration: required.
+        /// - CreatedAt: required.
+        /// </remarks>
         public void Configure(EntityTypeBuilder<BlackListToken> builder)
         {
             builder.ToTable("BlackListTokens");
