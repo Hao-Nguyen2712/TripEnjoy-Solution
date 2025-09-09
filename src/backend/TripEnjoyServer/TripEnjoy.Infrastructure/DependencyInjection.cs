@@ -14,6 +14,17 @@ namespace TripEnjoy.Infrastructure
 {
     public static class DependencyInjection
     {
+        /// <summary>
+        /// Configures infrastructure services (persistence, caching, identity, email, and domain services) and returns the updated service collection.
+        /// </summary>
+        /// <remarks>
+        /// - Binds EmailConfiguration from the "EMAIL_CONFIGURATION" configuration section.
+        /// - Configures StackExchange.Redis distributed cache using "CacheSettings:ConnectionString" and instance name "TripEnjoy_".
+        /// - Registers TripEnjoyDbContext with SQL Server using the "DefaultConnection" connection string and sets the migrations assembly to the DbContext's assembly.
+        /// - Configures ASP.NET Core Identity for ApplicationUser and IdentityRole with required confirmed account/email and lockout settings (5 minute lockout, 5 max failed attempts, allowed for new users). Adds EF stores and default token providers.
+        /// - Registers scoped implementations: IAuthenService, IUnitOfWork, IGenericRepository<>, and IEmailService.
+        /// </remarks>
+        /// <returns>The same IServiceCollection instance with infrastructure services registered.</returns>
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<EmailConfiguration>(configuration.GetSection("EMAIL_CONFIGURATION"));

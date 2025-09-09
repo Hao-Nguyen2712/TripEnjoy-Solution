@@ -48,6 +48,13 @@ namespace TripEnjoy.Domain.Account.Entities
             return Result.Success();
         }
 
+        /// <summary>
+        /// Calculates the user's age in years based on the current UTC date and the stored DateOfBirth.
+        /// </summary>
+        /// <returns>
+        /// A <c>Result&lt;int&gt;</c> containing the age in years on success, or a failure with <see cref="DomainError.User.InvalidDateOfBirth"/> if DateOfBirth is null.
+        /// Note: the calculation uses only the year difference (no adjustment for month/day).
+        /// </returns>
         public Result<int> GetAge()
         {
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -58,13 +65,25 @@ namespace TripEnjoy.Domain.Account.Entities
             var age = today.Year - DateOfBirth.Value.Year;
             return Result<int>.Success(age);
         }
-         public static Result<User> Create(AccountId accountId, string fullName, string? phoneNumber = null, string? address = null, DateOnly? dateOfBirth = null)
+        /// <summary>
+        /// Creates a new User with a generated unique UserId after validating required fields.
+        /// </summary>
+        /// <param name="accountId">The account identifier that will own the user.</param>
+        /// <param name="fullName">The user's full name. Must not be null, empty, or whitespace.</param>
+        /// <param name="phoneNumber">Optional phone number.</param>
+        /// <param name="address">Optional address.</param>
+        /// <param name="dateOfBirth">Optional date of birth.</param>
+        /// <returns>
+        /// A <see cref="Result{User}"/> that is successful containing the created User when validation passes;
+        /// otherwise a failure result with <see cref="DomainError.User.FullNameRequired"/> if <paramref name="fullName"/> is null/empty/whitespace.
+        /// </returns>
+        public static Result<User> Create(AccountId accountId, string fullName, string? phoneNumber = null, string? address = null, DateOnly? dateOfBirth = null)
         {
             if (string.IsNullOrWhiteSpace(fullName))
             {
                 return Result<User>.Failure(DomainError.User.FullNameRequired);
             }
-            
+
             var user = new User(UserId.CreateUnique(), accountId, fullName, phoneNumber, address, dateOfBirth);
             return Result<User>.Success(user);
         }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TripEnjoy.Application.Interfaces.Persistence;
 
 namespace TripEnjoy.Infrastructure.Persistence.Repositories
@@ -28,6 +28,11 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
             return entity;
         }
 
+        /// <summary>
+        /// Marks the given entity as modified in the DbContext so it will be updated on the next SaveChanges call.
+        /// </summary>
+        /// <param name="entity">The entity to mark as modified. Must be tracked or will become tracked by the context.</param>
+        /// <returns>A completed task returning the same entity instance.</returns>
         public Task<T> UpdateAsync(T entity)
         {
             

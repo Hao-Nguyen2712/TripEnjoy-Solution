@@ -17,6 +17,9 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
         private readonly IDistributedCache _cache;
         private readonly ILogger<LoginStepTwoCommandHandler> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="LoginStepTwoCommandHandler"/> with required dependencies.
+        /// </summary>
         public LoginStepTwoCommandHandler(IAuthenService authenService, IUnitOfWork unitOfWork, IDistributedCache cache, ILogger<LoginStepTwoCommandHandler> logger)
         {
             _authenService = authenService;
@@ -25,6 +28,18 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Handles the second-step OTP login: validates the OTP, associates and persists a refresh token with the account, clears the related cache, and returns authentication data.
+        /// </summary>
+        /// <param name="request">The login command containing the user's email and one-time password (OTP).</param>
+        /// <returns>
+        /// A <see cref="Result{AuthResultDTO}"/> that is successful when authentication succeeds and the refresh token is persisted; the value contains the authentication result (including the refresh token and AspNetUserId).
+        /// On failure, the result contains one of:
+        /// - errors from the OTP validation step,
+        /// - <c>DomainError.Account.NotFound</c> if the account cannot be located by AspNetUserId,
+        /// - errors from adding the refresh token to the account,
+        /// - or an <c>Error</c> with code "LoginStepTwo.Failure" when persisting changes or removing the cache fails.
+        /// </returns>
         public async Task<Result<AuthResultDTO>> Handle(LoginStepTwoCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Handling LoginStepTwoCommand for user {Email}", request.Email);

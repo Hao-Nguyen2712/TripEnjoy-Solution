@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -8,7 +8,18 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
     /// <inheritdoc />
     public partial class AddBlackListToken : Migration
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Applies the migration by creating the BlackListTokens table for storing blacklisted tokens associated with accounts.
+        /// </summary>
+        /// <remarks>
+        /// The table includes:
+        /// - Id: primary key (uniqueidentifier)
+        /// - AccountId: foreign key to Accounts.Id with cascade delete
+        /// - Token: nvarchar(500), not nullable
+        /// - Expiration: datetime2, not nullable
+        /// - CreatedAt: datetime2, not nullable
+        /// An index IX_BlackListTokens_AccountId is created on AccountId to support account-based lookups.
+        /// </remarks>
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -38,7 +49,9 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
                 column: "AccountId");
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Reverts the migration by dropping the "BlackListTokens" table.
+        /// </summary>
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

@@ -13,6 +13,14 @@ namespace TripEnjoy.Api.Controllers
     [Route("api/[controller]")]
     public class ApiControllerBase : ControllerBase
     {
+        /// <summary>
+        /// Converts a domain Result&lt;T&gt; into an IActionResult: returns 200 OK with a successful ApiResponse when the result is successful,
+        /// or an ObjectResult containing a standardized error ApiResponse and an HTTP status code derived from the first error's type when it is not.
+        /// </summary>
+        /// <param name="result">The domain result to translate; on failure its Errors collection will be converted to ApiError entries included in the response.</param>
+        /// <returns>
+        /// An IActionResult representing either a successful ApiResponse&lt;T&gt; (HTTP 200) or an error ObjectResult containing ApiResponse&lt;T&gt; with a list of ApiError and the corresponding HTTP status code.
+        /// </returns>
         protected IActionResult HandleResult<T>(Result<T> result)
         {
             if (result.IsSuccess)
@@ -31,6 +39,12 @@ namespace TripEnjoy.Api.Controllers
                 StatusCode = statusCode
             };
         }
+        /// <summary>
+        /// Converts a domain Result into an IActionResult: returns 200 OK with a success ApiResponse when the result is successful, or an error response containing one or more ApiError entries and an appropriate HTTP status code when the result represents failure.
+        /// </summary>
+        /// <returns>
+        /// On success: an OkObjectResult containing ApiResponse.Ok(); on failure: an ObjectResult whose payload is ApiResponse.CreateError with the message "One or more errors occurred." and a list of ApiError (one per domain error), and whose HTTP status code is derived from the first error's type.
+        /// </returns>
         protected IActionResult HandleResult(Result result)
         {
             if (result.IsSuccess)
@@ -49,7 +63,12 @@ namespace TripEnjoy.Api.Controllers
             };
         }
         
-         private int GetStatusCode(ErrorType errorType)
+         /// <summary>
+        /// Maps a domain <see cref="ErrorType"/> to the corresponding HTTP status code.
+        /// </summary>
+        /// <param name="errorType">The domain error type used to determine the HTTP status code.</param>
+        /// <returns>An int HTTP status code (e.g., 404 for NotFound, 409 for Conflict). Defaults to 400 for unknown types.</returns>
+        private int GetStatusCode(ErrorType errorType)
         {
             return errorType switch
             {

@@ -7,6 +7,14 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
 {
     public class PartnerConfiguration : IEntityTypeConfiguration<Partner>
     {
+        /// <summary>
+        /// Configures EF Core mappings for the Partner entity.
+        /// </summary>
+        /// <remarks>
+        /// Maps Partner to the "Partners" table, sets the primary key, disables database-generated Ids,
+        /// and applies value conversions and constraints for properties (Id, AccountId, CompanyName,
+        /// ContactNumber, Address, and Status) such as required flags and max lengths.
+        /// </remarks>
         public void Configure(EntityTypeBuilder<Partner> builder)
         {
             builder.ToTable("Partners");

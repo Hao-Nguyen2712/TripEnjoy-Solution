@@ -7,6 +7,14 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
 {
     public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
     {
+        /// <summary>
+        /// Configures the EF Core mapping for the RefreshToken entity.
+        /// </summary>
+        /// <remarks>
+        /// Maps to the "RefreshTokens" table, sets Id as the primary key (no database-generated values) with custom conversions for the value objects
+        /// RefreshTokenId and AccountId. Enforces Token as required with a maximum length of 500, marks ExpireDate and CreatedAt as required,
+        /// leaves RevokeAt optional, and ignores the IsUsed domain property for persistence.
+        /// </remarks>
         public void Configure(EntityTypeBuilder<RefreshToken> builder)
         {
             builder.ToTable("RefreshTokens");
