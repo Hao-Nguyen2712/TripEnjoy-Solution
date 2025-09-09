@@ -13,7 +13,6 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
         public async Task<Account?> FindByAspNetUserIdAsync(string aspNetUserId)
         {
             return await _dbContext.Accounts
-                .Include(a => a.RefreshTokens)
                 .FirstOrDefaultAsync(a => a.AspNetUserId == aspNetUserId);
         }
     }

@@ -22,8 +22,9 @@ namespace TripEnjoy.Domain.Account
         public readonly List<RefreshToken> _refreshTokens = new();
         public IReadOnlyList<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
 
-        private Account(AccountId id) : base(AccountId.CreateUnique())
+        private Account() : base(AccountId.CreateUnique())
         {
+            // EF requires a parameterless constructor
             AspNetUserId = null!;
             AccountEmail = null!;
         }
@@ -47,11 +48,12 @@ namespace TripEnjoy.Domain.Account
             return Result.Success();
         }
 
-        public Result AddRefreshToken(string token, DateTime expiryDate)
+        public Result<RefreshToken> AddRefreshToken(string token)
         {
-            var refreshToken = RefreshToken.Create(Id, token, expiryDate);
+            var refreshToken = RefreshToken.Create(Id, token);
             _refreshTokens.Add(refreshToken);
-            return Result.Success();
+            UpdatedAt = DateTime.UtcNow;
+            return Result<RefreshToken>.Success(refreshToken);
         }
 
 

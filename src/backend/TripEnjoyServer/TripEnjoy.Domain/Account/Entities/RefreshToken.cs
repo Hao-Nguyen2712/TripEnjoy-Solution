@@ -21,7 +21,7 @@ namespace TripEnjoy.Domain.Account.Entities
             AccountId = null!;
             Token = null!;
         }
-        public RefreshToken(RefreshTokenId id, AccountId accountId, string token, DateTime? revokeAt = null) : base(id)
+        private RefreshToken(RefreshTokenId id, AccountId accountId, string token, DateTime? revokeAt = null) : base(id)
         {
             AccountId = accountId;
             Token = token;
@@ -31,9 +31,9 @@ namespace TripEnjoy.Domain.Account.Entities
             IsUsed = false;
         }
 
-          public static RefreshToken Create(AccountId accountId, string token, DateTime expiryDate)
+        public static RefreshToken Create(AccountId accountId, string token)
         {
-            return new RefreshToken(RefreshTokenId.CreateUnique(), accountId, token, expiryDate);
+            return new RefreshToken(RefreshTokenId.CreateUnique(), accountId, token);
         }
     }
 }

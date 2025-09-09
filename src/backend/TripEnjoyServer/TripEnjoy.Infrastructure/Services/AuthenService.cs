@@ -1,19 +1,18 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.IdentityModel.Tokens;
-using TripEnjoy.Application.Interfaces.Identity;
 using TripEnjoy.Application.Interfaces.External.Email;
+using TripEnjoy.Application.Interfaces.Identity;
 using TripEnjoy.Domain.Common.Errors;
 using TripEnjoy.Domain.Common.Models;
 using TripEnjoy.Infrastructure.Persistence;
 using TripEnjoy.ShareKernel.Dtos;
-using TripEnjoy.Domain.Account.Entities;
+using TripEnjoy.ShareKernel.Extensions;
 
 namespace TripEnjoy.Infrastructure.Services
 {
@@ -39,10 +38,28 @@ namespace TripEnjoy.Infrastructure.Services
         public async Task<Result> LoginStepOneAsync(string email, string password)
         {
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null || !await _userManager.CheckPasswordAsync(user, password))
+            if (user == null)
             {
                 return Result.Failure(Domain.Common.Errors.DomainError.Account.LoginFailed);
             }
+            var passwordValid = await _userManager.CheckPasswordAsync(user, password);
+
+            if (!passwordValid)
+            {
+                user.AccessFailedCount++;
+                if (user.AccessFailedCount >= 5)
+                {
+                    user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(5);
+                    user.AccessFailedCount = 0; // Reset after lockout
+                }
+                await _userManager.UpdateAsync(user);
+                return Result.Failure(Domain.Common.Errors.DomainError.Account.LoginFailed);
+            }
+            if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow)
+            {
+                return Result.Failure(Domain.Common.Errors.DomainError.Account.LockedOut);
+            }
+
 
             if (!await _userManager.IsEmailConfirmedAsync(user))
             {
@@ -51,41 +68,40 @@ namespace TripEnjoy.Infrastructure.Services
 
             var otp = new Random().Next(100000, 999999).ToString();
             var cacheKey = $"otp:{email}";
-            
+            var hashOtp = HashingOtpExtension.HashWithSHA256(otp);
             var cacheOptions = new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
             };
-            await _cache.SetStringAsync(cacheKey, otp, cacheOptions);
+            await _cache.SetStringAsync(cacheKey, hashOtp, cacheOptions);
 
             await _emailService.SendOtpAsync(email, otp);
 
-            return Result.Success();
+            return Result<string>.Success("Sending OTP to email successfully");
         }
 
-        public async Task<Result<AuthResultDTO>> LoginStepTwoAsync(string email, string otp)
+        public async Task<Result<(AuthResultDTO AuthResult, string CacheKey)>> LoginStepTwoAsync(string email, string otp)
         {
             var cacheKey = $"otp:{email}";
             var storedOtp = await _cache.GetStringAsync(cacheKey);
+            var hashOtp = HashingOtpExtension.HashWithSHA256(otp);
 
-            if (string.IsNullOrEmpty(storedOtp) || storedOtp != otp)
+            if (string.IsNullOrEmpty(storedOtp) || storedOtp != hashOtp)
             {
-                return Result<AuthResultDTO>.Failure(Domain.Common.Errors.DomainError.Account.InvalidOtp);
+                return Result<(AuthResultDTO, string)>.Failure(Domain.Common.Errors.DomainError.Account.InvalidOtp);
             }
-            
-            await _cache.RemoveAsync(cacheKey);
 
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Result<AuthResultDTO>.Failure(Domain.Common.Errors.DomainError.User.NotFound);
+                return Result<(AuthResultDTO, string)>.Failure(Domain.Common.Errors.DomainError.User.NotFound);
             }
-            
+
             // Reusing token generation logic
             var (accessToken, refreshTokenString) = await GenerateTokensAsync(user);
             var authResult = new AuthResultDTO(accessToken, refreshTokenString, user.Id);
 
-            return Result<AuthResultDTO>.Success(authResult);
+            return Result<(AuthResultDTO, string)>.Success((authResult, cacheKey));
         }
 
         public async Task<Result<string>> ConfirmEmailAsync(string userId, string confirmToken)
@@ -103,7 +119,7 @@ namespace TripEnjoy.Infrastructure.Services
                 return Result<string>.Failure(errors);
             }
 
-            return Result<string>.Success("Create account successfully");
+            return Result<string>.Success("Confirm Email SuccessFully");
         }
 
 
@@ -160,9 +176,9 @@ namespace TripEnjoy.Infrastructure.Services
             );
             var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
             var refreshToken = GenerateRefreshToken();
-            
+
             var authResult = new AuthResultDTO(accessToken, refreshToken, user.Id);
-            
+
             return Result<(AuthResultDTO, string)>.Success((authResult, user.Id));
         }
 
@@ -220,7 +236,7 @@ namespace TripEnjoy.Infrastructure.Services
 
             return (accessToken, refreshToken);
         }
-        
+
         private string GenerateRefreshToken()
         {
             var randomNumber = new byte[64];

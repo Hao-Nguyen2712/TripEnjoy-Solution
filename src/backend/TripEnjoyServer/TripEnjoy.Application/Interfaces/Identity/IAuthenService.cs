@@ -7,7 +7,7 @@ namespace TripEnjoy.Application.Interfaces.Identity
     {
         Task<Result<(string UserId, string confirmToken)>> CreateUserAsync(string email, string password, string role);
         Task<Result> LoginStepOneAsync(string email, string password);
-        Task<Result<AuthResultDTO>> LoginStepTwoAsync(string email, string otp);
+        Task<Result<(AuthResultDTO AuthResult, string CacheKey)>> LoginStepTwoAsync(string email, string otp);
         Task<Result<string>> ConfirmEmailAsync(string userId, string confirmToken);
     }
 }

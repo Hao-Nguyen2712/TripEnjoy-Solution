@@ -22,14 +22,7 @@ namespace TripEnjoy.Api.Controllers
 
 
             var firstError = result.Errors.First();
-            var statusCode = firstError.Type switch
-            {
-                ErrorType.NotFound => StatusCodes.Status404NotFound,
-                ErrorType.Conflict => StatusCodes.Status409Conflict,
-                ErrorType.Validation => StatusCodes.Status400BadRequest,
-                _ => StatusCodes.Status400BadRequest
-            };
-
+            var statusCode = GetStatusCode(firstError.Type);
 
             var apiErrors = result.Errors.Select(e => new ApiError(e.Code, e.Description));
 
@@ -45,14 +38,8 @@ namespace TripEnjoy.Api.Controllers
                 return Ok(ApiResponse.Ok());
             }
 
-            var firstError = result.Errors.First();
-            var statusCode = firstError.Type switch
-            {
-                ErrorType.NotFound => StatusCodes.Status404NotFound,
-                ErrorType.Conflict => StatusCodes.Status409Conflict,
-                ErrorType.Validation => StatusCodes.Status400BadRequest,
-                _ => StatusCodes.Status400BadRequest
-            };
+            var firstError = result.Errors.First().Type;
+            var statusCode = GetStatusCode(firstError);
 
             var apiErrors = result.Errors.Select(e => new ApiError(e.Code, e.Description));
 
