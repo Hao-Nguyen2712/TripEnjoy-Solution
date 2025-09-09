@@ -13,6 +13,17 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
             ConfigureAccountTable(builder);
         }
 
+        /// <summary>
+        /// Configures the EF Core mapping for the Account aggregate root.
+        /// </summary>
+        /// <remarks>
+        /// Maps Account to the "Accounts" table, configures the primary key (Id) with no DB generation and a value converter
+        /// between the AccountId value object and its primitive representation, and configures scalar properties
+        /// (AspNetUserId, AccountEmail with max length 256, IsDeleted, CreatedAt, UpdatedAt) as required.
+        /// Establishes one-to-one relationships to User, Partner, and Wallet (foreign keys on the related entities),
+        /// and one-to-many relationships for RefreshTokens and BlackListTokens (foreign keys on the token entities).
+        /// For both token collections, the navigation property access mode is set to Field when available.
+        /// </remarks>
         private void ConfigureAccountTable(EntityTypeBuilder<Account> builder)
         {
             builder.ToTable("Accounts");

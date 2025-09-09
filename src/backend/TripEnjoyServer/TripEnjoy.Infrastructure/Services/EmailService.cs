@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
 using TripEnjoy.Application.Interfaces.External.Email;
@@ -16,12 +16,29 @@ namespace TripEnjoy.Infrastructure.Services
         private readonly EmailConfiguration _emailConfig;
         private readonly ILogger<EmailService> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EmailService"/> class.
+        /// </summary>
+        /// <remarks>
+        /// Reads SMTP settings from the provided options and stores the logger for use by the service.
+        /// </remarks>
         public EmailService(IOptions<EmailConfiguration> emailConfig, ILogger<EmailService> logger)
         {
             _emailConfig = emailConfig.Value;
             _logger = logger;
         }
 
+        /// <summary>
+        /// Sends an HTML confirmation email to the specified recipient using the configured SMTP settings.
+        /// </summary>
+        /// <param name="sendFor">Recipient email address.</param>
+        /// <param name="subject">Email subject line.</param>
+        /// <param name="body">Content inserted into the HTML email body (e.g., an OTP or confirmation text).</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the send operation.</param>
+        /// <returns>
+        /// A <see cref="Result"/> indicating success, or a failure result containing an <see cref="Error"/>
+        /// with code "Email.SendFailed" if sending the message fails.
+        /// </returns>
         public async Task<Result> SendEmailConfirmationAsync(string sendFor, string subject, string body, CancellationToken cancellationToken = default)
         {
             var email = _emailConfig.Email;
@@ -53,6 +70,12 @@ namespace TripEnjoy.Infrastructure.Services
             }
         }
 
+        /// <summary>
+        /// Simulates sending an OTP email by logging the recipient, subject, and body; does not send network requests.
+        /// </summary>
+        /// <param name="userEmail">The recipient email address that would receive the OTP (used only for logging).</param>
+        /// <param name="otp">The one-time password value included in the logged message.</param>
+        /// <returns>A completed <see cref="Task"/>; no asynchronous work is performed.</returns>
         public Task SendOtpAsync(string userEmail, string otp)
         {
             _logger.LogWarning("--- SENDING OTP EMAIL (SIMULATION) ---");
@@ -64,6 +87,11 @@ namespace TripEnjoy.Infrastructure.Services
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Builds an HTML-formatted email body for sending a one-time password (OTP).
+        /// </summary>
+        /// <param name="otp">The OTP value to embed in the message; must be a short-lived code (the template indicates 5-minute validity).</param>
+        /// <returns>An HTML string containing styled content with the provided OTP and the current year in the footer.</returns>
         private string MailBodyForOTP(string otp)
         {
             return $@"
@@ -125,6 +153,13 @@ namespace TripEnjoy.Infrastructure.Services
  </html>";
         }
 
+        /// <summary>
+        /// Sends an email confirmation to the specified address.
+        /// </summary>
+        /// <param name="userId">Identifier of the user the confirmation is for.</param>
+        /// <param name="token">Confirmation token to include in the message.</param>
+        /// <param name="ct">Cancellation token to cancel the send operation.</param>
+        /// <returns>A task that completes with a <see cref="Result"/> indicating success or failure of the send.</returns>
         Task IEmailService.SendEmailConfirmationAsync(string userEmail, string userId, string token, CancellationToken ct)
         {
             return SendEmailConfirmationAsync(userEmail, userId, token, ct);

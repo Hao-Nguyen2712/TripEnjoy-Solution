@@ -25,6 +25,9 @@ namespace TripEnjoy.Infrastructure.Services
         private readonly IDistributedCache _cache;
         private readonly IEmailService _emailService;
 
+        /// <summary>
+        /// Initializes a new instance of AuthenService and stores required dependencies for authentication operations.
+        /// </summary>
         public AuthenService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration, RoleManager<IdentityRole> roleManager, IDistributedCache cache, IEmailService emailService)
         {
             _userManager = userManager;
@@ -35,6 +38,23 @@ namespace TripEnjoy.Infrastructure.Services
             _emailService = emailService;
         }
 
+        /// <summary>
+        /// First step of a two-step OTP login flow: verifies the user's email and password, enforces lockout on repeated failures,
+        /// generates a 6-digit one-time passcode (OTP), stores a SHA-256 hash of the OTP in the distributed cache for 5 minutes
+        /// under the key "otp:{email}", and sends the raw OTP to the user's email.
+        /// </summary>
+        /// <remarks>
+        /// - If the password is invalid, increments the user's AccessFailedCount; when it reaches 5 the user is locked out for 5 minutes and the counter is reset.
+        /// - If the account is currently locked out or the email is not confirmed, the call returns a corresponding failure result.
+        /// - On success returns a success result containing a confirmation message indicating the OTP was sent.
+        /// </remarks>
+        /// <returns>
+        /// A Result indicating outcome:
+        /// - Failure with DomainError.Account.LoginFailed when the user is not found or the password is incorrect.
+        /// - Failure with DomainError.Account.LockedOut when the user is currently locked out.
+        /// - Failure with DomainError.Account.EmailNotConfirmed when the user's email is unconfirmed.
+        /// - Success containing a message when the OTP has been generated, cached, and emailed.
+        /// </returns>
         public async Task<Result> LoginStepOneAsync(string email, string password)
         {
             var user = await _userManager.FindByEmailAsync(email);
@@ -80,6 +100,16 @@ namespace TripEnjoy.Infrastructure.Services
             return Result<string>.Success("Sending OTP to email successfully");
         }
 
+        /// <summary>
+        /// Verifies a one-time password (OTP) for the given email and, on success, issues access and refresh tokens.
+        /// </summary>
+        /// <param name="email">The user's email address used as the OTP cache key prefix.</param>
+        /// <param name="otp">The plaintext one-time password provided by the user.</param>
+        /// <returns>
+        /// A <see cref="Result{T}"/> containing a tuple of <see cref="AuthResultDTO"/> and the cache key string on success.
+        /// Returns a failure result with InvalidOtp if the cached hashed OTP is missing or does not match the provided OTP,
+        /// or NotFound if no user exists for the given email.
+        /// </returns>
         public async Task<Result<(AuthResultDTO AuthResult, string CacheKey)>> LoginStepTwoAsync(string email, string otp)
         {
             var cacheKey = $"otp:{email}";
@@ -104,6 +134,17 @@ namespace TripEnjoy.Infrastructure.Services
             return Result<(AuthResultDTO, string)>.Success((authResult, cacheKey));
         }
 
+        /// <summary>
+        /// Confirms a user's email address using the provided ASP.NET Identity confirmation token.
+        /// </summary>
+        /// <param name="userId">The Identity user id of the account to confirm.</param>
+        /// <param name="confirmToken">The email confirmation token previously generated for the user (e.g. from <c>UserManager.GenerateEmailConfirmationTokenAsync</c>).</param>
+        /// <returns>
+        /// A <see cref="Result{T}"/> containing a success message when confirmation succeeds.
+        /// On failure returns a Result with:
+        /// - a NotFound error if the user id does not exist, or
+        /// - one or more mapped Identity errors if confirmation fails.
+        /// </returns>
         public async Task<Result<string>> ConfirmEmailAsync(string userId, string confirmToken)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -125,6 +166,20 @@ namespace TripEnjoy.Infrastructure.Services
 
 
 
+        /// <summary>
+        /// Authenticate a user using email and password and, on success, issue JWT access and refresh tokens.
+        /// </summary>
+        /// <remarks>
+        /// Uses ASP.NET Identity to validate credentials and enforces lockout and email-confirmation rules via SignInManager.
+        /// On success returns an AuthResultDTO with an access token, a refresh token, and the user's ASP.NET Identity id.
+        /// On failure returns a failure Result containing one of the domain errors: LoginFailed, LockedOut, EmailNotConfirmed, or TwoFactorRequired.
+        /// </remarks>
+        /// <returns>
+        /// A <see cref="Result{T}"/> whose value on success is a tuple containing:
+        /// - <see cref="AuthResultDTO"/>: the issued access and refresh tokens and the user id, and
+        /// - <c>string AspNetUserId</c>: the user's Identity id.
+        /// On failure the Result contains a corresponding domain error.
+        /// </returns>
         public async Task<Result<(AuthResultDTO AuthResult, string AspNetUserId)>> LoginAsync(string email, string password)
         {
             var user = await _userManager.FindByEmailAsync(email);
@@ -182,6 +237,15 @@ namespace TripEnjoy.Infrastructure.Services
             return Result<(AuthResultDTO, string)>.Success((authResult, user.Id));
         }
 
+        /// <summary>
+        /// Creates a new user with the specified email and password, assigns the given role (creating the role if it does not exist),
+        /// and generates an email confirmation token.
+        /// </summary>
+        /// <param name="role">The role to assign to the new user; the role will be created if it does not already exist.</param>
+        /// <returns>
+        /// On success, a <see cref="Result{T}"/> containing a tuple with the new user's id and the email confirmation token.
+        /// On failure, a failure <see cref="Result{T}"/> with aggregated identity errors describing why creation failed.
+        /// </returns>
         public async Task<Result<(string UserId, string confirmToken)>> CreateUserAsync(string email, string password, string role)
         {
             var user = new ApplicationUser
@@ -207,6 +271,17 @@ namespace TripEnjoy.Infrastructure.Services
             return Result<(string, string)>.Success((user.Id, token));
         }
 
+        /// <summary>
+        /// Creates a short-lived JWT access token and a cryptographically strong refresh token for the specified user.
+        /// </summary>
+        /// <param name="user">The authenticated ApplicationUser for whom tokens are generated; must have a valid Id and Email.</param>
+        /// <returns>
+        /// A tuple containing:
+        /// - AccessToken: a JWT carrying user id, email, JTI and role claims (expires in ~15 minutes).
+        /// - RefreshToken: a securely generated opaque token for renewing access.
+        ///
+        /// Both values are returned as strings.
+        /// </returns>
         public async Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(ApplicationUser user)
         {
             var authClaims = new List<Claim>
@@ -237,6 +312,10 @@ namespace TripEnjoy.Infrastructure.Services
             return (accessToken, refreshToken);
         }
 
+        /// <summary>
+        /// Generates a cryptographically secure random refresh token encoded as a Base64 string.
+        /// </summary>
+        /// <returns>A 64-byte cryptographically secure random value encoded in Base64, suitable for use as a refresh token.</returns>
         public string GenerateRefreshToken()
         {
             var randomNumber = new byte[64];
@@ -245,6 +324,19 @@ namespace TripEnjoy.Infrastructure.Services
             return Convert.ToBase64String(randomNumber);
         }
 
+        /// <summary>
+        /// Validates a JWT's signature (without enforcing expiration) and returns the reconstructed <see cref="ClaimsPrincipal"/>.
+        /// </summary>
+        /// <remarks>
+        /// The method disables lifetime validation so it can extract claims from expired tokens, but still requires a valid signature
+        /// using the configured HMAC-SHA256 signing key. If the token is not a valid JWT or does not use HMAC-SHA256, the call fails.
+        /// </remarks>
+        /// <param name="token">The JWT to validate and extract claims from.</param>
+        /// <returns>
+        /// A <see cref="Result{ClaimsPrincipal?}"/> containing the principal on success, or a failure result with
+        /// <c>Domain.Common.Errors.DomainError.RefreshToken.InvalidToken</c> if the token is malformed, uses a different algorithm,
+        /// or fails signature validation.
+        /// </returns>
         public Task<Result<ClaimsPrincipal?>> GetPrincipalFromExpiredToken(string token)
         {
             var tokenValidationParameters = new TokenValidationParameters
@@ -267,6 +359,11 @@ namespace TripEnjoy.Infrastructure.Services
             return Task.FromResult(Result<ClaimsPrincipal?>.Success(principal));
         }
 
+        /// <summary>
+        /// Generates a new JWT access token for the specified user.
+        /// </summary>
+        /// <param name="userId">The ASP.NET Identity user id for which to create an access token.</param>
+        /// <returns>A freshly generated JWT access token as a string.</returns>
         public async Task<string> GenerateAccessTokenAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);

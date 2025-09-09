@@ -20,6 +20,13 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<RefreshTokenCommandHandler> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RefreshTokenCommandHandler"/> class.
+        /// </summary>
+        /// <remarks>
+        /// Assigns the injected authentication service, unit-of-work, and logger to the handler instance.
+        /// Dependencies are expected to be provided by dependency injection and non-null.
+        /// </remarks>
         public RefreshTokenCommandHandler(IAuthenService authenService, IUnitOfWork unitOfWork, ILogger<RefreshTokenCommandHandler> logger)
         {
             _authenService = authenService;
@@ -27,6 +34,17 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Refreshes an expired access token using a provided refresh token: validates the expired token, locates the account,
+        /// rotates the refresh token, issues a new access token, persists the updated account, and returns the new credentials.
+        /// </summary>
+        /// <param name="request">Command containing the expired access token and the refresh token to rotate.</param>
+        /// <param name="cancellationToken">Cancellation token forwarded to the persistence call (<see cref="IUnitOfWork.SaveChangesAsync(CancellationToken)"/>).</param>
+        /// <returns>
+        /// A <see cref="Result{AuthResultDTO}"/> that is:
+        /// - Success containing <see cref="AuthResultDTO"/> with the new access token, new refresh token, and user id; or
+        /// - Failure for invalid/expired token, missing account, refresh-token rotation errors, or persistence failures (error code "RefreshToken.Failure").
+        /// </returns>
         public async Task<Result<AuthResultDTO>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
             var principal = await _authenService.GetPrincipalFromExpiredToken(request.expiredAccessToken);
