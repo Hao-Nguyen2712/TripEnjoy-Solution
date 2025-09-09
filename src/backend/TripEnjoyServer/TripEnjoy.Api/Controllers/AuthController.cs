@@ -67,8 +67,15 @@ namespace TripEnjoy.Api.Controllers
             (
                 refreshToken,
                 aspNetUserId
-            );               
+            );
             var result = await _sender.Send(secureCommand);
+            return HandleResult(result);
+        }
+        
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken(RefreshTokenCommand command)
+        {
+            var result = await _sender.Send(command);
             return HandleResult(result);
         }
     }
