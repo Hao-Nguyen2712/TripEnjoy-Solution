@@ -22,8 +22,13 @@ namespace TripEnjoy.Domain.Account
         public readonly List<RefreshToken> _refreshTokens = new();
         public IReadOnlyList<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
 
-        private Account(AccountId id) : base(AccountId.CreateUnique())
+        public readonly List<BlackListToken> _blackListTokens = new();
+        public IReadOnlyList<BlackListToken> BlackListTokens => _blackListTokens.AsReadOnly();
+
+
+        private Account() : base(AccountId.CreateUnique())
         {
+            // EF requires a parameterless constructor
             AspNetUserId = null!;
             AccountEmail = null!;
         }
@@ -35,6 +40,26 @@ namespace TripEnjoy.Domain.Account
             CreatedAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;
         }
+
+        public Result AddUserInformation(string fullName)
+        {
+            var userResult = Domain.Account.Entities.User.Create(this.Id, fullName);
+            if (userResult.IsFailure)
+            {
+                return Result.Failure(userResult.Errors);
+            }
+            User = userResult.Value;
+            return Result.Success();
+        }
+
+        public Result<RefreshToken> AddRefreshToken(string token)
+        {
+            var refreshToken = RefreshToken.Create(Id, token);
+            _refreshTokens.Add(refreshToken);
+            UpdatedAt = DateTime.UtcNow;
+            return Result<RefreshToken>.Success(refreshToken);
+        }
+
 
         public void MarkAsDeleted()
         {
@@ -72,5 +97,44 @@ namespace TripEnjoy.Domain.Account
             }
             Wallet = Wallet;
         }
+
+        public Result AddBlackListToken(string token, DateTime expiration)
+        {
+            var blacklistedToken = BlackListToken.Create(this.Id, token, expiration);
+            _blackListTokens.Add(blacklistedToken);
+            UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
+        }
+
+        public Result RevokeRefreshToken(string tokenRemove)
+        {
+            var refreshToken = _refreshTokens.FirstOrDefault(rt => rt.Token == tokenRemove);
+            if (refreshToken == null)
+            {
+                return Result.Failure(DomainError.RefreshToken.InvalidToken);
+            }
+            refreshToken.Revoke();
+            UpdatedAt = DateTime.UtcNow;
+            return Result<string>.Success(refreshToken.Token);
+        }
+
+        public Result<RefreshToken> RotateRefreshToken(string oldToken, string newToken, DateTime newExpiryDate)
+        {
+            var tokenToUse = _refreshTokens.FirstOrDefault(rt => rt.Token == oldToken);
+            if (tokenToUse is null)
+            {
+                return Result<RefreshToken>.Failure(DomainError.RefreshToken.RefreshTokenNotFound);
+            }
+
+            if (tokenToUse.IsUsed)
+            {
+                return Result<RefreshToken>.Failure(DomainError.RefreshToken.RefreshTokenInvalidated);
+            }
+            tokenToUse.Revoke();
+
+            UpdatedAt = DateTime.UtcNow;
+            return Result<RefreshToken>.Success(tokenToUse);
+        }
     }
+
 }

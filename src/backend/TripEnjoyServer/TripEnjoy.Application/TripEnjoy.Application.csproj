@@ -7,12 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TripEnjoy.Domain\TripEnjoy.Domain.csproj" />
-    <ProjectReference Include="..\TripEnjoy.ShareKernel\TripEnjoy.ShareKernel.csproj" />
+    <Compile Remove="Usecases\**" />
+    <EmbeddedResource Remove="Usecases\**" />
+    <None Remove="Usecases\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Usecases\" />
+    <PackageReference Include="MediatR" Version="11.0.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+	 <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.19" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TripEnjoy.Domain\TripEnjoy.Domain.csproj" />
+    <ProjectReference Include="..\TripEnjoy.ShareKernel\TripEnjoy.ShareKernel.csproj" />
   </ItemGroup>
 
 </Project>

@@ -30,7 +30,8 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
 
         public Task<T> UpdateAsync(T entity)
         {
-            _dbContext.Set<T>().Update(entity);
+            
+            _dbContext.Entry(entity).State = EntityState.Modified;
             return Task.FromResult(entity);
         }
 

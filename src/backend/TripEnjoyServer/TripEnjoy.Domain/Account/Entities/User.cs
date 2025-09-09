@@ -58,5 +58,15 @@ namespace TripEnjoy.Domain.Account.Entities
             var age = today.Year - DateOfBirth.Value.Year;
             return Result<int>.Success(age);
         }
+         public static Result<User> Create(AccountId accountId, string fullName, string? phoneNumber = null, string? address = null, DateOnly? dateOfBirth = null)
+        {
+            if (string.IsNullOrWhiteSpace(fullName))
+            {
+                return Result<User>.Failure(DomainError.User.FullNameRequired);
+            }
+            
+            var user = new User(UserId.CreateUnique(), accountId, fullName, phoneNumber, address, dateOfBirth);
+            return Result<User>.Success(user);
+        }
     }
 }

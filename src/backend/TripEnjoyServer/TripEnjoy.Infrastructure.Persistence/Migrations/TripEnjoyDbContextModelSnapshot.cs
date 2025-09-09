@@ -183,6 +183,32 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
                     b.ToTable("Accounts", (string)null);
                 });
 
+            modelBuilder.Entity("TripEnjoy.Domain.Account.Entities.BlackListToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Expiration")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("BlackListTokens", (string)null);
+                });
+
             modelBuilder.Entity("TripEnjoy.Domain.Account.Entities.Partner", b =>
                 {
                     b.Property<Guid>("Id")
@@ -419,6 +445,15 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TripEnjoy.Domain.Account.Entities.BlackListToken", b =>
+                {
+                    b.HasOne("TripEnjoy.Domain.Account.Account", null)
+                        .WithMany("BlackListTokens")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TripEnjoy.Domain.Account.Entities.Partner", b =>
                 {
                     b.HasOne("TripEnjoy.Domain.Account.Account", null)
@@ -457,6 +492,8 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("TripEnjoy.Domain.Account.Account", b =>
                 {
+                    b.Navigation("BlackListTokens");
+
                     b.Navigation("Partner");
 
                     b.Navigation("RefreshTokens");

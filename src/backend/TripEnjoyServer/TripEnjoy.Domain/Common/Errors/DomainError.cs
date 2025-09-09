@@ -6,8 +6,48 @@ namespace TripEnjoy.Domain.Common.Errors
         {
             public static readonly Error InvalidEmail = new(
                 "Account.InvalidEmail",
-                "The email address is invalid.",
-                ErrorType.Validation
+                "The email format is invalid.",
+                ErrorType.Validation);
+
+            public static readonly Error DuplicateEmail = new(
+                "Account.DuplicateEmail",
+                "The email is already in use.",
+                ErrorType.Conflict);
+
+            public static readonly Error LoginFailed = new(
+                "Account.LoginFailed",
+                "Invalid email or password.",
+                ErrorType.Failure);
+
+            public static readonly Error LockedOut = new(
+                "Account.LockedOut",
+                "This account is locked out.",
+                ErrorType.Failure);
+
+            public static readonly Error EmailNotConfirmed = new(
+                "Account.EmailNotConfirmed",
+                "The email for this account is not confirmed.",
+                ErrorType.Failure);
+
+            public static readonly Error TwoFactorRequired = new(
+                "Account.TwoFactorRequired",
+                "Two-factor authentication is required for this account.",
+                ErrorType.Failure);
+
+            public static readonly Error NotFound = new(
+                "Account.NotFound",
+                "The account was not found.",
+                ErrorType.NotFound);
+
+            public static readonly Error InvalidOtp = new(
+                "Account.InvalidOtp",
+                "The one-time password provided is invalid or has expired.",
+                ErrorType.Validation);
+
+                public static readonly Error InvalidToken = new(
+                "Account.InvalidToken",
+                "The token is invalid.",
+                ErrorType.Unauthorized
             );
         }
 
@@ -24,6 +64,18 @@ namespace TripEnjoy.Domain.Common.Errors
                 "The date of birth is invalid.",
                 ErrorType.Validation
             );
+
+            public static readonly Error FullNameRequired = new(
+                "User.FullNameRequired",
+                "The full name is required.",
+                ErrorType.Validation
+            );
+
+            public static readonly Error NotFound = new(
+                "User.NotFound",
+                "The user was not found.",
+                ErrorType.NotFound
+            );
         }
 
         public static class Wallet
@@ -37,6 +89,25 @@ namespace TripEnjoy.Domain.Common.Errors
                 "Wallet.InvalidTransactionAmount",
                 "The transaction amount must be greater than zero.",
                 ErrorType.Validation
+            );
+        }
+
+        public static class RefreshToken
+        {
+            public static readonly Error InvalidToken = new(
+                "RefreshToken.InvalidToken",
+                "The refresh token is invalid.",
+                ErrorType.Failure
+            );
+            public static readonly Error RefreshTokenNotFound = new(
+                "RefreshToken.RefreshTokenNotFound",
+                "The refresh token was not found.",
+                ErrorType.Failure
+            );
+            public static readonly Error RefreshTokenInvalidated = new(
+                "RefreshToken.RefreshTokenInvalidated",
+                "The refresh token has been invalidated.",
+                ErrorType.Failure
             );
         }
     }
