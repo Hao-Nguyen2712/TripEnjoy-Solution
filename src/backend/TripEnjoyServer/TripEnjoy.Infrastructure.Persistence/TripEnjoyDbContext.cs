@@ -17,7 +17,7 @@ namespace TripEnjoy.Infrastructure.Persistence
         public DbSet<Partner> Partners { get; set; } = null!;
         public DbSet<Wallet> Wallets { get; set; } = null!;
         public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
-
+        public DbSet<BlackListToken> BlackListTokens { get; set; } = null!;
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());

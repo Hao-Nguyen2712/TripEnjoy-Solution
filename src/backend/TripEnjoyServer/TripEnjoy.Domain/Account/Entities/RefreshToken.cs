@@ -35,5 +35,11 @@ namespace TripEnjoy.Domain.Account.Entities
         {
             return new RefreshToken(RefreshTokenId.CreateUnique(), accountId, token);
         }
+
+        public void Revoke()
+        {
+            RevokeAt = DateTime.UtcNow;
+            IsUsed = true;
+        }
     }
 }

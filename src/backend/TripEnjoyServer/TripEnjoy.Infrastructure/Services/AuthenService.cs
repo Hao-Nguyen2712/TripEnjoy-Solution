@@ -207,7 +207,7 @@ namespace TripEnjoy.Infrastructure.Services
             return Result<(string, string)>.Success((user.Id, token));
         }
 
-        private async Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(ApplicationUser user)
+        public async Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(ApplicationUser user)
         {
             var authClaims = new List<Claim>
             {
@@ -237,12 +237,41 @@ namespace TripEnjoy.Infrastructure.Services
             return (accessToken, refreshToken);
         }
 
-        private string GenerateRefreshToken()
+        public string GenerateRefreshToken()
         {
             var randomNumber = new byte[64];
             using var rng = RandomNumberGenerator.Create();
             rng.GetBytes(randomNumber);
             return Convert.ToBase64String(randomNumber);
+        }
+
+        public Task<Result<ClaimsPrincipal?>> GetPrincipalFromExpiredToken(string token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"])),
+                ValidateLifetime = false // Bỏ qua kiểm tra hết hạn
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+
+            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return Task.FromResult(Result<ClaimsPrincipal?>.Failure(Domain.Common.Errors.DomainError.RefreshToken.InvalidToken)); // Token không hợp lệ
+            }
+            return Task.FromResult(Result<ClaimsPrincipal?>.Success(principal));
+        }
+
+        public async Task<string> GenerateAccessTokenAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            var (accessToken, _) = await GenerateTokensAsync(user); // Tái sử dụng hàm đã có
+            return accessToken;
         }
     }
 }

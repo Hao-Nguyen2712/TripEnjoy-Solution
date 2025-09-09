@@ -1,7 +1,11 @@
-﻿using MediatR;
+﻿using System.Security.Claims;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using TripEnjoy.Application.Features.Authentication.Commands;
+using TripEnjoy.Domain.Common.Errors;
+using TripEnjoy.Domain.Common.Models;
 
 namespace TripEnjoy.Api.Controllers
 {
@@ -44,6 +48,27 @@ namespace TripEnjoy.Api.Controllers
 
             var command = new ConfirmEmailCommand(userId, token);
             var result = await _sender.Send(command);
+            return HandleResult(result);
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout(string refreshToken)
+        {
+            var aspNetUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(aspNetUserId))
+            {
+                return HandleResult(Result.Failure(
+                    new Error("Logout.Failure", "Unauthorized", ErrorType.Unauthorized)
+                ));
+            }
+
+            var secureCommand = new LogoutCommand
+            (
+                refreshToken,
+                aspNetUserId
+            );               
+            var result = await _sender.Send(secureCommand);
             return HandleResult(result);
         }
     }

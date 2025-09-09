@@ -47,6 +47,13 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
             builder.HasMany(a => a.RefreshTokens)
                 .WithOne()
                 .HasForeignKey(rt => rt.AccountId);
+
+            var navigationBlackListTokens = builder.Metadata.FindNavigation(nameof(Account.BlackListTokens));
+            navigationBlackListTokens?.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasMany(a => a.BlackListTokens)
+                .WithOne()
+                .HasForeignKey(bt => bt.AccountId);
         }
     }
 }

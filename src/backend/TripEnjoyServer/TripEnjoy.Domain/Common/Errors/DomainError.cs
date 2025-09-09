@@ -43,6 +43,12 @@ namespace TripEnjoy.Domain.Common.Errors
                 "Account.InvalidOtp",
                 "The one-time password provided is invalid or has expired.",
                 ErrorType.Validation);
+
+                public static readonly Error InvalidToken = new(
+                "Account.InvalidToken",
+                "The token is invalid.",
+                ErrorType.Unauthorized
+            );
         }
 
         public static class User
@@ -83,6 +89,25 @@ namespace TripEnjoy.Domain.Common.Errors
                 "Wallet.InvalidTransactionAmount",
                 "The transaction amount must be greater than zero.",
                 ErrorType.Validation
+            );
+        }
+
+        public static class RefreshToken
+        {
+            public static readonly Error InvalidToken = new(
+                "RefreshToken.InvalidToken",
+                "The refresh token is invalid.",
+                ErrorType.Failure
+            );
+            public static readonly Error RefreshTokenNotFound = new(
+                "RefreshToken.RefreshTokenNotFound",
+                "The refresh token was not found.",
+                ErrorType.Failure
+            );
+            public static readonly Error RefreshTokenInvalidated = new(
+                "RefreshToken.RefreshTokenInvalidated",
+                "The refresh token has been invalidated.",
+                ErrorType.Failure
             );
         }
     }
