@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using TripEnjoy.Domain.Account.Entities;
+using TripEnjoy.Domain.Account.Enums;
 using TripEnjoy.Domain.Account.ValueObjects;
 using TripEnjoy.Domain.Common.Errors;
 using TripEnjoy.Domain.Common.Models;
@@ -10,7 +11,7 @@ namespace TripEnjoy.Domain.Account
     {
         public string AspNetUserId { get; private set; }
         public string AccountEmail { get; private set; }
-        public bool IsDeleted { get; private set; }
+        public string Status { get; private set; }
 
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
@@ -34,6 +35,7 @@ namespace TripEnjoy.Domain.Account
             // EF requires a parameterless constructor
             AspNetUserId = null!;
             AccountEmail = null!;
+            Status = null!;
         }
         /// <summary>
         /// Initializes a new Account with the specified identifier, external ASP.NET user id, and email.
@@ -46,7 +48,7 @@ namespace TripEnjoy.Domain.Account
         {
             AspNetUserId = aspNetUserId;
             AccountEmail = accountEmail;
-            IsDeleted = false;
+            Status = AccountStatusEnum.PendingVerification.ToString();
             CreatedAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;
         }
@@ -70,6 +72,27 @@ namespace TripEnjoy.Domain.Account
             return Result.Success();
         }
 
+        public Result AddNewUser(string? fullName, string? phoneNumber, string? address, DateOnly? dateOfBirth)
+        {
+            var userResult = Domain.Account.Entities.User.Create(this.Id, fullName, phoneNumber, address, dateOfBirth);
+            if (userResult.IsFailure)
+            {
+                return Result.Failure(userResult.Errors);
+            }
+            UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
+        }
+        public Result AddNewPartner(string? companyName, string? phoneNumber, string? address, string? email)
+        {
+            var partnerResult = Partner.Create(this.Id, companyName, phoneNumber, address);
+            if (partnerResult.IsFailure)
+            {
+                return Result.Failure(partnerResult.Errors);
+            }
+            UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
+        }
+
         /// <summary>
         /// Creates a new refresh token for this account, stores it in the account's token collection, and updates the account's UpdatedAt timestamp.
         /// </summary>
@@ -90,10 +113,49 @@ namespace TripEnjoy.Domain.Account
         /// <remarks>
         /// Sets <see cref="IsDeleted"/> to true and updates <see cref="UpdatedAt"/> to the current UTC time.
         /// </remarks>
-        public void MarkAsDeleted()
+        public Result MarkAsDeleted()
         {
-            IsDeleted = true;
+            if (Status != AccountStatusEnum.PendingVerification.ToString())
+            {
+                return Result.Failure(DomainError.Account.AlreadyDeleted);
+            }
+            Status = AccountStatusEnum.Deleted.ToString();
             UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
+        }
+
+        public Result MarkAsLocked()
+        {
+            if (Status != AccountStatusEnum.PendingVerification.ToString())
+            {
+                return Result.Failure(DomainError.Account.AlreadyLocked);
+            }
+            Status = AccountStatusEnum.Locked.ToString();
+            UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
+        }
+
+        public Result MarkAsBanned()
+        {
+            if (Status != AccountStatusEnum.PendingVerification.ToString())
+            {
+                return Result.Failure(DomainError.Account.AlreadyBanned);
+            }
+            Status = AccountStatusEnum.Banned.ToString();
+            UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
+        }
+
+        public Result MarkAsActive()
+        {
+            if (Status != AccountStatusEnum.PendingVerification.ToString())
+            {
+
+                return Result.Failure(DomainError.Account.AlreadyActivated);
+            }
+            Status = AccountStatusEnum.Active.ToString();
+            UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
         }
 
         public Result UpdateEmail(string newEmail)

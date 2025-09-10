@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
 using TripEnjoy.Application.Interfaces.External.Email;
@@ -51,7 +51,7 @@ namespace TripEnjoy.Infrastructure.Services
             smtpClient.UseDefaultCredentials = false;
             smtpClient.Credentials = new NetworkCredential(email, password);
 
-            var bodyEmail = MailBodyForOTP(body);
+            var bodyEmail = MailBodyForConfirmation(body);
             var message = new MailMessage(
                 email!, sendFor, subject, bodyEmail
             )
@@ -76,15 +76,43 @@ namespace TripEnjoy.Infrastructure.Services
         /// <param name="userEmail">The recipient email address that would receive the OTP (used only for logging).</param>
         /// <param name="otp">The one-time password value included in the logged message.</param>
         /// <returns>A completed <see cref="Task"/>; no asynchronous work is performed.</returns>
-        public Task SendOtpAsync(string userEmail, string otp)
+        public async Task<Result> SendOtpAsync(string userEmail, string otp, CancellationToken cancellationToken = default)
         {
             _logger.LogWarning("--- SENDING OTP EMAIL (SIMULATION) ---");
             _logger.LogInformation($"To: {userEmail}");
             _logger.LogInformation($"Subject: Your One-Time Password");
             _logger.LogInformation($"Body: Your OTP is: {otp}. It is valid for 3 minutes.");
             _logger.LogWarning("------------------------------------");
+              
 
-            return Task.CompletedTask;
+            var email = _emailConfig.Email;
+            var password = _emailConfig.Password;
+            var host = _emailConfig.Host;
+            var port = _emailConfig.Port;
+
+            
+            var smtpClient = new SmtpClient(host, port);
+            smtpClient.EnableSsl = true;
+            smtpClient.UseDefaultCredentials = false;
+            smtpClient.Credentials = new NetworkCredential(email, password);
+
+            var bodyEmail = MailBodyForOTP(otp);
+            var message = new MailMessage(
+                email!, userEmail, "Your One-Time Password", bodyEmail
+            )
+            {
+                IsBodyHtml = true,
+            };
+
+            try
+            {
+                await smtpClient.SendMailAsync(message, cancellationToken);
+                return Result.Success();
+            }
+            catch
+            {
+                return Result.Failure(new Error("Email.SendFailed", "Failed to send email.", ErrorType.Failure));
+            }
         }
 
         /// <summary>
@@ -146,23 +174,78 @@ namespace TripEnjoy.Infrastructure.Services
                  <p>This OTP is valid for 5 minutes. Please do not share it with anyone.</p>
              </div>
              <div class='footer'>
-                 &copy; {DateTime.Now.Year} TraVinhGo. All rights reserved.
+                 &copy; {DateTime.Now.Year} TripEnjoy. All rights reserved.
              </div>
          </div>
      </body>
  </html>";
         }
 
-        /// <summary>
-        /// Sends an email confirmation to the specified address.
-        /// </summary>
-        /// <param name="userId">Identifier of the user the confirmation is for.</param>
-        /// <param name="token">Confirmation token to include in the message.</param>
-        /// <param name="ct">Cancellation token to cancel the send operation.</param>
-        /// <returns>A task that completes with a <see cref="Result"/> indicating success or failure of the send.</returns>
-        Task IEmailService.SendEmailConfirmationAsync(string userEmail, string userId, string token, CancellationToken ct)
+         private string MailBodyForConfirmation(string confirmationLink)
         {
-            return SendEmailConfirmationAsync(userEmail, userId, token, ct);
+            return $@"
+ <html>
+     <head>
+         <style>
+             .container {{
+                 max-width: 600px;
+                 margin: auto;
+                 padding: 20px;
+                 border: 1px solid #e0e0e0;
+                 border-radius: 10px;
+                 font-family: Arial, sans-serif;
+                 background-color: #f9f9f9;
+                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+             }}
+             .header {{
+                 background-color: #2196F3; /* Blue for confirmation */
+                 color: white;
+                 padding: 10px 20px;
+                 border-top-left-radius: 10px;
+                 border-top-right-radius: 10px;
+                 text-align: center;
+             }}
+             .content {{
+                 padding: 20px;
+                 text-align: center;
+             }}
+             .button {{
+                 display: inline-block;
+                 padding: 12px 24px;
+                 font-size: 16px;
+                 font-weight: bold;
+                 color: white;
+                 background-color: #2196F3;
+                 border-radius: 5px;
+                 text-decoration: none;
+                 margin: 20px 0;
+             }}
+             .footer {{
+                 text-align: center;
+                 font-size: 12px;
+                 color: #777;
+                 margin-top: 16px;
+             }}
+         </style>
+     </head>
+     <body>
+         <div class='container'>
+             <div class='header'>
+                 <h2>Confirm Your Account</h2>
+             </div>
+             <div class='content'>
+                 <p>Welcome to TripEnjoy!</p>
+                 <p>Thank you for registering. Please click the button below to confirm your email address and activate your account:</p>
+                 <a href='{confirmationLink}' class='button'>Confirm Email</a>
+                 <p>If you did not create an account, no further action is required.</p>
+             </div>
+             <div class='footer'>
+                 &copy; {DateTime.Now.Year} TripEnjoy. All rights reserved.
+             </div>
+         </div>
+     </body>
+ </html>";
         }
+
     }
 }

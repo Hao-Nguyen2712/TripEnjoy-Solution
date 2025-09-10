@@ -44,10 +44,31 @@ namespace TripEnjoy.Domain.Common.Errors
                 "The one-time password provided is invalid or has expired.",
                 ErrorType.Validation);
 
-                public static readonly Error InvalidToken = new(
-                "Account.InvalidToken",
-                "The token is invalid.",
-                ErrorType.Unauthorized
+            public static readonly Error InvalidToken = new(
+            "Account.InvalidToken",
+            "The token is invalid.",
+            ErrorType.Unauthorized
+        );
+
+            public static readonly Error AlreadyActivated = new(
+                "Account.AlreadyActivated",
+                "The account has already been activated.",
+                ErrorType.Failure
+            );
+            public static readonly Error AlreadyBanned = new(
+                "Account.AlreadyBanned",
+                "The account has already been banned.",
+                ErrorType.Failure
+            );
+            public static readonly Error AlreadyLocked = new(
+                "Account.AlreadyLocked",
+                "The account has already been locked.",
+                ErrorType.Failure
+            );
+            public static readonly Error AlreadyDeleted = new(
+                "Account.AlreadyDeleted",
+                "The account has already been deleted.",
+                ErrorType.Failure
             );
         }
 

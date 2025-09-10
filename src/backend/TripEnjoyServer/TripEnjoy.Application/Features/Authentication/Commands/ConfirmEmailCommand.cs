@@ -5,6 +5,7 @@ namespace TripEnjoy.Application.Features.Authentication.Commands
 {
     public record ConfirmEmailCommand(
          string UserId,
-         string Token
+         string Token,
+         string ConfirmFor 
      ) : IRequest<Result>;
 }

@@ -21,11 +21,11 @@ namespace TripEnjoy.Api.Controllers
         /// <returns>
         /// An IActionResult representing either a successful ApiResponse&lt;T&gt; (HTTP 200) or an error ObjectResult containing ApiResponse&lt;T&gt; with a list of ApiError and the corresponding HTTP status code.
         /// </returns>
-        protected IActionResult HandleResult<T>(Result<T> result)
+        protected IActionResult HandleResult<T>(Result<T> result, string? message = null)
         {
             if (result.IsSuccess)
             {
-                return Ok(ApiResponse<T>.Ok(result.Value));
+                return Ok(ApiResponse<T>.Ok(result.Value, message ?? "Operation successful"));
             }
 
 
@@ -45,11 +45,11 @@ namespace TripEnjoy.Api.Controllers
         /// <returns>
         /// On success: an OkObjectResult containing ApiResponse.Ok(); on failure: an ObjectResult whose payload is ApiResponse.CreateError with the message "One or more errors occurred." and a list of ApiError (one per domain error), and whose HTTP status code is derived from the first error's type.
         /// </returns>
-        protected IActionResult HandleResult(Result result)
+        protected IActionResult HandleResult(Result result, string? message = null)
         {
             if (result.IsSuccess)
             {
-                return Ok(ApiResponse.Ok());
+                return Ok(ApiResponse.Ok(message ?? "Operation successful"));
             }
 
             var firstError = result.Errors.First().Type;
@@ -62,8 +62,8 @@ namespace TripEnjoy.Api.Controllers
                 StatusCode = statusCode
             };
         }
-        
-         /// <summary>
+
+        /// <summary>
         /// Maps a domain <see cref="ErrorType"/> to the corresponding HTTP status code.
         /// </summary>
         /// <param name="errorType">The domain error type used to determine the HTTP status code.</param>
@@ -80,6 +80,6 @@ namespace TripEnjoy.Api.Controllers
                 _ => StatusCodes.Status400BadRequest
             };
         }
-    
+
     }
 }

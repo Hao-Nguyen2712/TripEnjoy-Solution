@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+
 namespace TripEnjoy.Application.Interfaces.Persistence
 {
     public interface IGenericRepository<T> where T : class
@@ -7,5 +9,6 @@ namespace TripEnjoy.Application.Interfaces.Persistence
         Task<T> AddAsync(T entity);
         Task<T> UpdateAsync(T entity);
         Task<T> DeleteAsync(T entity);
+        Task<T?> GetAsync(Expression<Func<T, bool>> predicate);
     }
 }

@@ -38,7 +38,7 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
             builder.Property(a => a.AspNetUserId).IsRequired();
             builder.Property(a => a.AccountEmail).IsRequired()
                                                  .HasMaxLength(256);
-            builder.Property(a => a.IsDeleted).IsRequired();
+            builder.Property(a => a.Status).IsRequired();
             builder.Property(a => a.CreatedAt).IsRequired();
             builder.Property(a => a.UpdatedAt).IsRequired();
 
