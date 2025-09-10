@@ -47,7 +47,7 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
         /// </returns>
         public async Task<Result<AuthResultDTO>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
-            var principal = await _authenService.GetPrincipalFromExpiredToken(request.expiredAccessToken);
+            var principal = await _authenService.GetPrincipalFromExpiredToken(request.refreshToken);
             if (principal is null)
             {
                 _logger.LogError("Invalid token for user {Email}", request.expiredAccessToken);
@@ -62,15 +62,20 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
             }
 
             // 2. Tìm Account
-            var account = await _unitOfWork.AccountRepository.FindByAspNetUserIdAsync(aspNetUserId);
+            var account = await _unitOfWork.AccountRepository.FindByAspNetUserIdWithBlackListTokensAsync(aspNetUserId);
             if (account is null)
             {
                 return Result<AuthResultDTO>.Failure(DomainError.Account.NotFound);
             }
 
+            var isBlackListToken = account.BlackListTokens.Any(bt => bt.Token == request.refreshToken);
+            if (isBlackListToken)
+            {
+                return Result<AuthResultDTO>.Failure(DomainError.Account.InvalidToken);
+            }
+             
             var newRefreshTokenString = _authenService.GenerateRefreshToken();
-
-            // 4. Gọi aggregate để xoay vòng token
+            
             var rotateResult = account.RotateRefreshToken(request.refreshToken, newRefreshTokenString, DateTime.UtcNow.AddDays(7));
             if (rotateResult.IsFailure)
             {
