@@ -46,7 +46,7 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
         {
             _logger.LogInformation("Handling LogoutCommand for user {RefreshToken}", request.refreshToken);
 
-            var account = await _unitOfWork.AccountRepository.FindByAspNetUserIdAsync(request.aspNetUserId);
+            var account = await _unitOfWork.AccountRepository.FindByAspNetUserIdWithTokensAsync(request.aspNetUserId);
             if (account == null)
             {
                 return Result<Error>.Failure(DomainError.Account.NotFound);
@@ -72,7 +72,7 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
                 return Result.Failure(new Error("Logout.Failure", ex.Message, ErrorType.Failure));
             }
 
-            return Result<string>.Success("Logout Succe");
+            return Result<string>.Success("Logout SuccessFully");
         }
     }
 }
