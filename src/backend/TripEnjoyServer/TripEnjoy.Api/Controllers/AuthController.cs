@@ -1,8 +1,8 @@
-using System.Security.Claims;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Security.Claims;
 using TripEnjoy.Application.Features.Authentication.Commands;
 using TripEnjoy.Domain.Common.Errors;
 using TripEnjoy.Domain.Common.Models;
@@ -33,7 +33,7 @@ namespace TripEnjoy.Api.Controllers
         public async Task<IActionResult> Register(RegisterCommand command)
         {
             var result = await _sender.Send(command);
-            return HandleResult(result);
+            return HandleResult(result , "Register successful");
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace TripEnjoy.Api.Controllers
         public async Task<IActionResult> LoginStepOne(LoginStepOneCommand command)
         {
             var result = await _sender.Send(command);
-            return HandleResult(result);
+            return HandleResult(result , "Login step one successful");
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace TripEnjoy.Api.Controllers
         public async Task<IActionResult> LoginStepTwo(LoginStepTwoCommand command)
         {
             var result = await _sender.Send(command);
-            return HandleResult(result);
+            return HandleResult(result , "Login step two successful");
         }
 
         /// <summary>
@@ -67,12 +67,12 @@ namespace TripEnjoy.Api.Controllers
         /// <param name="token">The email confirmation token issued to the user (from query string).</param>
         /// <returns>An <see cref="IActionResult"/> that wraps the command result indicating success or failure of the email confirmation.</returns>
         [HttpGet("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token, [FromQuery] string confirmFor)
         {
 
-            var command = new ConfirmEmailCommand(userId, token);
+            var command = new ConfirmEmailCommand(userId, token, confirmFor);
             var result = await _sender.Send(command);
-            return HandleResult(result);
+            return HandleResult(result , "Confirm email successful");
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace TripEnjoy.Api.Controllers
             {
                 return HandleResult(Result.Failure(
                     new Error("Logout.Failure", "Unauthorized", ErrorType.Unauthorized)
-                ));
+                ), "Logout failed");
             }
 
             var secureCommand = new LogoutCommand
@@ -102,9 +102,9 @@ namespace TripEnjoy.Api.Controllers
                 aspNetUserId
             );
             var result = await _sender.Send(secureCommand);
-            return HandleResult(result);
+            return HandleResult(result , "Logout successful");
         }
-        
+
         /// <summary>
         /// Exchanges a valid refresh token for a new access (and refresh) token pair.
         /// </summary>
@@ -114,7 +114,7 @@ namespace TripEnjoy.Api.Controllers
         public async Task<IActionResult> RefreshToken(RefreshTokenCommand command)
         {
             var result = await _sender.Send(command);
-            return HandleResult(result);
+            return HandleResult(result , "Refresh token successful");
         }
     }
 }

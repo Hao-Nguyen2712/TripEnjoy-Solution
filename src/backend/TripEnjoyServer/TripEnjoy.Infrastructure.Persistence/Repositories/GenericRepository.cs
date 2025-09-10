@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using TripEnjoy.Application.Interfaces.Persistence;
 
@@ -44,6 +45,11 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
         {
             _dbContext.Set<T>().Remove(entity);
             return Task.FromResult(entity);
+        }
+
+        public Task<T?> GetAsync(Expression<Func<T, bool>> predicate)
+        {
+            return _dbContext.Set<T>().FirstOrDefaultAsync(predicate);
         }
     }
 }

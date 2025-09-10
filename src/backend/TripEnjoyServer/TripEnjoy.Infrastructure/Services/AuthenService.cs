@@ -268,6 +268,12 @@ namespace TripEnjoy.Infrastructure.Services
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
+            // Build the confirmation link, now including the role
+            var confirmationLink = $"{_configuration["WebAppUrl"]}/confirm-email?userId={user.Id}&token={System.Net.WebUtility.UrlEncode(token)}&confirmFor={role}";
+
+            // Send the confirmation email
+            await _emailService.SendEmailConfirmationAsync(user.Email, "Confirm Your Email", confirmationLink, CancellationToken.None);
+
             return Result<(string, string)>.Success((user.Id, token));
         }
 
@@ -345,7 +351,7 @@ namespace TripEnjoy.Infrastructure.Services
                 ValidateIssuer = false,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"])),
-                ValidateLifetime = false // Bỏ qua kiểm tra hết hạn
+                ValidateLifetime = false
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();

@@ -5,6 +5,7 @@ using TripEnjoy.Application.Interfaces.Identity;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Domain.Account;
 using TripEnjoy.Domain.Account.ValueObjects;
+using TripEnjoy.Domain.Common.Errors;
 using TripEnjoy.Domain.Common.Models;
 using TripEnjoy.ShareKernel.Constant;
 
@@ -42,7 +43,8 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
         /// </returns>
         public async Task<Result<AccountId>> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
-            var createUserResult = await _authenService.CreateUserAsync(request.email, request.password, RoleConstant.User);
+            var role = request.confirmFor?.ToUpper() == RoleConstant.User.ToString().ToUpper() ? RoleConstant.User : RoleConstant.Partner;
+            var createUserResult = await _authenService.CreateUserAsync(request.email, request.password, role.ToString());
             if (createUserResult.IsFailure)
             {
                 return Result<AccountId>.Failure(createUserResult.Errors);
@@ -50,7 +52,12 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
 
             var (userId, confirmToken) = createUserResult.Value;
 
-            // 2. Tạo Account Aggregate
+            var accountExisting = await _unitOfWork.Repository<Account>().GetAsync(x => x.AccountEmail == request.email);
+            if (accountExisting != null)
+            {
+                return Result<AccountId>.Failure(DomainError.Account.DuplicateEmail);
+            }
+
             var accountResult = Account.Create(userId, request.email);
             if (accountResult.IsFailure)
             {
@@ -59,15 +66,8 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
 
             var account = accountResult.Value;
 
-            // 3. Dùng Unit of Work để lưu Account vào DB
             await _unitOfWork.Repository<Account>().AddAsync(account);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            var confirmationLink = $"https://localhost:7199/api/v1/auth/confirm-email?userId={userId}&token={System.Web.HttpUtility.UrlEncode(confirmToken)}";
-
-            await _emailService.SendEmailConfirmationAsync(request.email, "Confirm your email",
-             "Please confirm your email by clicking the link below: " + confirmationLink, cancellationToken);
-
             return Result<AccountId>.Success(account.Id);
         }
     }

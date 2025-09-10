@@ -15,6 +15,9 @@ namespace TripEnjoy.Domain.Account.Entities
         public string? Address { get; private set; }
         public string Status { get; private set; }
 
+        public readonly List<PartnerDocument> _partnerDocuments = new();
+        public IReadOnlyList<PartnerDocument> PartnerDocuments => _partnerDocuments.AsReadOnly();
+
         private Partner() : base(PartnerId.CreateUnique())
         {
             AccountId = null!;
@@ -30,5 +33,11 @@ namespace TripEnjoy.Domain.Account.Entities
             Address = address;
             Status = PartnerStatusEnum.Pending.ToString();
         }
+
+        public static Result<Partner> Create(AccountId accountId, string? companyName, string? contactNumber, string? address)
+        {
+            var partner = new Partner(PartnerId.CreateUnique(), accountId, companyName, contactNumber, address);
+            return Result<Partner>.Success(partner);
+        }
     }
-}
+}   

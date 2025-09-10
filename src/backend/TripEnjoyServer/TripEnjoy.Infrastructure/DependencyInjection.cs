@@ -59,6 +59,7 @@ namespace TripEnjoy.Infrastructure
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IAccountRepository, AccountRepository>();
 
             return services;
         }

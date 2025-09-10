@@ -25,7 +25,7 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
                     accountId => accountId.Id, // Correct property is .Value
                     dbValue => AccountId.Create(dbValue));
             
-            // Cấu hình các thuộc tính khác
+           
             builder.Property(u => u.FullName)
                 .IsRequired()
                 .HasMaxLength(200);

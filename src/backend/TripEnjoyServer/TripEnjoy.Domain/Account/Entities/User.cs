@@ -16,6 +16,7 @@ namespace TripEnjoy.Domain.Account.Entities
 
         private User() : base(UserId.CreateUnique())
         {
+            AccountId = null!;
         }
 
         public User(UserId id, AccountId accountId, string? fullName, string? phoneNumber = null, string? address = null, DateOnly? dateOfBirth = null) : base(id)
@@ -77,13 +78,8 @@ namespace TripEnjoy.Domain.Account.Entities
         /// A <see cref="Result{User}"/> that is successful containing the created User when validation passes;
         /// otherwise a failure result with <see cref="DomainError.User.FullNameRequired"/> if <paramref name="fullName"/> is null/empty/whitespace.
         /// </returns>
-        public static Result<User> Create(AccountId accountId, string fullName, string? phoneNumber = null, string? address = null, DateOnly? dateOfBirth = null)
+        public static Result<User> Create(AccountId accountId, string? fullName, string? phoneNumber = null, string? address = null, DateOnly? dateOfBirth = null)
         {
-            if (string.IsNullOrWhiteSpace(fullName))
-            {
-                return Result<User>.Failure(DomainError.User.FullNameRequired);
-            }
-
             var user = new User(UserId.CreateUnique(), accountId, fullName, phoneNumber, address, dateOfBirth);
             return Result<User>.Success(user);
         }

@@ -48,6 +48,13 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
                 .HasConversion<string>()
                 .HasMaxLength(50);
 
+            var navigation = builder.Metadata.FindNavigation(nameof(Partner.PartnerDocuments));
+            navigation?.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasMany(p => p.PartnerDocuments)
+                .WithOne()
+                .HasForeignKey(pd => pd.PartnerId);
+
         }
     }
 }
