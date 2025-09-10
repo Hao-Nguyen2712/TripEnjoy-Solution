@@ -1,4 +1,6 @@
 using TripEnjoy.Domain.Account;
+using TripEnjoy.Domain.Account.Entities;
+using TripEnjoy.Domain.Account.ValueObjects;
 
 namespace TripEnjoy.Application.Interfaces.Persistence
 {
@@ -12,5 +14,6 @@ namespace TripEnjoy.Application.Interfaces.Persistence
         Task<Account?> FindByAspNetUserIdAsync(string aspNetUserId);
         Task<Account?> FindByAspNetUserIdWithTokensAsync(string aspNetUserId);
         Task<Account?> FindByAspNetUserIdWithBlackListTokensAsync(string aspNetUserId);
+        Task<Partner?> FindPartnerByAccountIdAsync(AccountId accountId);
     }
 }

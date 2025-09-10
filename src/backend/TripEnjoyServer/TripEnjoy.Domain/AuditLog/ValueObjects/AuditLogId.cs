@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using TripEnjoy.Domain.Common.Models;
 
 namespace TripEnjoy.Domain.AuditLog.ValueObjects
@@ -9,7 +5,7 @@ namespace TripEnjoy.Domain.AuditLog.ValueObjects
     public class AuditLogId : ValueObject
     {
 
-        public Guid Id {get ; private set;}
+        public Guid Id { get; private set; }
         public AuditLogId(Guid id)
         {
             Id = id;

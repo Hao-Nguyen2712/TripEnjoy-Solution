@@ -38,23 +38,7 @@ namespace TripEnjoy.Infrastructure.Services
             _emailService = emailService;
         }
 
-        /// <summary>
-        /// First step of a two-step OTP login flow: verifies the user's email and password, enforces lockout on repeated failures,
-        /// generates a 6-digit one-time passcode (OTP), stores a SHA-256 hash of the OTP in the distributed cache for 5 minutes
-        /// under the key "otp:{email}", and sends the raw OTP to the user's email.
-        /// </summary>
-        /// <remarks>
-        /// - If the password is invalid, increments the user's AccessFailedCount; when it reaches 5 the user is locked out for 5 minutes and the counter is reset.
-        /// - If the account is currently locked out or the email is not confirmed, the call returns a corresponding failure result.
-        /// - On success returns a success result containing a confirmation message indicating the OTP was sent.
-        /// </remarks>
-        /// <returns>
-        /// A Result indicating outcome:
-        /// - Failure with DomainError.Account.LoginFailed when the user is not found or the password is incorrect.
-        /// - Failure with DomainError.Account.LockedOut when the user is currently locked out.
-        /// - Failure with DomainError.Account.EmailNotConfirmed when the user's email is unconfirmed.
-        /// - Success containing a message when the OTP has been generated, cached, and emailed.
-        /// </returns>
+
         public async Task<Result> LoginStepOneAsync(string email, string password)
         {
             var user = await _userManager.FindByEmailAsync(email);
