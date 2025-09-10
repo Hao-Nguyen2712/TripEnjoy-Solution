@@ -409,6 +409,112 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
                     b.ToTable("AuditLogs", (string)null);
                 });
 
+            modelBuilder.Entity("TripEnjoy.Domain.Property.Property", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal?>("AverageRating")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<double?>("Latitude")
+                        .HasPrecision(10, 8)
+                        .HasColumnType("float(10)");
+
+                    b.Property<double?>("Longitude")
+                        .HasPrecision(11, 8)
+                        .HasColumnType("float(11)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("PartnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PartnerId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PropertyTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PropertyTypeId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ReviewCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartnerId");
+
+                    b.HasIndex("PartnerId1");
+
+                    b.HasIndex("PropertyTypeId");
+
+                    b.HasIndex("PropertyTypeId1");
+
+                    b.ToTable("Properties", (string)null);
+                });
+
+            modelBuilder.Entity("TripEnjoy.Domain.PropertyType.PropertyType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PropertyTypes", (string)null);
+                });
+
             modelBuilder.Entity("TripEnjoy.Infrastructure.Persistence.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -588,6 +694,37 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("TripEnjoy.Domain.Property.Property", b =>
+                {
+                    b.HasOne("TripEnjoy.Domain.Account.Entities.Partner", null)
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TripEnjoy.Domain.Account.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TripEnjoy.Domain.PropertyType.PropertyType", null)
+                        .WithMany()
+                        .HasForeignKey("PropertyTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TripEnjoy.Domain.PropertyType.PropertyType", "PropertyType")
+                        .WithMany()
+                        .HasForeignKey("PropertyTypeId1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Partner");
+
+                    b.Navigation("PropertyType");
                 });
 
             modelBuilder.Entity("TripEnjoy.Domain.Account.Account", b =>

@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Domain.Account;
+using TripEnjoy.Domain.Account.Entities;
+using TripEnjoy.Domain.Account.ValueObjects;
 
 namespace TripEnjoy.Infrastructure.Persistence.Repositories
 {
@@ -31,6 +33,11 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
                         return await _dbContext.Accounts.
                                         Include(a => a.BlackListTokens)
                                         .FirstOrDefaultAsync(a => a.AspNetUserId == aspNetUserId);
+                }
+
+                public Task<Partner?> FindPartnerByAccountIdAsync(AccountId accountId)
+                {
+                        return _dbContext.Partners.FirstOrDefaultAsync(p => p.AccountId == accountId);
                 }
         }
 }
