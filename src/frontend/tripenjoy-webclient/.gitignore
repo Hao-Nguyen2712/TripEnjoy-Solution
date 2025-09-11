@@ -30,3 +30,12 @@ dist-ssr
 .kiro/steering/byterover-rules.md
 .qoder/rules/byterover-rules.md
 .augment/rules/byterover-rules.md
+
+# Documentation files (not for repo)
+.documentation/
+rules.md
+
+# Environment variables
+.env
+.env.*
+!.env.example

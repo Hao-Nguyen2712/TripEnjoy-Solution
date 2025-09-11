@@ -131,5 +131,14 @@ namespace TripEnjoy.Domain.Common.Errors
                 ErrorType.Failure
             );
         }
+
+        public static class Property
+        {
+            public static readonly Error NameIsRequired = new(
+                "Property.NameIsRequired",
+                "The name is required.",
+                ErrorType.Validation
+            );
+        }
     }
 }
