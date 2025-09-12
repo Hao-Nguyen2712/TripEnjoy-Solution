@@ -14,9 +14,19 @@
             <h2>OTP Verification</h2>
             <p>Enter the code sent to your email.</p>
             <form @submit.prevent="handleOtpVerification" class="mt-4" novalidate>
-              <div class="ui left icon input swdh95">
-                <input class="prompt srch_explore" type="text" v-model="otp" required placeholder="Enter OTP Code" />
-                <i class="uil uil-comment-alt-verify icon icon2"></i>
+              <div class="otp-inputs">
+                <input
+                  v-for="(digit, index) in otpDigits"
+                  :key="index"
+                  v-model="otpDigits[index]"
+                  :ref="el => { if (el) otpInputs[index] = el }"
+                  @input="handleInput($event, index)"
+                  @keydown="handleKeyDown($event, index)"
+                  type="text"
+                  maxlength="1"
+                  class="otp-input"
+                  required
+                />
               </div>
 
               <button class="login-btn" type="submit" :disabled="isLoading">
@@ -35,43 +45,94 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue'; // Import computed
 import { useToast } from 'vue-toastification';
 import { useRouter } from 'vue-router';
+import authService from '@/services/authService'; // Import authService
+import tokenService from '@/services/tokenService'; // Import tokenService
 import logoUrl from '@/assets/images/logo.svg';
 import logoInverseUrl from '@/assets/images/ct_logo.svg';
 import signLogoUrl from '@/assets/images/sign_logo.png';
 
-const otp = ref('');
+const otpDigits = ref(['', '', '', '', '', '']);
+const otpInputs = ref([]);
+const otp = computed(() => otpDigits.value.join(''));
+
 const isLoading = ref(false);
 const toast = useToast();
 const router = useRouter();
+let userEmail = '';
 
-const handleOtpVerification = async () => {
-  if (!otp.value || otp.value.length < 6) { // Assuming OTP is 6 digits
-    toast.error("Please enter a valid OTP code.");
+onMounted(() => {
+  userEmail = sessionStorage.getItem('user_email_for_otp');
+  if (!userEmail) {
+    toast.error("Không tìm thấy thông tin xác thực. Vui lòng thử đăng nhập lại.");
+    router.push('/login');
+  }
+});
+
+const handleInput = (event, index) => {
+  const input = event.target;
+  let value = input.value;
+
+  // Only allow digits
+  if (!/^\d*$/.test(value)) {
+    toast.error("Vui lòng chỉ nhập số.");
+    otpDigits.value[index] = ''; // Clear the invalid input
     return;
   }
   
-  toast.success("Verification successful!");
-  // Placeholder for API call
-  // After successful verification, you might redirect to a 'reset-password' page
-  console.log("OTP Submitted:", otp.value);
+  // Move to next input if a digit is entered
+  if (value && index < otpDigits.value.length - 1) {
+    otpInputs.value[index + 1].focus();
+  }
+};
+
+const handleKeyDown = (event, index) => {
+  // Move to previous input on backspace if current input is empty
+  if (event.key === 'Backspace' && !otpDigits.value[index] && index > 0) {
+    otpInputs.value[index - 1].focus();
+  }
+};
+
+
+const handleOtpVerification = async () => {
+  if (otp.value.length !== 6) {
+    toast.error("Vui lòng nhập mã OTP gồm 6 chữ số.");
+    return;
+  }
+  
+  isLoading.value = true;
+  try {
+    const response = await authService.loginStepTwo({
+      email: userEmail,
+      otp: otp.value,
+    });
+    
+    toast.success("Xác thực thành công! Đăng nhập thành công.");
+    
+    // Save the tokens
+    tokenService.setTokens(response.data.data);
+
+    router.push('/'); // Redirect to home
+
+  } catch (error) {
+    if (error.response) {
+      toast.error(error.response.data.message || "Mã OTP không chính xác hoặc đã hết hạn.");
+    } else if (error.request) {
+      toast.error("Không thể kết nối đến máy chủ. Vui lòng thử lại.");
+    } else {
+      toast.error("Đã có lỗi bất ngờ xảy ra.");
+    }
+    console.error('API Error:', error);
+  } finally {
+    isLoading.value = false;
+  }
 };
 </script>
 
 <style>
-.sign_form .input.swdh95 {
-  margin-bottom: 20px;
-}
-.sign_form .login-btn {
-  margin-top: 10px;
-}
-.sign_in_up_bg {
-  background-color: #f7f7f7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-}
+/* 
+  Styles are now handled by AuthLayout.vue via auth.css
+*/
 </style>
