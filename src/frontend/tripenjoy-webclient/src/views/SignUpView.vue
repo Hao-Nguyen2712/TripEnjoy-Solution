@@ -93,17 +93,7 @@ const handleSignUp = async () => {
 </script>
 
 <style>
-.sign_form .input.swdh95 {
-  margin-bottom: 20px;
-}
-.sign_form .login-btn {
-  margin-top: 10px;
-}
-.sign_in_up_bg {
-  background-color: #f7f7f7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-}
+/* 
+  Styles are now handled by AuthLayout.vue via auth.css
+*/
 </style>

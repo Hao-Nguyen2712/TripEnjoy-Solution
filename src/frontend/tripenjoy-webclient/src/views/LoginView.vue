@@ -13,15 +13,15 @@
           <div class="sign_form">
             <h2>Welcome Back</h2>
             <p>Log In to Your TripEnjoy Account!</p>
-            <button class="social_lnk_btn color_btn_go"><i class="uil uil-google"></i>Continue with Google</button>
+            <button class="social_lnk_btn color_btn_go mt-3"><i class="uil uil-google"></i>Continue with Google</button>
             <form @submit.prevent="handleLogin" class="mt-4" novalidate>
-              <div class="ui left icon input swdh95" >
+              <div class="ui left icon input swdh95 mb-3" >
                 <input class="prompt srch_explore" type="email" v-model="email" required maxlength="64" placeholder="Email Address" />
                 <i class="uil uil-envelope icon icon2"></i>
               </div>
               <div class="ui left icon input swdh95">
-                <input class="prompt srch_explore" type="password" v-model="password" required maxlength="64" placeholder="Password" />
-                <i class="uil uil-key-skeleton-alt icon icon2"></i>
+                <input class="prompt srch_explore" :type="passwordFieldType" v-model="password" required maxlength="64" placeholder="Password" />
+                <i :class="['icon', 'icon2', passwordIconClass]" @click="togglePasswordVisibility" style="cursor: pointer; user-select: none;"></i>
               </div>
 
               <button class="login-btn" type="submit" :disabled="isLoading">
@@ -41,8 +41,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useToast } from 'vue-toastification';
+import { useRouter } from 'vue-router'; // Import useRouter
 import authService from '@/services/authService';
 import logoUrl from '@/assets/images/logo.svg';
 import logoInverseUrl from '@/assets/images/ct_logo.svg';
@@ -51,7 +52,22 @@ import signLogoUrl from '@/assets/images/sign_logo.png';
 const email = ref('');
 const password = ref('');
 const isLoading = ref(false);
+const isPasswordVisible = ref(false);
 const toast = useToast();
+const router = useRouter(); // Initialize router
+
+const passwordFieldType = computed(() => {
+  return isPasswordVisible.value ? 'text' : 'password';
+});
+
+const passwordIconClass = computed(() => {
+  // Using unicons classes for eye and eye-slash
+  return isPasswordVisible.value ? 'uil uil-eye-slash' : 'uil uil-eye';
+});
+
+const togglePasswordVisibility = () => {
+  isPasswordVisible.value = !isPasswordVisible.value;
+};
 
 const validateEmail = (emailToTest) => {
   const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -77,9 +93,11 @@ const handleLogin = async () => {
       password: password.value,
     });
 
-    toast.success("Đăng nhập thành công!");
-    console.log('API Response:', response.data);
-    // Bạn có thể xử lý chuyển trang hoặc lưu token ở đây
+    toast.success("Mã OTP đã được gửi đến email của bạn!");
+    
+    // Save email and redirect
+    sessionStorage.setItem('user_email_for_otp', email.value);
+    router.push('/verify-otp');
 
   } catch (error) {
     // 3. Error Handling
@@ -98,19 +116,7 @@ const handleLogin = async () => {
 </script>
 
 <style>
-.sign_form .input.swdh95 {
-  margin-bottom: 20px;
-}
-
-.sign_form .login-btn {
-  margin-top: 10px;
-}
-
-.sign_in_up_bg {
-  background-color: #f7f7f7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-}
+/* 
+  Styles are now handled by AuthLayout.vue via auth.css
+*/
 </style>
