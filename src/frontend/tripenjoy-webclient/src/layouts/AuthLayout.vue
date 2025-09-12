@@ -1,30 +1,64 @@
 <template>
-  <div>
-    <router-view />
-  </div>
-</template>
-
-<script setup>
-
-</script>
-
-<style>
-
-@import '@/assets/styles/auth.css';
-@import '@/assets/vendor/unicons-2.0.1/css/unicons.css';
-@import '@/assets/vendor/fontawesome-free/css/all.min.css';
-@import '@/assets/vendor/OwlCarousel/assets/owl.carousel.css';
-@import '@/assets/vendor/OwlCarousel/assets/owl.theme.default.min.css';
-@import '@/assets/vendor/bootstrap/css/bootstrap.min.css';
-@import '@/assets/vendor/bootstrap-select/docs/docs/dist/css/bootstrap-select.min.css';
-@import '@/assets/vendor/semantic/semantic.min.css';
-
-/* The following files were not found in your project and have been commented out. */
-/* Please verify their paths or remove them if they are not needed. */
-/* @import '/css/vertical-responsive-menu.min.css'; */
-/* @import '/css/responsive.css'; */
-/* @import '/css/night-mode.css'; */
-/* @import '/lib/animate/animate.min.css'; */
-/* @import '/lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css'; */
-
-</style>
+    <div class="app-layout">
+      <header class="app-header">
+        <div class="logo">TripEnjoy</div>
+        <nav class="app-nav">
+          <router-link to="/">Home</router-link>
+        </nav>
+        <div class="user-actions">
+           <router-link to="/login">Login</router-link>
+        </div>
+      </header>
+      <main class="app-main">
+        <router-view />
+      </main>
+      <footer class="app-footer">
+        <p>&copy; 2025 TripEnjoy. All rights reserved.</p>
+      </footer>
+    </div>
+  </template>
+  
+  <script setup>
+  </script>
+  
+  <style scoped>
+  .app-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #fff;
+    border-bottom: 1px solid #eaeaea;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  .logo {
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: #35495E;
+  }
+  .app-nav a {
+    margin: 0 1rem;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+  }
+  .app-nav a.router-link-exact-active {
+    color: #42b883;
+  }
+  .app-main {
+    flex-grow: 1;
+    padding: 2rem;
+  }
+  .app-footer {
+    padding: 1rem 2rem;
+    text-align: center;
+    background-color: #f8f8f8;
+    border-top: 1px solid #eaeaea;
+    color: #666;
+  }
+  </style>
