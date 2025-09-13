@@ -3,17 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36310.24
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Api", "TripEnjoy.Api\TripEnjoy.Api.csproj", "{BEE6F9BE-8F22-4F61-A142-8D14862A7DC1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Api", "src\TripEnjoyServer\TripEnjoy.Api\TripEnjoy.Api.csproj", "{BEE6F9BE-8F22-4F61-A142-8D14862A7DC1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Application", "TripEnjoy.Application\TripEnjoy.Application.csproj", "{DDFFC6AF-B179-4A3E-8E11-B6A4320C5951}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Application", "src\TripEnjoyServer\TripEnjoy.Application\TripEnjoy.Application.csproj", "{DDFFC6AF-B179-4A3E-8E11-B6A4320C5951}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Infrastructure", "TripEnjoy.Infrastructure\TripEnjoy.Infrastructure.csproj", "{2DA1DC2F-7223-4CF3-8AA1-84A0BADA7053}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Infrastructure", "src\TripEnjoyServer\TripEnjoy.Infrastructure\TripEnjoy.Infrastructure.csproj", "{2DA1DC2F-7223-4CF3-8AA1-84A0BADA7053}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Domain", "TripEnjoy.Domain\TripEnjoy.Domain.csproj", "{8F4F0EEA-2852-4D2A-8F15-3B13DBFFEC0A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Domain", "src\TripEnjoyServer\TripEnjoy.Domain\TripEnjoy.Domain.csproj", "{8F4F0EEA-2852-4D2A-8F15-3B13DBFFEC0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.ShareKernel", "TripEnjoy.ShareKernel\TripEnjoy.ShareKernel.csproj", "{A2BAFF88-91C9-408A-B2A4-459565FC8754}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.ShareKernel", "src\TripEnjoyServer\TripEnjoy.ShareKernel\TripEnjoy.ShareKernel.csproj", "{A2BAFF88-91C9-408A-B2A4-459565FC8754}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Infrastructure.Persistence", "TripEnjoy.Infrastructure.Persistence\TripEnjoy.Infrastructure.Persistence.csproj", "{C4004612-3F27-4EE3-8365-D6B406186BF1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Infrastructure.Persistence", "src\TripEnjoyServer\TripEnjoy.Infrastructure.Persistence\TripEnjoy.Infrastructure.Persistence.csproj", "{C4004612-3F27-4EE3-8365-D6B406186BF1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Client", "src\TripEnjoyServer\TripEnjoy.Client\TripEnjoy.Client.csproj", "{3BA0F451-3AA4-4296-61CA-790F1678B35F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{C4004612-3F27-4EE3-8365-D6B406186BF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4004612-3F27-4EE3-8365-D6B406186BF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4004612-3F27-4EE3-8365-D6B406186BF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BA0F451-3AA4-4296-61CA-790F1678B35F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BA0F451-3AA4-4296-61CA-790F1678B35F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BA0F451-3AA4-4296-61CA-790F1678B35F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BA0F451-3AA4-4296-61CA-790F1678B35F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
