@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Confirm Your Email";
+    Layout = "_AuthLayout";
+}
+
+<div class="tg-login-area pt-130 pb-130">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-6 col-lg-8 col-md-10">
+                <div class="tg-login-wrapper text-center">
+                    <div class="tg-login-top mb-30">
+                        <i class="fa-solid fa-envelope-circle-check fa-4x text-success mb-3"></i>
+                        <h2>Please check your email</h2>
+                        <p>We've sent a confirmation link to <strong>@ViewBag.Email</strong>.</p>
+                        <p class="mt-2">Click the link in the email to complete your registration.</p>
+                    </div>
+                    <div class="tg-login-form">
+                        <a asp-controller="Home" asp-action="Index" class="tg-btn w-100">Back to Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

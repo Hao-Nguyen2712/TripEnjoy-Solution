@@ -1,0 +1,202 @@
+@model TripEnjoy.Client.ViewModels.VerifyOtpRequestVM
+@using Newtonsoft.Json;
+
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Verify OTP";
+}
+
+@section Styles {
+    <style>
+        .otp-input-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .otp-input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 24px;
+            border: 1px solid #ced4da;
+            border-radius: .25rem;
+            -moz-appearance: textfield; /* Firefox */
+        }
+
+        .otp-input::-webkit-outer-spin-button,
+        .otp-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        #resend-otp.disabled {
+            color: #6c757d;
+            pointer-events: none;
+            text-decoration: none;
+        }
+    </style>
+}
+
+<div class="tg-login-area pt-130 pb-130">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-6 col-lg-8 col-md-10">
+                <div class="tg-login-wrapper">
+                    <div class="tg-login-top text-center mb-30">
+                         <div class="login-logo mb-20 py-3">
+                            <a asp-controller="Home" asp-action="Index"><img src="~/img/logo/logo-green.png" alt="Logo" style="max-width: 180px;"></a>
+                        </div>
+                        <h2>Two-Step Verification</h2>
+                        <p>We've sent a 6-digit verification code to <br> <strong>@Model.Email</strong></p>
+                    </div>
+                    <div class="tg-login-form">
+                        <div class="tg-tour-about-review-form">
+                            <form asp-action="VerifyOtp" method="post">
+                                <input asp-for="Email" type="hidden" />
+                                <input asp-for="Otp" type="hidden" />
+                               
+                                <div class="row">
+                                    <div class="col-lg-12 mb-35">
+                                        <div class="otp-input-container">
+                                            <input type="text" class="otp-input" maxlength="1" autofocus>
+                                            <input type="text" class="otp-input" maxlength="1">
+                                            <input type="text" class="otp-input" maxlength="1">
+                                            <input type="text" class="otp-input" maxlength="1">
+                                            <input type="text" class="otp-input" maxlength="1">
+                                            <input type="text" class="otp-input" maxlength="1">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-12">
+                                        <button id="verify-btn" type="submit" class="tg-btn w-100">Verify</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                         <div class="text-center mt-20">
+                            Didn't receive the code? 
+                            <a href="#" id="resend-otp">Resend</a>
+                            <span id="countdown-timer" class="ms-2"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // --- Notyf Notification Setup ---
+            const notyf = new Notyf({
+                duration: 5000,
+                position: { x: 'right', y: 'top' },
+                types: [{ type: 'error', background: 'indianred', dismissible: true }]
+            });
+
+            var errorMessages = @Html.Raw(TempData["ErrorMessages"] != null ? TempData["ErrorMessages"] : "[]");
+            if (errorMessages.length > 0) {
+                errorMessages.forEach(function(message) {
+                    notyf.error(message);
+                });
+            }
+
+            // --- OTP Input Logic ---
+            const inputs = $(".otp-input");
+            const otpHiddenInput = $("#Otp");
+
+            inputs.on('input', function (e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                const currentInput = $(this);
+                const nextInput = currentInput.next('.otp-input');
+                if (this.value && nextInput.length) {
+                    nextInput.focus();
+                }
+                updateOtpValue();
+            });
+
+            inputs.on('keydown', function (e) {
+                if (e.key === "Backspace" && !this.value) {
+                    const prevInput = $(this).prev('.otp-input');
+                    if (prevInput.length) {
+                        prevInput.focus();
+                    }
+                }
+            });
+
+            inputs.first().on('paste', function (e) {
+                e.preventDefault();
+                const pastedData = (e.originalEvent || e).clipboardData.getData('text');
+                const digits = pastedData.replace(/[^0-g]/g, '');
+                if (digits.length === 6) {
+                    inputs.each(function (index) {
+                        $(this).val(digits[index] || '').trigger('input');
+                    });
+                    inputs.last().focus();
+                }
+            });
+
+            function updateOtpValue() {
+                let otp = "";
+                inputs.each(function () { otp += $(this).val(); });
+                otpHiddenInput.val(otp);
+            }
+
+            $('form').on('submit', function(e) {
+                let isFilled = Array.from(inputs).every(input => $(input).val() !== '');
+                if (isFilled) {
+                    var submitButton = $('#verify-btn');
+                    submitButton.prop('disabled', true);
+                    submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Verifying...');
+                }
+            });
+
+            // --- Countdown Timer Logic ---
+            const countdownElement = $('#countdown-timer');
+            const resendLink = $('#resend-otp');
+            const fiveMinutes = 5 * 60;
+
+            let otpExpiryTime = localStorage.getItem('otpExpiryTime');
+
+            if (!otpExpiryTime) {
+                otpExpiryTime = new Date().getTime() + fiveMinutes * 1000;
+                localStorage.setItem('otpExpiryTime', otpExpiryTime);
+            }
+
+            function updateCountdown() {
+                const now = new Date().getTime();
+                const distance = otpExpiryTime - now;
+
+                if (distance < 0) {
+                    clearInterval(timerInterval);
+                    countdownElement.text("");
+                    resendLink.removeClass('disabled');
+                    localStorage.removeItem('otpExpiryTime');
+                    return;
+                }
+
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                countdownElement.text(`(${minutes}:${seconds.toString().padStart(2, '0')})`);
+                resendLink.addClass('disabled');
+            }
+
+            const timerInterval = setInterval(updateCountdown, 1000);
+            updateCountdown(); // Initial call
+
+            resendLink.on('click', function(e){
+                e.preventDefault();
+                if(!$(this).hasClass('disabled')){
+                    // Here you would call an API to resend the OTP
+                    notyf.success('A new OTP has been sent.');
+                    localStorage.removeItem('otpExpiryTime');
+                    window.location.reload(); // Reload to restart timer
+                }
+            });
+        });
+    </script>
+}
+

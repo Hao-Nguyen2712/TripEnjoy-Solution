@@ -1,0 +1,25 @@
+@using System.Security.Claims
+
+@if (User.Identity.IsAuthenticated)
+{
+    var emailClaim = User.FindFirst(ClaimTypes.Email);
+    <div class="dropdown">
+        <a href="#" class="btn btn-primary dropdown-toggle" role="button" id="userDropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-regular fa-user me-1"></i>Welcome, @(emailClaim?.Value ?? "User")
+        </a>
+
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdownMenuLink">
+            <li><a class="dropdown-item" href="#"><i class="fa-regular fa-address-card me-2"></i>Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form asp-controller="auth" asp-action="sign-out" method="post" id="logoutForm">
+                    <button type="submit" class="dropdown-item"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Logout</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+}
+else
+{
+    <a href="/auth/sign-in" class="btn btn-primary"><i class="fa-regular fa-user"></i> Login</a>
+}
