@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
@@ -24,11 +25,12 @@ namespace TripEnjoy.Infrastructure.Services
         private readonly IConfiguration _configuration;
         private readonly IDistributedCache _cache;
         private readonly IEmailService _emailService;
+        private readonly IBackgroundJobClient _backgroundJobClient;
 
         /// <summary>
         /// Initializes a new instance of AuthenService and stores required dependencies for authentication operations.
         /// </summary>
-        public AuthenService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration, RoleManager<IdentityRole> roleManager, IDistributedCache cache, IEmailService emailService)
+        public AuthenService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration, RoleManager<IdentityRole> roleManager, IDistributedCache cache, IEmailService emailService, IBackgroundJobClient backgroundJobClient)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -36,6 +38,7 @@ namespace TripEnjoy.Infrastructure.Services
             _roleManager = roleManager;
             _cache = cache;
             _emailService = emailService;
+            _backgroundJobClient = backgroundJobClient;
         }
 
 
@@ -72,6 +75,10 @@ namespace TripEnjoy.Infrastructure.Services
 
             var otp = new Random().Next(100000, 999999).ToString();
             var cacheKey = $"otp:{email}";
+
+            // Remove old OTP from cache before setting a new one
+            await _cache.RemoveAsync(cacheKey);
+
             var hashOtp = HashingOtpExtension.HashWithSHA256(otp);
             var cacheOptions = new DistributedCacheEntryOptions
             {
@@ -79,7 +86,7 @@ namespace TripEnjoy.Infrastructure.Services
             };
             await _cache.SetStringAsync(cacheKey, hashOtp, cacheOptions);
 
-            await _emailService.SendOtpAsync(email, otp);
+            _backgroundJobClient.Enqueue(() => _emailService.SendOtpAsync(email, otp, CancellationToken.None));
 
             return Result<string>.Success("Sending OTP to email successfully");
         }
@@ -256,7 +263,7 @@ namespace TripEnjoy.Infrastructure.Services
             var confirmationLink = $"{_configuration["WebAppUrl"]}/confirm-email?userId={user.Id}&token={System.Net.WebUtility.UrlEncode(token)}&confirmFor={role}";
 
             // Send the confirmation email
-            await _emailService.SendEmailConfirmationAsync(user.Email, "Confirm Your Email", confirmationLink, CancellationToken.None);
+            _backgroundJobClient.Enqueue(() => _emailService.SendEmailConfirmationAsync(user.Email, "Confirm Your Email", confirmationLink, CancellationToken.None));
 
             return Result<(string, string)>.Success((user.Id, token));
         }
@@ -359,6 +366,19 @@ namespace TripEnjoy.Infrastructure.Services
             var user = await _userManager.FindByIdAsync(userId);
             var (accessToken, _) = await GenerateTokensAsync(user); // Tái sử dụng hàm đã có
             return accessToken;
+        }
+
+        public async Task<Result<string>> GeneratePasswordResetTokenAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                // Return a success result even if user not found to prevent email enumeration
+                return Result<string>.Success(string.Empty);
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            return Result<string>.Success(token);
         }
     }
 }

@@ -61,6 +61,7 @@ namespace TripEnjoy.Infrastructure
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IAccountRepository, AccountRepository>();
 
+
             return services;
         }
     }

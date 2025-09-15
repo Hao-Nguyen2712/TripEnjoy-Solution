@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Hangfire;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -6,10 +8,10 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
 using System.Threading.RateLimiting;
+using TripEnjoy.Api.Middleware;
 using TripEnjoy.Application;
 using TripEnjoy.Infrastructure;
 using TripEnjoy.Infrastructure.Persistence;
-using HealthChecks.UI.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -66,13 +68,13 @@ try
 
     builder.Services.AddRateLimiter(options =>
     {
-        
+
         options.AddFixedWindowLimiter(policyName: "auth", limiterOptions =>
         {
-            limiterOptions.PermitLimit = 5; 
-            limiterOptions.Window = TimeSpan.FromMinutes(1); 
+            limiterOptions.PermitLimit = 5;
+            limiterOptions.Window = TimeSpan.FromMinutes(1);
             limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-            limiterOptions.QueueLimit = 2; 
+            limiterOptions.QueueLimit = 2;
         });
 
         // for all
@@ -106,6 +108,15 @@ try
             });
     });
 
+    // Add Hangfire services.
+    builder.Services.AddHangfire(config => config
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseSqlServerStorage(configuration.GetConnectionString("DefaultConnection")));
+
+    builder.Services.AddHangfireServer();
+
     var app = builder.Build();
 
     app.UseRateLimiter();
@@ -116,6 +127,10 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    app.UseHangfireDashboard(); // This will be available at /hangfire
+
+    app.UseMiddleware<LoggingMiddleware>();
 
     app.UseHttpsRedirection();
 
@@ -130,6 +145,8 @@ try
     });
 
     app.MapControllers();
+
+    app.MapHangfireDashboard();
 
     app.Run();
 }

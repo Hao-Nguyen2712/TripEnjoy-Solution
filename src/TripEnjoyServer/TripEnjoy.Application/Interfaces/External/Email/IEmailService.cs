@@ -20,5 +20,6 @@ namespace TripEnjoy.Application.Interfaces.External.Email
                 /// <param name="otp">The one-time password to deliver in the email.</param>
                 /// <returns>A task that represents the asynchronous send operation.</returns>
                 Task<Result> SendOtpAsync(string userEmail, string otp , CancellationToken cancellationToken = default);
+                Task<Result> SendPasswordResetEmailAsync(string userEmail, string token, CancellationToken cancellationToken = default);
         }
 }

@@ -225,7 +225,7 @@ namespace TripEnjoy.Infrastructure.Services
                  font-size: 12px;
                  color: #777;
                  margin-top: 16px;
-             }}
+            }}
          </style>
      </head>
      <body>
@@ -247,5 +247,11 @@ namespace TripEnjoy.Infrastructure.Services
  </html>";
         }
 
+        public async Task<Result> SendPasswordResetEmailAsync(string userEmail, string token, CancellationToken cancellationToken = default)
+        {
+            var subject = "Reset Your Password";
+            var body = $"Please reset your password by using this token: {token}";
+            return await SendEmailConfirmationAsync(userEmail, subject, body, cancellationToken);
+        }
     }
 }

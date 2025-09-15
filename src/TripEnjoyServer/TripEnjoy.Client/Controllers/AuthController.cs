@@ -116,6 +116,77 @@ namespace TripEnjoy.Client.Controllers
             return View();
         }
 
+        [HttpGet("forgot-password")]
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordRequestVM());
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestVM forgotPasswordRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(forgotPasswordRequest);
+            }
+            
+            var client = _clientFactory.CreateClient("ApiClient");
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/forgot-password");
+            request.Content = new StringContent(JsonConvert.SerializeObject(forgotPasswordRequest), Encoding.UTF8, "application/json");
+
+            await client.SendAsync(request);
+
+            // Regardless of success or failure, we show the same page to prevent email enumeration
+            TempData["Email"] = forgotPasswordRequest.Email;
+            return RedirectToAction("VerifyPasswordResetOtp");
+        }
+
+        [HttpGet("verify-password-reset-otp")]
+        public IActionResult VerifyPasswordResetOtp()
+        {
+            var email = TempData["Email"] as string;
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("ForgotPassword");
+            }
+            var model = new VerifyPasswordResetOtpVM { Email = email };
+            return View(model);
+        }
+
+        [HttpPost("verify-password-reset-otp")]
+        public async Task<IActionResult> VerifyPasswordResetOtp(VerifyPasswordResetOtpVM verifyOtpRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(verifyOtpRequest);
+            }
+
+            var client = _clientFactory.CreateClient("ApiClient");
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/verify-password-reset-otp");
+            request.Content = new StringContent(JsonConvert.SerializeObject(verifyOtpRequest), Encoding.UTF8, "application/json");
+            
+            var response = await client.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseString = await response.Content.ReadAsStringAsync();
+                var apiResponse = JsonConvert.DeserializeObject<ApiResponseVM<string>>(responseString);
+                var resetToken = apiResponse.Data;
+
+                // Pass email and the single-use token to the final reset page
+                TempData["Email"] = verifyOtpRequest.Email;
+                TempData["ResetToken"] = resetToken;
+                return RedirectToAction("ResetPassword");
+            }
+            else
+            {
+                var errorMessages = new List<string> { "Invalid OTP. Please try again." };
+                TempData["ErrorMessages"] = JsonConvert.SerializeObject(errorMessages);
+                TempData["Email"] = verifyOtpRequest.Email; // Keep email for the reloaded page
+                return RedirectToAction("VerifyPasswordResetOtp");
+            }
+        }
+
         [HttpPost]
         [Route("sign-out")]
         public async Task<IActionResult> SignOut()
@@ -226,5 +297,10 @@ namespace TripEnjoy.Client.ViewModels
         public string Code { get; set; }
         public string Detail { get; set; }
         public string Field { get; set; }
+    }
+
+    public class ResendOtpRequestVM
+    {
+        public string Email { get; set; }
     }
 }

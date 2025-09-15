@@ -34,12 +34,12 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
                     propertyTypeId => propertyTypeId.Id,
                     dbValue => PropertyTypeId.Create(dbValue));
                     
-            builder.HasOne<Partner>() 
+            builder.HasOne(p => p.Partner) 
                       .WithMany() 
                       .HasForeignKey(p => p.PartnerId) 
                       .IsRequired().OnDelete(DeleteBehavior.Restrict); 
 
-            builder.HasOne<PropertyType>()
+            builder.HasOne(p => p.PropertyType)
                    .WithMany() 
                    .HasForeignKey(p => p.PropertyTypeId)
                    .IsRequired().OnDelete(DeleteBehavior.Restrict);
