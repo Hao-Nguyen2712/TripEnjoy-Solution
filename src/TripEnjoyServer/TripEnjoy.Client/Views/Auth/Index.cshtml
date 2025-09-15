@@ -1,0 +1,185 @@
+﻿@model TripEnjoy.Client.ViewModels.LoginRequestVM
+
+@{
+
+    ViewData["Title"] = "Sign In";
+    Layout = "_AuthLayout";
+}
+
+@section Styles {
+    <style>
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-with-icon .form-icon {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            color: #777;
+        }
+
+        .input-with-icon .form-icon-password {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #777;
+        }
+
+        .input-with-icon .input {
+            padding-left: 50px;
+        }
+
+        .divider-text {
+            position: relative;
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .divider-text span {
+            padding: 0 10px;
+            background-color: #fff;
+            position: relative;
+            z-index: 2;
+        }
+
+        .divider-text:after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background-color: #ddd;
+            left: 0;
+            top: 50%;
+            z-index: 1;
+        }
+    </style>
+}
+
+<!-- login-area-start -->
+<div class="tg-login-area pt-130 pb-130">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-6 col-lg-8 col-md-10">
+                <div class="tg-login-wrapper">
+                    <div class="tg-login-top text-center mb-30">
+                        <div class="login-logo mb-20 py-3">
+                            <a asp-controller="Home" asp-action="Index"><img src="~/img/logo/logo-green.png" alt="Logo" style="max-width: 180px;"></a>
+                        </div>
+                        <h2>Welcome back to Trip Enjoy</h2>
+                        <p>Enter your credentials to acces your account.</p>
+                    </div>
+                    <div class="tg-login-form">
+                        <div class="tg-tour-about-review-form">
+                            <form id="login-form" asp-controller="Auth" asp-action="Login" method="post" autocomplete="on" novalidate>
+                                <div class="row">
+                                    <div class="col-lg-12 mb-25">
+                                        <div class="input-with-icon">
+                                            <i class="fa-regular fa-envelope form-icon"></i>
+                                            <input class="input" type="email" asp-for="Email" placeholder="Email" autocomplete="email">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-12 mb-25">
+                                        <div class="input-with-icon">
+                                             <i class="fa-regular fa-lock form-icon"></i>
+                                            <input class="input" type="password" asp-for="Password" placeholder="Password" autocomplete="current-password" id="password-input">
+                                             <i class="fa-regular fa-eye form-icon-password" id="toggle-password"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-12">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="review-checkbox d-flex align-items-center mb-25">
+                                                <input class="tg-checkbox" type="checkbox" id="remember-me">
+                                                <label for="remember-me" class="tg-label">Remember me</label>
+                                            </div>
+                                            <div class="tg-login-navigate mb-25">
+                                                <a href="/auth/sign-up">Register Now</a>
+                                            </div>
+                                        </div>
+                                        <button id="login-submit-btn" type="submit" class="tg-btn w-100">Sign In</button>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="divider-text"><span>Or</span></div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <a href="#" class="tg-btn w-100" style="background-color: #fff; border: 1px solid #ddd; color: #333; display: flex; align-items: center; justify-content: center;">
+                                            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 20px; margin-right: 10px;">
+                                            Sign in with Google
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- login-area-end -->
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Toggle password visibility
+            $("#toggle-password").click(function () {
+                $(this).toggleClass("fa-eye fa-eye-slash");
+                var input = $("#password-input");
+                if (input.attr("type") === "password") {
+                    input.attr("type", "text");
+                } else {
+                    input.attr("type", "password");
+                }
+            });
+
+            const notyf = new Notyf({
+                duration: 3000,
+                position: {
+                    x: 'right',
+                    y: 'top',
+                },
+                types: [
+                    {
+                        type: 'error',
+                        background: 'indianred',
+                        dismissible: true
+                    }
+                ]
+            });
+
+            $('#login-form').on('submit', function (e) {
+                // Prevent the default form submission
+                e.preventDefault();
+
+                var form = $(this);
+                
+                // Manually trigger validation
+                form.validate();
+
+                if (!form.valid()) {
+                    // Get the list of errors
+                    var validator = form.validate();
+                    var errorList = validator.errorList;
+
+                    // Display each error with Notyf
+                    errorList.forEach(function (error) {
+                        notyf.error(error.message);
+                    });
+                } else {
+                    // If the form is valid, show loading state and submit it
+                    var submitButton = $('#login-submit-btn');
+                    submitButton.prop('disabled', true);
+                    submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing In...');
+                    
+                    this.submit();
+                }
+            });
+        });
+    </script>
+}

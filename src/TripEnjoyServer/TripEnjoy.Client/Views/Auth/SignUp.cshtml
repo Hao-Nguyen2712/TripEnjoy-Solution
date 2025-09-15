@@ -1,0 +1,84 @@
+﻿@model TripEnjoy.Client.ViewModels.SignUpRequestVM
+@{
+    ViewData["Title"] = "Sign Up";
+    Layout = "_AuthLayout";
+}
+<!-- login-area-start -->
+<div class="tg-login-area pt-130 pb-130">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-6 col-lg-8 col-md-10">
+                <div class="tg-login-wrapper">
+                    <div class="tg-login-top text-center mb-30">
+                        <h2>Create Your Account</h2>
+                        <p>Join us to find your next adventure!</p>
+                    </div>
+                    <div class="tg-login-form">
+                        <div class="tg-tour-about-review-form">
+                            <form id="signup-form" asp-action="SignUp" method="post" novalidate>
+                                <div class="row">
+                                    <div class="col-lg-12 mb-25">
+                                        <input class="input" type="email" asp-for="Email" placeholder="Enter your email">
+                                    </div>
+                                    <div class="col-lg-12 mb-25">
+                                        <input class="input" type="password" asp-for="Password" placeholder="Password">
+                                    </div>
+                                    <div class="col-lg-12 mb-25">
+                                        <input class="input" type="password" asp-for="ConfirmPassword" placeholder="Confirm Password">
+                                    </div>
+                                    <div class="col-lg-12">
+                                        <div class="d-flex align-items-center justify-content-end">
+                                            <div class="tg-login-navigate mb-25">
+                                                <span>Already have an account? <a asp-action="Index">Log In</a></span>
+                                            </div>
+                                        </div>
+                                        <button id="signup-btn" type="submit" class="tg-btn w-100">Sign Up</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- login-area-end -->
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const notyf = new Notyf({
+                duration: 5000,
+                position: { x: 'right', y: 'top' },
+                types: [{ type: 'error', background: 'indianred', dismissible: true }]
+            });
+
+            // Display server-side errors passed via TempData
+            var serverErrors = @Html.Raw(TempData["ErrorMessages"] as string ?? "[]");
+            if (serverErrors.length > 0) {
+                serverErrors.forEach(function(message) {
+                    notyf.error(message);
+                });
+            }
+
+            $('#signup-form').on('submit', function (e) {
+                e.preventDefault();
+                var form = $(this);
+                form.validate();
+
+                if (!form.valid()) {
+                    var validator = form.validate();
+                    validator.errorList.forEach(function (error) {
+                        notyf.error(error.message);
+                    });
+                } else {
+                    var submitButton = $('#signup-btn');
+                    submitButton.prop('disabled', true);
+                    submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating Account...');
+                    this.submit();
+                }
+            });
+        });
+    </script>
+}
