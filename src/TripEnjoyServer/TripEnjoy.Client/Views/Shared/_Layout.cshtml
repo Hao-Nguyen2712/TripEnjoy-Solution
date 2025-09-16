@@ -18,6 +18,30 @@
     <link rel="stylesheet" href="~/css/odometer.css" asp-append-version="true">
     <link rel="stylesheet" href="~/css/default.css" asp-append-version="true">
     <link rel="stylesheet" href="~/css/main.css" asp-append-version="true">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        .btn-login-custom {
+            background-color: #00796B; /* Teal Color */
+            color: white !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px; /* Space between icon and text */
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-login-custom:hover {
+            background-color: #005f56; /* Darker Teal on hover */
+            color: white !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -95,51 +119,19 @@
                                     <div
                                         class="tgmenu__navbar-wrap tgmenu__main-menu tgmenu__navbar-wrap-4 d-none d-xl-flex">
                                         <ul class="navigation">
-                                            <li class="active menu-item-has-children"><a href="index-2.html">Home</a>
-                                                <ul class="sub-menu">
-                                                    <li><a href="index-2.html">Home One</a></li>
-                                                    <li><a href="index-3.html">Home Two</a></li>
-                                                    <li><a href="index-4.html">Home Three</a></li>
-                                                    <li><a href="index-5.html">Home Four</a></li>
-                                                    <li><a href="index-6.html">Home Five</a></li>
-                                                    <li class="active"><a href="index-7.html">Home Six</a></li>
-                                                    <li><a href="index-8.html">Home Saven</a></li>
-                                                </ul>
+                                            <li class="menu-item-has-children"><a href="index-2.html">Home</a>
                                             </li>
                                             <li class="menu-item-has-children"><a href="hotel-grid.html">Features</a>
-                                                <ul class="sub-menu">
-                                                    <li><a href="hotel-grid.html">Hotel Grid</a></li>
-                                                    <li><a href="tour-grid-1.html">Tour Grid One</a></li>
-                                                    <li><a href="tour-grid-2.html">Tour Grid Two</a></li>
-                                                    <li><a href="map-listing.html">Hotel Listing</a></li>
-                                                    <li><a href="tour-details.html">Tour Details One</a></li>
-                                                    <li><a href="tour-details-2.html">Tour Details Two</a></li>
-                                                </ul>
+                                               
                                             </li>
                                             <li class="menu-item-has-children"><a href="#">Pages</a>
-                                                <ul class="sub-menu">
-                                                    <li><a href="about.html">About</a></li>
-                                                    <li><a href="team.html">Team</a></li>
-                                                    <li><a href="team-details.html">Team Details</a></li>
-                                                    <li><a href="shop.html">Shop</a></li>
-                                                    <li><a href="shop-details.html">Shop Details</a></li>
-                                                    <li><a href="cart.html">Cart</a></li>
-                                                    <li><a href="checkout.html">Checkout</a></li>
-                                                    <li><a href="pricing.html">Pricing</a></li>
-                                                    <li><a href="faq.html">Faq</a></li>
-                                                    <li><a href="login.html">Log In</a></li>
-                                                    <li><a href="register.html">Register</a></li>
-                                                    <li><a href="error.html">Error</a></li>
-                                                </ul>
+                                             
                                             </li>
                                             <li class="menu-item-has-children"><a href="blog-grid.html">Blogs</a>
-                                                <ul class="sub-menu">
-                                                    <li><a href="blog-grid.html">Blog Grid</a></li>
-                                                    <li><a href="blog-standard.html">Blog Standard</a></li>
-                                                    <li><a href="blog-details.html">Blog Details</a></li>
-                                                </ul>
+                                               
                                             </li>
-                                            <li><a href="contact.html">Contact</a></li>
+                                            <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
+                                            <li><a asp-controller="Home" asp-action="Partner">Partner Program</a></li>
                                         </ul>
                                     </div>
                                 </nav>
@@ -309,6 +301,20 @@
 
 
     @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const currentLocation = window.location.pathname;
+            const menuItems = document.querySelectorAll('.navigation > li');
+
+            menuItems.forEach(item => {
+                const link = item.querySelector('a');
+                if (link && link.getAttribute('href') === currentLocation) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
 
     @if (TempData["ClearOtpTimer"] as bool? == true)
     {

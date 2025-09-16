@@ -22,5 +22,9 @@ namespace TripEnjoy.Client.Controllers
         {
             return View();
         }
+        public IActionResult Partner()
+        {
+            return View();
+        }
     }
 }

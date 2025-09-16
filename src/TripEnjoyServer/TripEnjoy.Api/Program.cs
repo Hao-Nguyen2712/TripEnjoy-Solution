@@ -1,9 +1,11 @@
 ﻿using Hangfire;
+using Hangfire.Redis.StackExchange;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
@@ -12,6 +14,7 @@ using TripEnjoy.Api.Middleware;
 using TripEnjoy.Application;
 using TripEnjoy.Infrastructure;
 using TripEnjoy.Infrastructure.Persistence;
+using TripEnjoy.Infrastructure.Persistence.Seeding;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -68,7 +71,6 @@ try
 
     builder.Services.AddRateLimiter(options =>
     {
-
         options.AddFixedWindowLimiter(policyName: "auth", limiterOptions =>
         {
             limiterOptions.PermitLimit = 5;
@@ -113,11 +115,30 @@ try
         .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
         .UseSimpleAssemblyNameTypeSerializer()
         .UseRecommendedSerializerSettings()
-        .UseSqlServerStorage(configuration.GetConnectionString("DefaultConnection")));
+        .UseRedisStorage(configuration.GetValue<string>("CacheSettings:ConnectionString")));
 
     builder.Services.AddHangfireServer();
 
     var app = builder.Build();
+
+    // Apply migrations automatically
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var dbContext = services.GetRequiredService<TripEnjoyDbContext>();
+            dbContext.Database.Migrate();
+            Log.Information("Database migrations applied successfully.");
+
+            // Seed data
+            await DataSeeder.SeedAsync(services);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while migrating the database.");
+        }
+    }
 
     app.UseRateLimiter();
 

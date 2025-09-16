@@ -17,7 +17,6 @@
     <link rel="stylesheet" href="~/css/odometer.css" asp-append-version="true">
     <link rel="stylesheet" href="~/css/default.css" asp-append-version="true">
     <link rel="stylesheet" href="~/css/main.css" asp-append-version="true">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,19 +24,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    @await RenderSectionAsync("Styles", required: false)
-    <div id="loading">
-        <div class="loader"></div>
-    </div>
-      <main>
+    <div>
         @RenderBody()
-    </main>
-     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
-    <script src="~/js/vendor/jquery.js"></script>
-    <script src="~/js/bootstrap.min.js"></script>
+    @* The theme's JS files. We remove the conflicting jquery.js and bootstrap.min.js from the theme. *@
     <script src="~/js/isotope.pkgd.min.js"></script>
     <script src="~/js/imagesloaded.pkgd.min.js"></script>
     <script src="~/js/jquery.magnific-popup.min.js"></script>
@@ -49,11 +44,6 @@
     <script src="~/js/ajax-form.js"></script>
     <script src="~/js/wow.min.js"></script>
     <script src="~/js/main.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 
-
-    @await RenderSectionAsync("Scripts", required: false)
-    
-    <partial name="_ValidationScriptsPartial" />
 </body>
 </html>

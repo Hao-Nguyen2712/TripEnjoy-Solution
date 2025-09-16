@@ -25,7 +25,12 @@ namespace TripEnjoy.Client.Controllers
         public IActionResult Index()
         {
 
-            return View(new LoginRequestVM());
+            var model = new LoginRequestVM();
+            if (TempData["LoginEmail"] is string email)
+            {
+                model.Email = email;
+            }
+            return View(model);
         }
 
         [HttpPost]
@@ -51,14 +56,21 @@ namespace TripEnjoy.Client.Controllers
             }
             
             // Handle login failure
-            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-            return View("Index", loginRequest);
+            var errorMessages = new List<string> { "Invalid login attempt." };
+            TempData["ErrorMessages"] = JsonConvert.SerializeObject(errorMessages);
+            TempData["LoginEmail"] = loginRequest.Email;
+            return RedirectToAction("Index");
         }
 
         [Route("sign-up")]
         public IActionResult SignUp()
         {
-            return View(new SignUpRequestVM());
+            var model = new SignUpRequestVM();
+            if (TempData["SignUpEmail"] is string email)
+            {
+                model.Email = email;
+            }
+            return View(model);
         }
 
         [HttpPost]
@@ -105,6 +117,7 @@ namespace TripEnjoy.Client.Controllers
                 }
 
                 TempData["ErrorMessages"] = JsonConvert.SerializeObject(errorMessages);
+                TempData["SignUpEmail"] = signUpRequest.Email; // Preserve email on failure
                 return RedirectToAction("SignUp");
             }
         }
@@ -256,24 +269,33 @@ namespace TripEnjoy.Client.Controllers
                     var claimsIdentity = new ClaimsIdentity(jwtToken.Claims, CookieAuthenticationDefaults.AuthenticationScheme);
                     var authProperties = new AuthenticationProperties
                     {
-                        IsPersistent = verifyOtpRequest.RememberMe, // Use RememberMe from OTP step if needed, or pass from login
+                        // For now, we will make all sessions persistent to solve the restart issue.
+                        // "Remember Me" checkbox can be wired up to this property later.
+                        IsPersistent = true, 
                         ExpiresUtc = DateTimeOffset.UtcNow.Add(jwtToken.ValidTo - DateTime.UtcNow)
                     };
 
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
 
 
-                    var cookieOptions = new CookieOptions
+                    var refreshTokenCookieOptions = new CookieOptions
                     {
                         HttpOnly = true,
                         Expires = DateTime.UtcNow.AddDays(7),
                         Secure = true, // Ensure this is true for production
                         SameSite = SameSiteMode.Strict
                     };
-                    Response.Cookies.Append("refreshToken", apiResponse.Data.RefreshToken, cookieOptions);
+                    Response.Cookies.Append("refreshToken", apiResponse.Data.RefreshToken, refreshTokenCookieOptions);
                     
-                    // Access token might be stored in a session cookie or handled in memory by JS
-                    Response.Cookies.Append("accessToken", apiResponse.Data.Token, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
+                    var accessTokenCookieOptions = new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                        // Make accessToken persistent to match the authentication cookie
+                        Expires = authProperties.ExpiresUtc
+                    };
+                    Response.Cookies.Append("accessToken", apiResponse.Data.Token, accessTokenCookieOptions);
 
                     TempData["ClearOtpTimer"] = true;
                     return RedirectToAction("Index", "Home");

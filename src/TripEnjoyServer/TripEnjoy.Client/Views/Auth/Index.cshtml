@@ -153,6 +153,14 @@
                 ]
             });
 
+            // Display server-side errors passed via TempData
+            var serverErrors = @Html.Raw(TempData["ErrorMessages"] as string ?? "[]");
+            if (serverErrors.length > 0) {
+                serverErrors.forEach(function(message) {
+                    notyf.error(message);
+                });
+            }
+
             $('#login-form').on('submit', function (e) {
                 // Prevent the default form submission
                 e.preventDefault();
