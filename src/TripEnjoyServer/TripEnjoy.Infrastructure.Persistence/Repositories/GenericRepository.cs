@@ -51,5 +51,10 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
         {
             return _dbContext.Set<T>().FirstOrDefaultAsync(predicate);
         }
+
+        public IQueryable<T> GetQueryable()
+        {
+            return _dbContext.Set<T>().AsQueryable();
+        }
     }
 }

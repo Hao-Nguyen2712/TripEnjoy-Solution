@@ -15,5 +15,7 @@ namespace TripEnjoy.Application.Interfaces.Persistence
         Task<Account?> FindByAspNetUserIdWithTokensAsync(string aspNetUserId);
         Task<Account?> FindByAspNetUserIdWithBlackListTokensAsync(string aspNetUserId);
         Task<Partner?> FindPartnerByAccountIdAsync(AccountId accountId);
+        Task<Account?> GetAccountByEmail(string email);
+        Task<Account?> FindByAspNetUserIdAsyncIncludePartnersOrUser(string aspNetUserId);
     }
 }

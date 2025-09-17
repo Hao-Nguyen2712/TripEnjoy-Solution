@@ -66,5 +66,6 @@ namespace TripEnjoy.Application.Interfaces.Identity
                 /// <param name="userId">The identifier of the user for whom the access token will be issued.</param>
                 /// <returns>A task that resolves to the access token string (JWT).</returns>
                 Task<string> GenerateAccessTokenAsync(string userId);
+                Task<Result<string>> GeneratePasswordResetTokenAsync(string email);
         }
 }

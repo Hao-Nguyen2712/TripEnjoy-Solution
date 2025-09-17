@@ -15,13 +15,15 @@ namespace TripEnjoy.Api.Controllers
     public class AuthController : ApiControllerBase
     {
         private readonly ISender _sender;
+        private readonly ILogger<AuthController> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthController"/> class and configures its dependencies.
         /// </summary>
-        public AuthController(ISender sender)
+        public AuthController(ISender sender, ILogger<AuthController> logger)
         {
             _sender = sender;
+            _logger = logger;
         }
 
         /// <summary>
@@ -32,8 +34,9 @@ namespace TripEnjoy.Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterCommand command)
         {
+            _logger.LogInformation("Attempting to register user with email {Email}", command.email);
             var result = await _sender.Send(command);
-            return HandleResult(result , "Register successful");
+            return HandleResult(result, "Register successful");
         }
 
         /// <summary>
@@ -44,8 +47,9 @@ namespace TripEnjoy.Api.Controllers
         [HttpPost("login-step-one")]
         public async Task<IActionResult> LoginStepOne(LoginStepOneCommand command)
         {
+            _logger.LogInformation("Attempting login step one for user with email {Email}", command.Email);
             var result = await _sender.Send(command);
-            return HandleResult(result , "Login step one successful");
+            return HandleResult(result, "Login step one successful");
         }
 
         /// <summary>
@@ -56,8 +60,9 @@ namespace TripEnjoy.Api.Controllers
         [HttpPost("login-step-two")]
         public async Task<IActionResult> LoginStepTwo(LoginStepTwoCommand command)
         {
+            _logger.LogInformation("Attempting login step two for user with email {Email}", command.Email);
             var result = await _sender.Send(command);
-            return HandleResult(result , "Login step two successful");
+            return HandleResult(result, "Login step two successful");
         }
 
         /// <summary>
@@ -69,28 +74,21 @@ namespace TripEnjoy.Api.Controllers
         [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token, [FromQuery] string confirmFor)
         {
-
+            _logger.LogInformation("Attempting to confirm email for user ID {UserId}", userId);
             var command = new ConfirmEmailCommand(userId, token, confirmFor);
             var result = await _sender.Send(command);
-            return HandleResult(result , "Confirm email successful");
+            return HandleResult(result, "Confirm email successful");
         }
 
-        /// <summary>
-        /// Logs out the currently authenticated user by revoking the provided refresh token.
-        /// </summary>
-        /// <param name="refreshToken">The refresh token to revoke for the current user.</param>
-        /// <returns>
-        /// An <see cref="IActionResult"/> representing the outcome produced by the logout command:
-        /// - 401/Unauthorized result if the current user's identifier cannot be determined.
-        /// - The command handler's result (success or failure) otherwise.
-        /// </returns>
         [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout(string refreshToken)
         {
             var aspNetUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            _logger.LogInformation("User {UserId} is attempting to logout", aspNetUserId);
             if (string.IsNullOrEmpty(aspNetUserId))
             {
+                _logger.LogWarning("Logout failed for an unauthenticated user.");
                 return HandleResult(Result.Failure(
                     new Error("Logout.Failure", "Unauthorized", ErrorType.Unauthorized)
                 ), "Logout failed");
@@ -102,7 +100,7 @@ namespace TripEnjoy.Api.Controllers
                 aspNetUserId
             );
             var result = await _sender.Send(secureCommand);
-            return HandleResult(result , "Logout successful");
+            return HandleResult(result, "Logout successful");
         }
 
         /// <summary>
@@ -113,8 +111,38 @@ namespace TripEnjoy.Api.Controllers
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(RefreshTokenCommand command)
         {
+            _logger.LogInformation("Attempting to refresh token");
             var result = await _sender.Send(command);
-            return HandleResult(result , "Refresh token successful");
+            return HandleResult(result, "Refresh token successful");
+        }
+
+        /// <summary>
+        /// Resends the One-Time Password (OTP) to the user's registered email address.
+        /// </summary>
+        /// <param name="command">The command containing the user's email.</param>
+        /// <returns>An IActionResult indicating the outcome of the operation.</returns>
+        [HttpPost("resend-otp")]
+        public async Task<IActionResult> ResendOtp(ResendLoginOtpCommand command)
+        {
+            _logger.LogInformation("Resending OTP for user with email {Email}", command.Email);
+            var result = await _sender.Send(command);
+            return HandleResult(result, "OTP resent successfully");
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordCommand command)
+        {
+            _logger.LogInformation("Forgot password request for email {Email}", command.Email);
+            var result = await _sender.Send(command);
+            return HandleResult(result, "If an account with this email exists, a password reset link has been sent.");
+        }
+
+        [HttpPost("verify-password-reset-otp")]
+        public async Task<IActionResult> VerifyPasswordResetOtp(VerifyPasswordResetOtpCommand command)
+        {
+            _logger.LogInformation("Verifying password reset OTP for email {Email}", command.Email);
+            var result = await _sender.Send(command);
+            return HandleResult(result, "OTP verified successfully. Please reset your password.");
         }
     }
 }

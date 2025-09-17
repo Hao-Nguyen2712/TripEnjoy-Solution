@@ -3,6 +3,16 @@
     ViewData["Title"] = "Sign Up";
     Layout = "_AuthLayout";
 }
+
+@section Styles {
+    <style>
+        .input-with-icon { position: relative; }
+        .input-with-icon .form-icon { position: absolute; top: 50%; left: 20px; transform: translateY(-50%); color: #777; }
+        .input-with-icon .form-icon-password { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); cursor: pointer; color: #777; }
+        .input-with-icon .input { padding-left: 50px; }
+    </style>
+}
+
 <!-- login-area-start -->
 <div class="tg-login-area pt-130 pb-130">
     <div class="container">
@@ -18,13 +28,24 @@
                             <form id="signup-form" asp-action="SignUp" method="post" novalidate>
                                 <div class="row">
                                     <div class="col-lg-12 mb-25">
-                                        <input class="input" type="email" asp-for="Email" placeholder="Enter your email">
+                                        <div class="input-with-icon">
+                                            <i class="fa-regular fa-envelope form-icon"></i>
+                                            <input class="input" type="email" asp-for="Email" placeholder="Enter your email" autocomplete="email">
+                                        </div>
                                     </div>
                                     <div class="col-lg-12 mb-25">
-                                        <input class="input" type="password" asp-for="Password" placeholder="Password">
+                                        <div class="input-with-icon">
+                                            <i class="fa-regular fa-lock form-icon"></i>
+                                            <input class="input" type="password" asp-for="Password" placeholder="Password" id="password-input" autocomplete="new-password">
+                                            <i class="fa-regular fa-eye form-icon-password" id="toggle-password"></i>
+                                        </div>
                                     </div>
                                     <div class="col-lg-12 mb-25">
-                                        <input class="input" type="password" asp-for="ConfirmPassword" placeholder="Confirm Password">
+                                        <div class="input-with-icon">
+                                            <i class="fa-regular fa-lock form-icon"></i>
+                                            <input class="input" type="password" asp-for="ConfirmPassword" placeholder="Confirm Password" id="confirm-password-input" autocomplete="new-password">
+                                            <i class="fa-regular fa-eye form-icon-password" id="toggle-confirm-password"></i>
+                                        </div>
                                     </div>
                                     <div class="col-lg-12">
                                         <div class="d-flex align-items-center justify-content-end">
@@ -48,13 +69,31 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
+            // --- Password Toggle Logic ---
+            $('#toggle-password').click(function () {
+                togglePasswordVisibility($(this), $('#password-input'));
+            });
+
+            $('#toggle-confirm-password').click(function () {
+                togglePasswordVisibility($(this), $('#confirm-password-input'));
+            });
+
+            function togglePasswordVisibility(toggleIcon, passwordInput) {
+                toggleIcon.toggleClass('fa-eye fa-eye-slash');
+                if (passwordInput.attr('type') === 'password') {
+                    passwordInput.attr('type', 'text');
+                } else {
+                    passwordInput.attr('type', 'password');
+                }
+            }
+
+            // --- Form Validation and Submission Logic ---
             const notyf = new Notyf({
                 duration: 5000,
                 position: { x: 'right', y: 'top' },
                 types: [{ type: 'error', background: 'indianred', dismissible: true }]
             });
 
-            // Display server-side errors passed via TempData
             var serverErrors = @Html.Raw(TempData["ErrorMessages"] as string ?? "[]");
             if (serverErrors.length > 0) {
                 serverErrors.forEach(function(message) {

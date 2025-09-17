@@ -22,27 +22,27 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
                     propertyId => propertyId.Id,
                     dbValue => PropertyId.Create(dbValue));
 
-                builder.Property(p => p.PartnerId)
-                .ValueGeneratedNever()
-                .HasConversion(
-                    partnerId => partnerId.Id,
-                    dbValue => PartnerId.Create(dbValue));
+            builder.Property(p => p.PartnerId)
+            .ValueGeneratedNever()
+            .HasConversion(
+                partnerId => partnerId.Id,
+                dbValue => PartnerId.Create(dbValue));
 
             builder.Property(p => p.PropertyTypeId)
                 .ValueGeneratedNever()
                 .HasConversion(
                     propertyTypeId => propertyTypeId.Id,
                     dbValue => PropertyTypeId.Create(dbValue));
-                    
-            builder.HasOne<Partner>() 
-                      .WithMany() 
-                      .HasForeignKey(p => p.PartnerId) 
-                      .IsRequired().OnDelete(DeleteBehavior.Restrict); 
 
-            builder.HasOne<PropertyType>()
-                   .WithMany() 
-                   .HasForeignKey(p => p.PropertyTypeId)
-                   .IsRequired().OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(p => p.Partner)
+                .WithMany()
+                .HasForeignKey(p => p.PartnerId)
+                .IsRequired().OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(p => p.PropertyType)
+                .WithMany()
+                .HasForeignKey(p => p.PropertyTypeId)
+                .IsRequired().OnDelete(DeleteBehavior.Restrict);
 
             builder.Property(p => p.Name)
                 .IsRequired()
@@ -72,6 +72,13 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
                 .IsRequired();
             builder.Property(p => p.UpdatedAt)
                 .IsRequired(false);
+                
+            var navigationPropertyImages = builder.Metadata.FindNavigation(nameof(Property.PropertyImages));
+            navigationPropertyImages?.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasMany(p => p.PropertyImages)
+                .WithOne()
+                .HasForeignKey(pi => pi.PropertyId);
         }
     }
 }

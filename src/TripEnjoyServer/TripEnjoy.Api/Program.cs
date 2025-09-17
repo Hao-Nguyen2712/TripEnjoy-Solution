@@ -1,15 +1,20 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Hangfire;
+using Hangfire.Redis.StackExchange;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
 using System.Threading.RateLimiting;
+using TripEnjoy.Api.Middleware;
 using TripEnjoy.Application;
 using TripEnjoy.Infrastructure;
 using TripEnjoy.Infrastructure.Persistence;
-using HealthChecks.UI.Client;
+using TripEnjoy.Infrastructure.Persistence.Seeding;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -66,13 +71,12 @@ try
 
     builder.Services.AddRateLimiter(options =>
     {
-        
         options.AddFixedWindowLimiter(policyName: "auth", limiterOptions =>
         {
-            limiterOptions.PermitLimit = 5; 
-            limiterOptions.Window = TimeSpan.FromMinutes(1); 
+            limiterOptions.PermitLimit = 5;
+            limiterOptions.Window = TimeSpan.FromMinutes(1);
             limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-            limiterOptions.QueueLimit = 2; 
+            limiterOptions.QueueLimit = 2;
         });
 
         // for all
@@ -88,7 +92,7 @@ try
 
 
     builder.Services.AddControllers();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+    builder.Services.AddHttpContextAccessor();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
@@ -106,7 +110,35 @@ try
             });
     });
 
+    // Add Hangfire services.
+    builder.Services.AddHangfire(config => config
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseRedisStorage(configuration.GetValue<string>("CacheSettings:ConnectionString")));
+
+    builder.Services.AddHangfireServer();
+
     var app = builder.Build();
+
+    // Apply migrations automatically
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var dbContext = services.GetRequiredService<TripEnjoyDbContext>();
+            dbContext.Database.Migrate();
+            Log.Information("Database migrations applied successfully.");
+
+            // Seed data
+            await DataSeeder.SeedAsync(services);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while migrating the database.");
+        }
+    }
 
     app.UseRateLimiter();
 
@@ -117,9 +149,14 @@ try
         app.UseSwaggerUI();
     }
 
+    app.UseHangfireDashboard(); // This will be available at /hangfire
+
+    app.UseMiddleware<LoggingMiddleware>();
+
     app.UseHttpsRedirection();
 
-    app.UseCors("AllowAll");
+    // Add the Exception Handling Middleware at the beginning of the pipeline
+    app.UseExceptionHandlingMiddleware();
 
     app.UseAuthentication();
     app.UseAuthorization();
@@ -130,6 +167,8 @@ try
     });
 
     app.MapControllers();
+
+    app.MapHangfireDashboard();
 
     app.Run();
 }

@@ -3,6 +3,7 @@ namespace TripEnjoy.Application.Interfaces.Persistence
         public interface IUnitOfWork : IAsyncDisposable
         {
                 IAccountRepository AccountRepository { get; }
+                IPropertyRepository Properties { get; }
                 /// <summary>
                 /// Gets a repository for performing CRUD and query operations on entities of type <typeparamref name="T"/>.
                 /// </summary>

@@ -25,7 +25,12 @@ namespace TripEnjoy.Client.Controllers
         public IActionResult Index()
         {
 
-            return View(new LoginRequestVM());
+            var model = new LoginRequestVM();
+            if (TempData["LoginEmail"] is string email)
+            {
+                model.Email = email;
+            }
+            return View(model);
         }
 
         [HttpPost]
@@ -51,14 +56,21 @@ namespace TripEnjoy.Client.Controllers
             }
             
             // Handle login failure
-            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-            return View("Index", loginRequest);
+            var errorMessages = new List<string> { "Invalid login attempt." };
+            TempData["ErrorMessages"] = JsonConvert.SerializeObject(errorMessages);
+            TempData["LoginEmail"] = loginRequest.Email;
+            return RedirectToAction("Index");
         }
 
         [Route("sign-up")]
         public IActionResult SignUp()
         {
-            return View(new SignUpRequestVM());
+            var model = new SignUpRequestVM();
+            if (TempData["SignUpEmail"] is string email)
+            {
+                model.Email = email;
+            }
+            return View(model);
         }
 
         [HttpPost]
@@ -105,6 +117,7 @@ namespace TripEnjoy.Client.Controllers
                 }
 
                 TempData["ErrorMessages"] = JsonConvert.SerializeObject(errorMessages);
+                TempData["SignUpEmail"] = signUpRequest.Email; // Preserve email on failure
                 return RedirectToAction("SignUp");
             }
         }
@@ -114,6 +127,77 @@ namespace TripEnjoy.Client.Controllers
         {
             ViewBag.Email = TempData["Email"];
             return View();
+        }
+
+        [HttpGet("forgot-password")]
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordRequestVM());
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestVM forgotPasswordRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(forgotPasswordRequest);
+            }
+            
+            var client = _clientFactory.CreateClient("ApiClient");
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/forgot-password");
+            request.Content = new StringContent(JsonConvert.SerializeObject(forgotPasswordRequest), Encoding.UTF8, "application/json");
+
+            await client.SendAsync(request);
+
+            // Regardless of success or failure, we show the same page to prevent email enumeration
+            TempData["Email"] = forgotPasswordRequest.Email;
+            return RedirectToAction("VerifyPasswordResetOtp");
+        }
+
+        [HttpGet("verify-password-reset-otp")]
+        public IActionResult VerifyPasswordResetOtp()
+        {
+            var email = TempData["Email"] as string;
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("ForgotPassword");
+            }
+            var model = new VerifyPasswordResetOtpVM { Email = email };
+            return View(model);
+        }
+
+        [HttpPost("verify-password-reset-otp")]
+        public async Task<IActionResult> VerifyPasswordResetOtp(VerifyPasswordResetOtpVM verifyOtpRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(verifyOtpRequest);
+            }
+
+            var client = _clientFactory.CreateClient("ApiClient");
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/verify-password-reset-otp");
+            request.Content = new StringContent(JsonConvert.SerializeObject(verifyOtpRequest), Encoding.UTF8, "application/json");
+            
+            var response = await client.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseString = await response.Content.ReadAsStringAsync();
+                var apiResponse = JsonConvert.DeserializeObject<ApiResponseVM<string>>(responseString);
+                var resetToken = apiResponse.Data;
+
+                // Pass email and the single-use token to the final reset page
+                TempData["Email"] = verifyOtpRequest.Email;
+                TempData["ResetToken"] = resetToken;
+                return RedirectToAction("ResetPassword");
+            }
+            else
+            {
+                var errorMessages = new List<string> { "Invalid OTP. Please try again." };
+                TempData["ErrorMessages"] = JsonConvert.SerializeObject(errorMessages);
+                TempData["Email"] = verifyOtpRequest.Email; // Keep email for the reloaded page
+                return RedirectToAction("VerifyPasswordResetOtp");
+            }
         }
 
         [HttpPost]
@@ -185,24 +269,33 @@ namespace TripEnjoy.Client.Controllers
                     var claimsIdentity = new ClaimsIdentity(jwtToken.Claims, CookieAuthenticationDefaults.AuthenticationScheme);
                     var authProperties = new AuthenticationProperties
                     {
-                        IsPersistent = verifyOtpRequest.RememberMe, // Use RememberMe from OTP step if needed, or pass from login
+                        // For now, we will make all sessions persistent to solve the restart issue.
+                        // "Remember Me" checkbox can be wired up to this property later.
+                        IsPersistent = true, 
                         ExpiresUtc = DateTimeOffset.UtcNow.Add(jwtToken.ValidTo - DateTime.UtcNow)
                     };
 
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
 
 
-                    var cookieOptions = new CookieOptions
+                    var refreshTokenCookieOptions = new CookieOptions
                     {
                         HttpOnly = true,
                         Expires = DateTime.UtcNow.AddDays(7),
                         Secure = true, // Ensure this is true for production
                         SameSite = SameSiteMode.Strict
                     };
-                    Response.Cookies.Append("refreshToken", apiResponse.Data.RefreshToken, cookieOptions);
+                    Response.Cookies.Append("refreshToken", apiResponse.Data.RefreshToken, refreshTokenCookieOptions);
                     
-                    // Access token might be stored in a session cookie or handled in memory by JS
-                    Response.Cookies.Append("accessToken", apiResponse.Data.Token, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
+                    var accessTokenCookieOptions = new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                        // Make accessToken persistent to match the authentication cookie
+                        Expires = authProperties.ExpiresUtc
+                    };
+                    Response.Cookies.Append("accessToken", apiResponse.Data.Token, accessTokenCookieOptions);
 
                     TempData["ClearOtpTimer"] = true;
                     return RedirectToAction("Index", "Home");
@@ -226,5 +319,10 @@ namespace TripEnjoy.Client.ViewModels
         public string Code { get; set; }
         public string Detail { get; set; }
         public string Field { get; set; }
+    }
+
+    public class ResendOtpRequestVM
+    {
+        public string Email { get; set; }
     }
 }

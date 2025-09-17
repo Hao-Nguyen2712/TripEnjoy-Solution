@@ -139,6 +139,31 @@ namespace TripEnjoy.Domain.Common.Errors
                 "The name is required.",
                 ErrorType.Validation
             );
+
+            public static readonly Error NotFound = new(
+                "Property.NotFound",
+                "The property was not found.",
+                ErrorType.NotFound
+            );
+
+            public static readonly Error ImageNotFound = new(
+                "Property.ImageNotFound",
+                "The specified image was not found on this property.",
+                ErrorType.NotFound
+            );
+        }
+
+        public static class Authentication
+        {
+            public static readonly Error Unauthorized = new(
+                "Authentication.Unauthorized",
+                "You are not authorized to perform this action.",
+                ErrorType.Unauthorized);
+
+            public static readonly Error Forbidden = new(
+                "Authentication.Forbidden",
+                "You do not have permission to perform this action.",
+                ErrorType.Forbidden);
         }
     }
 }

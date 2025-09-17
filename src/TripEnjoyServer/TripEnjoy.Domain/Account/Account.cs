@@ -89,6 +89,7 @@ namespace TripEnjoy.Domain.Account
             {
                 return Result.Failure(partnerResult.Errors);
             }
+            Partner = partnerResult.Value;
             UpdatedAt = DateTime.UtcNow;
             return Result.Success();
         }
@@ -265,6 +266,13 @@ namespace TripEnjoy.Domain.Account
 
             UpdatedAt = DateTime.UtcNow;
             return Result<RefreshToken>.Success(tokenToUse);
+        }
+
+        public string GenerateNewOtp()
+        {
+            var otp = new Random().Next(100000, 999999).ToString();
+            UpdatedAt = DateTime.UtcNow;
+            return otp;
         }
     }
 

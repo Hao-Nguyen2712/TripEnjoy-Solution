@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewData["Title"] - TripEnjoy</title>
+    <link rel="shortcut icon" href="~/img/favicon.ico">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/TripEnjoy.Client.styles.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/css/bootstrap.min.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/animate.min.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/magnific-popup.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/fontawesome-all.min.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/swiper-bundle.min.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/flatpicker.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/odometer.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/default.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/main.css" asp-append-version="true">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+
+     <link href="~/css/vendor.min.css" rel="stylesheet" asp-append-version="true" />
+     <link href="~/css/icons.min.css" rel="stylesheet" asp-append-version="true"/>
+     <link href="~/css/app.min.css" rel="stylesheet" asp-append-version="true"/>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+ @await RenderSectionAsync("Styles", required: false)
+ <div id="loading">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Scroll-top -->
+    <button class="scroll__top scroll-to-target" data-target="html">
+        <i class="fa-sharp fa-regular fa-arrow-up"></i>
+    </button> 
+    <div>
+        @RenderBody()
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+        
+    @* The theme's JS files. We remove the conflicting jquery.js and bootstrap.min.js from the theme. *@
+    <script src="~/js/isotope.pkgd.min.js"></script>
+    <script src="~/js/imagesloaded.pkgd.min.js"></script>
+    <script src="~/js/jquery.magnific-popup.min.js"></script>
+    <script src="~/js/jquery.odometer.min.js"></script>
+    <script src="~/js/jquery.appear.js"></script>
+    <script src="~/js/swiper-bundle.min.js"></script>
+    <script src="~/js/flatpickr.js"></script>
+    <script src="~/js/nice-select.js"></script>
+    <script src="~/js/ajax-form.js"></script>
+    <script src="~/js/wow.min.js"></script>
+    <script src="~/js/main.js"></script>
+    <!-- Theme Config js (Require in all Page) -->
+     <script src="~/js/config.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

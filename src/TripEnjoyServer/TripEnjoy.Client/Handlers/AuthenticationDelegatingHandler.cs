@@ -117,7 +117,7 @@ namespace TripEnjoy.Client.Handlers
                 }
             }
             clone.Version = request.Version;
-            
+
             foreach (var prop in request.Options)
             {
                 clone.Options.Set(new HttpRequestOptionsKey<object>(prop.Key), prop.Value);

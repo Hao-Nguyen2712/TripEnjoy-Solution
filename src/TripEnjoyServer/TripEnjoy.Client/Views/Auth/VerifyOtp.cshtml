@@ -190,10 +190,24 @@
             resendLink.on('click', function(e){
                 e.preventDefault();
                 if(!$(this).hasClass('disabled')){
-                    // Here you would call an API to resend the OTP
-                    notyf.success('A new OTP has been sent.');
-                    localStorage.removeItem('otpExpiryTime');
-                    window.location.reload(); // Reload to restart timer
+                    
+                    // AJAX call to resend OTP
+                    $.ajax({
+                        url: '/auth/resend-otp',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ email: '@Model.Email' }),
+                        success: function(response) {
+                            notyf.success(response.message);
+                            // Reset timer
+                            localStorage.removeItem('otpExpiryTime');
+                            window.location.reload(); // Reload to restart timer
+                        },
+                        error: function(xhr) {
+                            var error = xhr.responseJSON ? xhr.responseJSON.message : 'An unexpected error occurred.';
+                            notyf.error(error);
+                        }
+                    });
                 }
             });
         });
