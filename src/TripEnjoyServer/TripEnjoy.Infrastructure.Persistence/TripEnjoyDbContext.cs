@@ -4,6 +4,7 @@ using System.Reflection;
 using TripEnjoy.Domain.Account;
 using TripEnjoy.Domain.Account.Entities;
 using TripEnjoy.Domain.Property;
+using TripEnjoy.Domain.Property.Entities;
 
 namespace TripEnjoy.Infrastructure.Persistence
 {
@@ -25,11 +26,8 @@ namespace TripEnjoy.Infrastructure.Persistence
         public DbSet<BlackListToken> BlackListTokens { get; set; } = null!;
         public DbSet<Property> Properties { get; set; } = null!;
         public DbSet<Domain.PropertyType.PropertyType> PropertyTypes { get; set; } = null!;
-        /// <summary>
-        /// Configures the EF Core model for this context by applying all IEntityTypeConfiguration implementations
-        /// found in the executing assembly, then invokes the base implementation to apply Identity-related mappings.
-        /// </summary>
-        /// <param name="modelBuilder">The <see cref="ModelBuilder"/> used to build the EF Core model.</param>
+        public DbSet<PropertyImage> PropertyImages { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());

@@ -2,6 +2,7 @@
 using TripEnjoy.Domain.Account.ValueObjects;
 using TripEnjoy.Domain.Common.Errors;
 using TripEnjoy.Domain.Common.Models;
+using TripEnjoy.Domain.Property.Entities;
 using TripEnjoy.Domain.Property.Enums;
 using TripEnjoy.Domain.Property.ValueObjects;
 using TripEnjoy.Domain.PropertyType.ValueObjects;
@@ -26,6 +27,9 @@ namespace TripEnjoy.Domain.Property
         public int ReviewCount { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime? UpdatedAt { get; private set; }
+        public readonly List<PropertyImage> _propertyImages = new();
+        public IReadOnlyList<PropertyImage> PropertyImages => _propertyImages.AsReadOnly();
+        
         private Property() : base(PropertyId.CreateUnique())
         {
             PartnerId = null!;
@@ -66,6 +70,65 @@ namespace TripEnjoy.Domain.Property
             }
             var property = new Property(PropertyId.CreateUnique(), partnerId, propertyTypeId, name, address, city, country, description, latitude, longitude);
             return Result<Property>.Success(property);
+        }
+
+        public Result AddImage(string imageUrl, bool isCover)
+        {
+            var propertyImage = new PropertyImage(PropertyImageId.CreateUnique(), Id, imageUrl);
+
+            if (isCover)
+            {
+                // Set all other images to not be the main one
+                _propertyImages.ForEach(img => img.SetAsNotMain());
+                propertyImage.SetAsMain();
+            }
+            else if (!_propertyImages.Any(img => img.IsMain))
+            {
+                // If no other image is the main one, make this the main one
+                propertyImage.SetAsMain();
+            }
+
+            _propertyImages.Add(propertyImage);
+            UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
+        }
+
+        public Result RemoveImage(PropertyImageId imageId)
+        {
+            var imageToRemove = _propertyImages.FirstOrDefault(img => img.Id == imageId);
+            if (imageToRemove == null)
+            {
+                return Result.Failure(DomainError.Property.ImageNotFound);
+            }
+
+            _propertyImages.Remove(imageToRemove);
+
+            // If the removed image was the main one, and there are other images, set the first one as the new main
+            if (imageToRemove.IsMain && _propertyImages.Any())
+            {
+                _propertyImages.First().SetAsMain();
+            }
+
+            UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
+        }
+
+        public Result SetCoverImage(PropertyImageId imageId)
+        {
+            var imageToSetAsMain = _propertyImages.FirstOrDefault(img => img.Id == imageId);
+            if (imageToSetAsMain == null)
+            {
+                return Result.Failure(DomainError.Property.ImageNotFound);
+            }
+
+            // Reset all other images
+            _propertyImages.ForEach(img => img.SetAsNotMain());
+            
+            // Set the new main image
+            imageToSetAsMain.SetAsMain();
+
+            UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
         }
     }
 }

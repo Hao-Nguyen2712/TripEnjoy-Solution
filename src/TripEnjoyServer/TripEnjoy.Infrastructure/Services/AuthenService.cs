@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using TripEnjoy.Application.Interfaces.External.Email;
 using TripEnjoy.Application.Interfaces.Identity;
+using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Domain.Common.Errors;
 using TripEnjoy.Domain.Common.Models;
 using TripEnjoy.Infrastructure.Persistence;
@@ -26,11 +27,12 @@ namespace TripEnjoy.Infrastructure.Services
         private readonly IDistributedCache _cache;
         private readonly IEmailService _emailService;
         private readonly IBackgroundJobClient _backgroundJobClient;
+        private readonly IAccountRepository _accountRepository;
 
         /// <summary>
         /// Initializes a new instance of AuthenService and stores required dependencies for authentication operations.
         /// </summary>
-        public AuthenService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration, RoleManager<IdentityRole> roleManager, IDistributedCache cache, IEmailService emailService, IBackgroundJobClient backgroundJobClient)
+        public AuthenService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration, RoleManager<IdentityRole> roleManager, IDistributedCache cache, IEmailService emailService, IBackgroundJobClient backgroundJobClient, IAccountRepository accountRepository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -39,6 +41,7 @@ namespace TripEnjoy.Infrastructure.Services
             _cache = cache;
             _emailService = emailService;
             _backgroundJobClient = backgroundJobClient;
+            _accountRepository = accountRepository;
         }
 
 
@@ -281,12 +284,28 @@ namespace TripEnjoy.Infrastructure.Services
         /// </returns>
         public async Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(ApplicationUser user)
         {
+            var account = await _accountRepository.FindByAspNetUserIdAsyncIncludePartnersOrUser(user.Id);
+
             var authClaims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.NameIdentifier, user.Id), // Identity Framework Id
+                new Claim("SessionId", Guid.NewGuid().ToString()), // Thêm session
                 new Claim(ClaimTypes.Email, user.Email!),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
+
+            if (account != null)
+            {
+                authClaims.Add(new Claim("AccountId", account.Id.Id.ToString()));
+                if (account.Partner != null)
+                {
+                    authClaims.Add(new Claim("PartnerId", account.Partner.Id.Id.ToString()));
+                }
+                else if (account.User != null)
+                {
+                    authClaims.Add(new Claim("UserId", account.User.Id.Id.ToString()));
+                }
+            }
 
             var userRoles = await _userManager.GetRolesAsync(user);
             foreach (var role in userRoles)
@@ -338,8 +357,8 @@ namespace TripEnjoy.Infrastructure.Services
         {
             var tokenValidationParameters = new TokenValidationParameters
             {
-                ValidateAudience = false,
-                ValidateIssuer = false,
+                ValidateAudience = true,
+                ValidateIssuer = true,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"])),
                 ValidateLifetime = false

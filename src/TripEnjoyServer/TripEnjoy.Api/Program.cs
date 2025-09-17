@@ -92,7 +92,7 @@ try
 
 
     builder.Services.AddControllers();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+    builder.Services.AddHttpContextAccessor();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
@@ -155,7 +155,8 @@ try
 
     app.UseHttpsRedirection();
 
-    app.UseCors("AllowAll");
+    // Add the Exception Handling Middleware at the beginning of the pipeline
+    app.UseExceptionHandlingMiddleware();
 
     app.UseAuthentication();
     app.UseAuthorization();

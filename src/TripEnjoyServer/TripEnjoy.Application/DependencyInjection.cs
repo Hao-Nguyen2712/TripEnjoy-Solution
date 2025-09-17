@@ -1,21 +1,27 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using TripEnjoy.Application.Behaviors;
 
 namespace TripEnjoy.Application
 {
     public static class DependencyInjection
     {
-        /// <summary>
-        /// Registers application-layer services into the provided <see cref="IServiceCollection"/>.
-        /// Currently this adds MediatR registrations from the executing assembly and returns the collection for chaining.
-        /// </summary>
-        /// <param name="configuration">Configuration instance (not used by this method currently; reserved for future registrations).</param>
-        /// <returns>The same <see cref="IServiceCollection"/> instance after registrations.</returns>
-        public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
+       public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddMediatR(Assembly.GetExecutingAssembly());
+             services.AddMediatR(Assembly.GetExecutingAssembly());
+   
+            // Register the pipeline behaviors
+            // The order matters: Caching -> Validation -> Logging
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+
+            // Automatically find and register all validators in the assembly
+            services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+
             return services;
         }
     }

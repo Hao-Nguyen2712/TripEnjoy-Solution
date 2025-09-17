@@ -9,6 +9,7 @@ using TripEnjoy.Infrastructure.Persistence;
 using TripEnjoy.Infrastructure.Persistence.Repositories;
 using TripEnjoy.Infrastructure.Services;
 using TripEnjoy.ShareKernel.Email;
+using TripEnjoy.Application.Interfaces.External.Cache;
 
 namespace TripEnjoy.Infrastructure
 {
@@ -50,6 +51,8 @@ namespace TripEnjoy.Infrastructure
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IAccountRepository, AccountRepository>();
+            services.AddScoped<IPropertyRepository, PropertyRepository>();
+            services.AddScoped<ICacheService, CacheService>();
 
 
             return services;

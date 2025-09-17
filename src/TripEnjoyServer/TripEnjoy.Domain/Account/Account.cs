@@ -89,6 +89,7 @@ namespace TripEnjoy.Domain.Account
             {
                 return Result.Failure(partnerResult.Errors);
             }
+            Partner = partnerResult.Value;
             UpdatedAt = DateTime.UtcNow;
             return Result.Success();
         }

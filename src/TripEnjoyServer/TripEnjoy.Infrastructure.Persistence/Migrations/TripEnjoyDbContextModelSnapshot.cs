@@ -409,6 +409,32 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
                     b.ToTable("AuditLogs", (string)null);
                 });
 
+            modelBuilder.Entity("TripEnjoy.Domain.Property.Entities.PropertyImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsMain")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("PropertyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UploadAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PropertyId");
+
+                    b.ToTable("PropertyImages", (string)null);
+                });
+
             modelBuilder.Entity("TripEnjoy.Domain.Property.Property", b =>
                 {
                     b.Property<Guid>("Id")
@@ -456,13 +482,7 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("PartnerId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("PartnerId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("PropertyTypeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PropertyTypeId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("ReviewCount")
@@ -480,11 +500,7 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PartnerId");
 
-                    b.HasIndex("PartnerId1");
-
                     b.HasIndex("PropertyTypeId");
-
-                    b.HasIndex("PropertyTypeId1");
 
                     b.ToTable("Properties", (string)null);
                 });
@@ -696,30 +712,27 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
                     b.Navigation("Account");
                 });
 
+            modelBuilder.Entity("TripEnjoy.Domain.Property.Entities.PropertyImage", b =>
+                {
+                    b.HasOne("TripEnjoy.Domain.Property.Property", null)
+                        .WithMany("PropertyImages")
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TripEnjoy.Domain.Property.Property", b =>
                 {
-                    b.HasOne("TripEnjoy.Domain.Account.Entities.Partner", null)
+                    b.HasOne("TripEnjoy.Domain.Account.Entities.Partner", "Partner")
                         .WithMany()
                         .HasForeignKey("PartnerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("TripEnjoy.Domain.Account.Entities.Partner", "Partner")
-                        .WithMany()
-                        .HasForeignKey("PartnerId1")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TripEnjoy.Domain.PropertyType.PropertyType", null)
+                    b.HasOne("TripEnjoy.Domain.PropertyType.PropertyType", "PropertyType")
                         .WithMany()
                         .HasForeignKey("PropertyTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("TripEnjoy.Domain.PropertyType.PropertyType", "PropertyType")
-                        .WithMany()
-                        .HasForeignKey("PropertyTypeId1")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Partner");
@@ -743,6 +756,11 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("TripEnjoy.Domain.Account.Entities.Partner", b =>
                 {
                     b.Navigation("PartnerDocuments");
+                });
+
+            modelBuilder.Entity("TripEnjoy.Domain.Property.Property", b =>
+                {
+                    b.Navigation("PropertyImages");
                 });
 #pragma warning restore 612, 618
         }

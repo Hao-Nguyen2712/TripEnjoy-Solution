@@ -60,5 +60,13 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
 
             return account;
         }
+
+        public async Task<Account?> FindByAspNetUserIdAsyncIncludePartnersOrUser(string aspNetUserId)
+        {
+            return await _dbContext.Accounts
+                .Include(a => a.Partner)
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.AspNetUserId == aspNetUserId);
+        }
     }
 }
