@@ -1,11 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using TripEnjoy.Application.Features.Property.Commands;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Domain.Account.ValueObjects;
@@ -59,7 +55,7 @@ public class CreatePropertyCommandHandler : IRequestHandler<CreatePropertyComman
         }
 
         var property = propertyResult.Value;
-        
+
         await _unitOfWork.Repository<Domain.Property.Property>().AddAsync(property);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

@@ -2,20 +2,23 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TripEnjoy.Application.Common.Interfaces;
+using TripEnjoy.Application.Interfaces.External.Cache;
+using TripEnjoy.Application.Interfaces.External.CloudStorage;
 using TripEnjoy.Application.Interfaces.External.Email;
 using TripEnjoy.Application.Interfaces.Identity;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Infrastructure.Persistence;
 using TripEnjoy.Infrastructure.Persistence.Repositories;
 using TripEnjoy.Infrastructure.Services;
+using TripEnjoy.Infrastructure.Services.CloudStorage;
 using TripEnjoy.ShareKernel.Email;
-using TripEnjoy.Application.Interfaces.External.Cache;
 
 namespace TripEnjoy.Infrastructure
 {
     public static class DependencyInjection
     {
-        
+
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<EmailConfiguration>(configuration.GetSection("EMAIL_CONFIGURATION"));
@@ -53,6 +56,12 @@ namespace TripEnjoy.Infrastructure
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IPropertyRepository, PropertyRepository>();
             services.AddScoped<ICacheService, CacheService>();
+            services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+            services.AddScoped<IAuditLogService, AuditLogService>();
+            
+            // Cloud Storage Services
+            services.AddHttpClient<CloudinaryService>();
+            services.AddScoped<ICloudinaryService, CloudinaryService>();
 
 
             return services;

@@ -68,5 +68,16 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.AspNetUserId == aspNetUserId);
         }
+
+        /// <summary>
+        /// Retrieves an Account by its AccountId with Partner and PartnerDocuments included
+        /// </summary>
+        public async Task<Account?> GetByAccountIdAsync(AccountId accountId)
+        {
+            return await _dbContext.Accounts
+                .Include(a => a.Partner)
+                    .ThenInclude(p => p!.PartnerDocuments)
+                .FirstOrDefaultAsync(a => a.Id == accountId);
+        }
     }
 }

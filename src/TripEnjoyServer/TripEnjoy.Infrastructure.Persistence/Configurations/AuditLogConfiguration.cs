@@ -37,10 +37,10 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
                 .HasMaxLength(256);
             builder.Property(a => a.OldValue)
                 .IsRequired()
-                .HasMaxLength(256);
+                .HasMaxLength(4000); // Increased from 256 to 4000 to handle larger JSON data
             builder.Property(a => a.NewValue)
                 .IsRequired()
-                .HasMaxLength(256);
+                .HasMaxLength(4000); // Increased from 256 to 4000 to handle larger JSON data
             builder.Property(a => a.CreatedAt)
                 .IsRequired();
 

@@ -9,6 +9,7 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
         private Hashtable? _repositories;
         private IAccountRepository? _accountRepository;
         private IPropertyRepository? _propertyRepository;
+        private IAuditLogRepository? _auditLogRepository;
 
         /// <summary>
         /// Initializes a new <see cref="UnitOfWork"/> using the provided <see cref="TripEnjoyDbContext"/> for repository coordination and persistence operations.
@@ -21,6 +22,8 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
         public IAccountRepository AccountRepository => _accountRepository ??= new AccountRepository(_dbContext);
 
         public IPropertyRepository Properties => _propertyRepository ??= new PropertyRepository(_dbContext);
+
+        public IAuditLogRepository AuditLogs => _auditLogRepository ??= new AuditLogRepository(_dbContext);
 
         public IGenericRepository<T> Repository<T>() where T : class
         {
@@ -42,7 +45,7 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
         {
             return _dbContext.SaveChangesAsync(cancellationToken);
         }
-  
+
         public ValueTask DisposeAsync()
         {
             return _dbContext.DisposeAsync();

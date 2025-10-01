@@ -1,0 +1,304 @@
+@{
+    ViewData["Title"] = "My Documents";
+}
+
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">My Documents</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="/partner/home">Dashboard</a></li>
+                            <li class="breadcrumb-item active">My Documents</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1">Document Management</h5>
+                                <p class="text-muted mb-0">Track your uploaded documents and their verification status</p>
+                            </div>
+                            <div>
+                                <a href="/partner/documents/upload" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i>Upload New Document
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Status Overview -->
+        <div class="row">
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Documents</span>
+                                <h4 class="mb-3">
+                                    <span class="counter-value" data-target="0">0</span>
+                                </h4>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm rounded-circle bg-soft-primary">
+                                    <span class="avatar-title bg-soft-primary text-primary rounded-circle fs-3">
+                                        <i class="fas fa-file-alt"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="text-muted mb-3 lh-1 d-block text-truncate">Pending Review</span>
+                                <h4 class="mb-3">
+                                    <span class="counter-value" data-target="0">0</span>
+                                </h4>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm rounded-circle bg-soft-warning">
+                                    <span class="avatar-title bg-soft-warning text-warning rounded-circle fs-3">
+                                        <i class="fas fa-clock"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="text-muted mb-3 lh-1 d-block text-truncate">Approved</span>
+                                <h4 class="mb-3">
+                                    <span class="counter-value" data-target="0">0</span>
+                                </h4>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm rounded-circle bg-soft-success">
+                                    <span class="avatar-title bg-soft-success text-success rounded-circle fs-3">
+                                        <i class="fas fa-check-circle"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="text-muted mb-3 lh-1 d-block text-truncate">Rejected</span>
+                                <h4 class="mb-3">
+                                    <span class="counter-value" data-target="0">0</span>
+                                </h4>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm rounded-circle bg-soft-danger">
+                                    <span class="avatar-title bg-soft-danger text-danger rounded-circle fs-3">
+                                        <i class="fas fa-times-circle"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents List -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>Uploaded Documents
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="documentsContainer">
+                            <!-- Documents will be loaded here -->
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="text-muted mt-2">Loading your documents...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Required Documents Checklist -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-tasks me-2"></i>Required Documents Checklist
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="checklist-item d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs">
+                                            <span class="avatar-title bg-soft-primary text-primary rounded-circle fs-6">
+                                                <i class="fas fa-certificate"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1">Business License</h6>
+                                        <p class="text-muted mb-0">Required for verification</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="badge bg-danger-subtle text-danger" id="status-BusinessLicense">Not Uploaded</span>
+                                    </div>
+                                </div>
+
+                                <div class="checklist-item d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs">
+                                            <span class="avatar-title bg-soft-success text-success rounded-circle fs-6">
+                                                <i class="fas fa-file-invoice"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1">Tax Identification</h6>
+                                        <p class="text-muted mb-0">Required for verification</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="badge bg-danger-subtle text-danger" id="status-TaxIdentification">Not Uploaded</span>
+                                    </div>
+                                </div>
+
+                                <div class="checklist-item d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs">
+                                            <span class="avatar-title bg-soft-info text-info rounded-circle fs-6">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1">Proof of Address</h6>
+                                        <p class="text-muted mb-0">Required for verification</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="badge bg-danger-subtle text-danger" id="status-ProofOfAddress">Not Uploaded</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="checklist-item d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs">
+                                            <span class="avatar-title bg-soft-warning text-warning rounded-circle fs-6">
+                                                <i class="fas fa-building"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1">Company Registration</h6>
+                                        <p class="text-muted mb-0">Optional but recommended</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="badge bg-secondary-subtle text-secondary" id="status-CompanyRegistration">Optional</span>
+                                    </div>
+                                </div>
+
+                                <div class="checklist-item d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs">
+                                            <span class="avatar-title bg-soft-secondary text-secondary rounded-circle fs-6">
+                                                <i class="fas fa-university"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1">Bank Statement</h6>
+                                        <p class="text-muted mb-0">Optional but recommended</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="badge bg-secondary-subtle text-secondary" id="status-BankStatement">Optional</span>
+                                    </div>
+                                </div>
+
+                                <div class="checklist-item d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs">
+                                            <span class="avatar-title bg-soft-dark text-dark rounded-circle fs-6">
+                                                <i class="fas fa-id-card"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1">Identity Document</h6>
+                                        <p class="text-muted mb-0">Optional but recommended</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="badge bg-secondary-subtle text-secondary" id="status-IdentityDocument">Optional</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // TODO: Implement document listing functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simulate document loading for now
+            setTimeout(() => {
+                const container = document.getElementById('documentsContainer');
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-folder-open text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="text-muted">No Documents Uploaded Yet</h5>
+                        <p class="text-muted mb-3">Start by uploading your business verification documents.</p>
+                        <a href="/partner/documents/upload" class="btn btn-primary">
+                            <i class="fas fa-upload me-1"></i>Upload Your First Document
+                        </a>
+                    </div>
+                `;
+            }, 1000);
+        });
+    </script>
+}

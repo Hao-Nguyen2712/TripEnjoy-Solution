@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using TripEnjoy.Application.Behaviors;
+using TripEnjoy.Application.Common.Interfaces;
 
 namespace TripEnjoy.Application
 {
@@ -14,7 +15,8 @@ namespace TripEnjoy.Application
              services.AddMediatR(Assembly.GetExecutingAssembly());
    
             // Register the pipeline behaviors
-            // The order matters: Caching -> Validation -> Logging
+            // The order matters
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(AuditLoggingBehavior<,>));
             services.AddScoped(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
             services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));

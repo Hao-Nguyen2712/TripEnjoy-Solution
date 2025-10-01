@@ -1,19 +1,17 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using System.Text;
 using System.IdentityModel.Tokens.Jwt;
-using System.Net;
-using TripEnjoy.Client.ViewModels;
 using System.Security.Claims;
+using System.Text;
+using TripEnjoy.Client.ViewModels;
 
 namespace TripEnjoy.Client.Controllers
 {
     [Route("auth")]
     public class AuthController : Controller
     {
-
         private readonly IHttpClientFactory _clientFactory;
         public AuthController(IHttpClientFactory clientFactory)
         {
@@ -54,7 +52,7 @@ namespace TripEnjoy.Client.Controllers
                 TempData["Email"] = loginRequest.Email;
                 return RedirectToAction("VerifyOtp", "Auth");
             }
-            
+
             // Handle login failure
             var errorMessages = new List<string> { "Invalid login attempt." };
             TempData["ErrorMessages"] = JsonConvert.SerializeObject(errorMessages);
@@ -90,7 +88,7 @@ namespace TripEnjoy.Client.Controllers
                 ConfirmFor = "User"
             };
 
-            var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/register");
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/register-user");
             request.Content = new StringContent(JsonConvert.SerializeObject(apiRequestPayload), Encoding.UTF8, "application/json");
 
             var response = await client.SendAsync(request);
@@ -104,7 +102,7 @@ namespace TripEnjoy.Client.Controllers
             {
                 var errorResponseString = await response.Content.ReadAsStringAsync();
                 var errorResponse = JsonConvert.DeserializeObject<ApiResponseVM<object>>(errorResponseString);
-                
+
                 var errorMessages = new List<string>();
                 if (errorResponse?.Errors != null)
                 {
@@ -142,7 +140,7 @@ namespace TripEnjoy.Client.Controllers
             {
                 return View(forgotPasswordRequest);
             }
-            
+
             var client = _clientFactory.CreateClient("ApiClient");
             var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/forgot-password");
             request.Content = new StringContent(JsonConvert.SerializeObject(forgotPasswordRequest), Encoding.UTF8, "application/json");
@@ -177,7 +175,7 @@ namespace TripEnjoy.Client.Controllers
             var client = _clientFactory.CreateClient("ApiClient");
             var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/verify-password-reset-otp");
             request.Content = new StringContent(JsonConvert.SerializeObject(verifyOtpRequest), Encoding.UTF8, "application/json");
-            
+
             var response = await client.SendAsync(request);
 
             if (response.IsSuccessStatusCode)
@@ -242,7 +240,6 @@ namespace TripEnjoy.Client.Controllers
         [Route("verify-otp")]
         public async Task<IActionResult> VerifyOtp(VerifyOtpRequestVM verifyOtpRequest)
         {
-            verifyOtpRequest.RememberMe = TempData.Peek("RememberMe") as bool? ?? false;
 
             if (!ModelState.IsValid)
             {
@@ -271,7 +268,7 @@ namespace TripEnjoy.Client.Controllers
                     {
                         // For now, we will make all sessions persistent to solve the restart issue.
                         // "Remember Me" checkbox can be wired up to this property later.
-                        IsPersistent = true, 
+                        IsPersistent = true,
                         ExpiresUtc = DateTimeOffset.UtcNow.Add(jwtToken.ValidTo - DateTime.UtcNow)
                     };
 
@@ -286,7 +283,7 @@ namespace TripEnjoy.Client.Controllers
                         SameSite = SameSiteMode.Strict
                     };
                     Response.Cookies.Append("refreshToken", apiResponse.Data.RefreshToken, refreshTokenCookieOptions);
-                    
+
                     var accessTokenCookieOptions = new CookieOptions
                     {
                         HttpOnly = true,
@@ -301,14 +298,14 @@ namespace TripEnjoy.Client.Controllers
                     return RedirectToAction("Index", "Home");
                 }
             }
-            
+
             // Handle API error (e.g., wrong OTP)
             var errorMessages = new List<string> { "Invalid OTP. Please try again." };
             // You can also add more specific errors from the API response if available
             TempData["ErrorMessages"] = JsonConvert.SerializeObject(errorMessages);
             return View(verifyOtpRequest);
         }
-                 
+
     }
 }
 

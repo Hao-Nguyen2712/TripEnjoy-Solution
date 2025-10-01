@@ -1,5 +1,4 @@
 using MediatR;
-using System;
 using TripEnjoy.Domain.Common.Models;
 
 namespace TripEnjoy.Application.Interfaces.External.Cache;

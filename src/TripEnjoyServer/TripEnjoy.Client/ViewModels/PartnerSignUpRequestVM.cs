@@ -24,5 +24,12 @@ namespace TripEnjoy.Client.ViewModels
         [Display(Name = "Confirm Password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = string.Empty;
+
+        [Display(Name = "Contact Number")]
+        [Phone(ErrorMessage = "Invalid phone number")]
+        public string? ContactNumber { get; set; }
+
+        [Display(Name = "Business Address")]
+        public string? Address { get; set; }
     }
 }

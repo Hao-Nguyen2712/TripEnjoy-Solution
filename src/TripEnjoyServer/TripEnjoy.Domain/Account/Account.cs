@@ -94,6 +94,22 @@ namespace TripEnjoy.Domain.Account
             return Result.Success();
         }
 
+        public Result AddPartnerDocument(string documentType, string documentUrl)
+        {
+            if (Partner is null)
+            {
+                return Result.Failure(new Error("Account.NoPartnerProfile", "This account does not have a partner profile.", ErrorType.NotFound));
+            }
+
+            var result = Partner.AddDocument(documentType, documentUrl);
+            if (result.IsSuccess)
+            {
+                UpdatedAt = DateTime.UtcNow;
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Creates a new refresh token for this account, stores it in the account's token collection, and updates the account's UpdatedAt timestamp.
         /// </summary>

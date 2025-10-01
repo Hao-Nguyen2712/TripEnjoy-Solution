@@ -153,6 +153,39 @@ namespace TripEnjoy.Domain.Common.Errors
             );
         }
 
+        public static class Partner
+        {
+            public static readonly Error DuplicateDocumentType = new(
+                "Partner.DuplicateDocumentType",
+                "A document of this type has already been uploaded.",
+                ErrorType.Conflict);
+
+            public static readonly Error CompanyNameRequired = new(
+                "Partner.CompanyNameRequired",
+                "Company name is required for partner registration.",
+                ErrorType.Validation);
+
+            public static readonly Error CompanyNameAlreadyExists = new(
+                "Partner.CompanyNameAlreadyExists",
+                "A partner with this company name already exists.",
+                ErrorType.Conflict);
+
+            public static readonly Error InvalidDocumentType = new(
+                "Partner.InvalidDocumentType",
+                "The specified document type is not supported.",
+                ErrorType.Validation);
+
+            public static readonly Error MissingRequiredDocuments = new(
+                "Partner.MissingRequiredDocuments",
+                "All required documents must be approved before partner approval.",
+                ErrorType.Validation);
+
+            public static readonly Error InvalidStatusTransition = new(
+                "Partner.InvalidStatusTransition",
+                "The partner status cannot be changed from the current state.",
+                ErrorType.Failure);
+        }
+
         public static class Authentication
         {
             public static readonly Error Unauthorized = new(

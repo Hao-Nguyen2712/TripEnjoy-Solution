@@ -272,6 +272,58 @@ namespace TripEnjoy.Infrastructure.Services
         }
 
         /// <summary>
+        /// Creates a new user with the provided email, password, and role. Optionally handles email confirmation based on user type.
+        /// Partners bypass email confirmation since they undergo document review and admin approval instead.
+        /// </summary>
+        /// <param name="email">The user's email address (used as the account identifier).</param>
+        /// <param name="password">The password for the new account.</param>
+        /// <param name="role">The role to assign to the user (e.g., "User", "Partner", "Admin").</param>
+        /// <param name="requireEmailConfirmation">Whether to require email confirmation. False for partners who go through document approval instead.</param>
+        /// <returns>
+        /// On success, a <see cref="Result{T}"/> containing a tuple with the new user's id and the email confirmation token (empty if confirmation not required).
+        /// On failure, a failure <see cref="Result{T}"/> with aggregated identity errors describing why creation failed.
+        /// </returns>
+        public async Task<Result<(string UserId, string confirmToken)>> CreateUserAsync(string email, string password, string role, bool requireEmailConfirmation)
+        {
+            var user = new ApplicationUser
+            {
+                Email = email,
+                UserName = email,
+                EmailConfirmed = !requireEmailConfirmation // Auto-confirm for partners
+            };
+
+            var result = await _userManager.CreateAsync(user, password);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => new Domain.Common.Errors.Error(e.Code, e.Description, Domain.Common.Errors.ErrorType.Failure)).ToArray();
+                return Result<(string, string)>.Failure(errors);
+            }
+
+            if (!await _roleManager.RoleExistsAsync(role))
+            {
+                await _roleManager.CreateAsync(new IdentityRole(role));
+            }
+            await _userManager.AddToRoleAsync(user, role);
+
+            string token = string.Empty;
+
+            if (requireEmailConfirmation)
+            {
+                // Generate confirmation token and send email for users
+                token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var confirmationLink = $"{_configuration["WebAppUrl"]}/confirm-email?userId={user.Id}&token={System.Net.WebUtility.UrlEncode(token)}&confirmFor={role}";
+                _backgroundJobClient.Enqueue(() => _emailService.SendEmailConfirmationAsync(user.Email, "Confirm Your Email", confirmationLink, CancellationToken.None));
+            }
+            else
+            {
+                // For partners, they can immediately proceed to login and document upload
+                // No email confirmation required - they will be verified through document review process
+            }
+
+            return Result<(string, string)>.Success((user.Id, token));
+        }
+
+        /// <summary>
         /// Creates a short-lived JWT access token and a cryptographically strong refresh token for the specified user.
         /// </summary>
         /// <param name="user">The authenticated ApplicationUser for whom tokens are generated; must have a valid Id and Email.</param>

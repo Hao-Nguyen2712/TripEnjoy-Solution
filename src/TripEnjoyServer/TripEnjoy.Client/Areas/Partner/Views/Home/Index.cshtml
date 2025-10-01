@@ -1,3 +1,263 @@
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Partner Dashboard";
+}
+
+<div class="container-fluid p-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="page-title">Welcome to Partner Dashboard</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="javascript: void(0);">TripEnjoy</a></li>
+                        <li class="breadcrumb-item active">Partner Dashboard</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Card -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-lg bg-soft-primary rounded-circle me-3">
+                                    <i class="fas fa-handshake h3 text-primary my-3"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">Welcome, Business Partner!</h4>
+                                    <p class="text-muted mb-0">
+                                        @if (!string.IsNullOrEmpty(ViewBag.Email as string))
+                                        {
+                                            <span>Signed in as: <strong>@ViewBag.Email</strong></span>
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-sm-end">
+                                <div class="badge bg-success-subtle text-success fs-12 px-2 py-1">
+                                    <i class="fas fa-check-circle me-1"></i>Account Active
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-lg-6 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h4 class="mb-1">Upload Documents</h4>
+                            <p class="text-muted mb-0">Submit business verification documents</p>
+                        </div>
+                        <div class="avatar-sm bg-soft-info rounded">
+                            <i class="fas fa-upload text-info avatar-title"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="/partner/documents/upload" class="btn btn-sm btn-soft-info">
+                            <i class="fas fa-arrow-right me-1"></i>Get Started
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h4 class="mb-1">Add Properties</h4>
+                            <p class="text-muted mb-0">List your accommodations</p>
+                        </div>
+                        <div class="avatar-sm bg-soft-success rounded">
+                            <i class="fas fa-plus text-success avatar-title"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="#" class="btn btn-sm btn-soft-success">
+                            <i class="fas fa-arrow-right me-1"></i>Add Property
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h4 class="mb-1">View Bookings</h4>
+                            <p class="text-muted mb-0">Manage your reservations</p>
+                        </div>
+                        <div class="avatar-sm bg-soft-warning rounded">
+                            <i class="fas fa-calendar text-warning avatar-title"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="#" class="btn btn-sm btn-soft-warning">
+                            <i class="fas fa-arrow-right me-1"></i>View All
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h4 class="mb-1">Analytics</h4>
+                            <p class="text-muted mb-0">View performance metrics</p>
+                        </div>
+                        <div class="avatar-sm bg-soft-primary rounded">
+                            <i class="fas fa-chart-line text-primary avatar-title"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="#" class="btn btn-sm btn-soft-primary">
+                            <i class="fas fa-arrow-right me-1"></i>View Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Information -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Account Status</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>Next Steps
+                        </h5>
+                        <p class="mb-3">
+                            Your partner account has been created successfully! To start listing properties and receiving bookings, please complete these steps:
+                        </p>
+                        <ol class="mb-0">
+                            <li><strong>Upload Business Documents:</strong> Submit required verification documents</li>
+                            <li><strong>Wait for Approval:</strong> Our team will review your documents</li>
+                            <li><strong>Add Your First Property:</strong> Once approved, you can start listing</li>
+                            <li><strong>Go Live:</strong> Your properties will be visible to customers</li>
+                        </ol>
+                    </div>
+
+                    <!-- Document Upload Quick Actions -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <h6 class="text-primary">
+                                    <i class="fas fa-upload me-1"></i>Document Upload Status
+                                </h6>
+                                <p class="text-muted small mb-2">Get started by uploading your business verification documents.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted small">0 of 6 documents uploaded</span>
+                                    <div class="btn-group" role="group">
+                                        <a href="/partner/documents/upload" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-plus me-1"></i>Upload
+                                        </a>
+                                        <a href="/partner/documents/list" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-list me-1"></i>View All
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <h6 class="text-success">
+                                    <i class="fas fa-shield-alt me-1"></i>Verification Status
+                                </h6>
+                                <p class="text-muted small mb-2">Your account verification progress.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-warning text-dark">Pending Documents</span>
+                                    <small class="text-muted">Complete document upload to proceed</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(ViewBag.PartnerId as string))
+                    {
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <h6>Account Information:</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Partner ID:</strong> @ViewBag.PartnerId</li>
+                                @if (!string.IsNullOrEmpty(ViewBag.AccountId as string))
+                                {
+                                    <li><strong>Account ID:</strong> @ViewBag.AccountId</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .page-title-box {
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 1.5rem;
+        }
+        
+        .avatar-lg {
+            height: 4rem;
+            width: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .avatar-sm {
+            height: 2.5rem;
+            width: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .avatar-title {
+            margin: 0;
+        }
+        
+        .bg-soft-primary { background-color: rgba(61, 123, 253, 0.1); }
+        .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
+        .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
+        .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
+        .bg-success-subtle { background-color: rgba(25, 135, 84, 0.1); }
+        
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+        
+        .card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+    </style>
 }

@@ -73,6 +73,8 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
                     return Result.Failure(result.Errors);
                 }
             }
+            // add New Wallet for account 
+            account.AddWallet(account.Id);     
             try
             {
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
