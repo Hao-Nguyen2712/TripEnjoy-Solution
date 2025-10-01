@@ -144,13 +144,25 @@
                 otpHiddenInput.val(otp);
             }
 
-            $('form').on('submit', function(e) {
-                let isFilled = Array.from(inputs).every(input => $(input).val() !== '');
-                if (isFilled) {
-                    var submitButton = $('#verify-btn');
-                    submitButton.prop('disabled', true);
-                    submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Verifying...');
+            $('#verify-btn').on('click', function(e) {
+                e.preventDefault(); // Always prevent the default action first
+
+                updateOtpValue(); // Ensure the hidden OTP value is up-to-date
+                const otpValue = otpHiddenInput.val();
+
+                // Validate that the OTP is exactly 6 digits
+                if (!otpValue || otpValue.length !== 6) {
+                    notyf.error('Please enter the complete 6-digit OTP code.'); // Show error message
+                    return; // Exit if validation fails
                 }
+
+                // If validation passes, disable the button, show spinner, and submit the form
+                const submitButton = $(this);
+                submitButton.prop('disabled', true);
+                submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Verifying...');
+                
+                // Programmatically submit the form
+                submitButton.closest('form').submit();
             });
 
             // --- Countdown Timer Logic ---
@@ -213,4 +225,3 @@
         });
     </script>
 }
-

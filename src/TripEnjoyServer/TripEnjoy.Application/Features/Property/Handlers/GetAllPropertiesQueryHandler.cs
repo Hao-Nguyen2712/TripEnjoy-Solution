@@ -1,7 +1,4 @@
 using MediatR;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using TripEnjoy.Application.Features.Property.Queries;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Domain.Common.Models;

@@ -1,0 +1,196 @@
+@model TripEnjoy.Client.ViewModels.UploadDocumentVM
+@{
+    ViewData["Title"] = "Upload Documents";
+}
+
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0">Document Upload</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="/partner/home">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Upload Documents</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Form -->
+        <div class="row justify-content-center">
+            <div class="col-xl-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-upload me-2"></i>Upload Business Documents
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-info-circle me-2"></i>Document Requirements
+                            </h5>
+                            <ul class="mb-0">
+                                <li>Supported formats: PDF, DOC, DOCX, JPG, JPEG, PNG</li>
+                                <li>Maximum file size: 10MB</li>
+                                <li>Ensure documents are clear and readable</li>
+                                <li>Only one document per type is allowed</li>
+                            </ul>
+                        </div>
+
+                        <form id="documentUploadForm">
+                            @Html.AntiForgeryToken()
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="documentType" class="form-label">
+                                            Document Type <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-select" id="documentType" name="documentType" required>
+                                            <option value="">-- Select Document Type --</option>
+                                            @foreach (var docType in ViewBag.DocumentTypes as Dictionary<string, string>)
+                                            {
+                                                <option value="@docType.Key">@docType.Value</option>
+                                            }
+                                        </select>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="documentFile" class="form-label">
+                                            Select File <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="file" class="form-control" id="documentFile" name="documentFile" 
+                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description (Optional)</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" 
+                                          placeholder="Add any additional notes about this document..."></textarea>
+                            </div>
+
+                            <!-- Upload Progress -->
+                            <div id="uploadProgress" class="mb-3" style="display: none;">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">Uploading...</span>
+                                    <span id="progressPercent" class="text-muted">0%</span>
+                                </div>
+                                <div class="progress">
+                                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                         role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <small id="progressStatus" class="text-muted">Preparing upload...</small>
+                            </div>
+
+                            <!-- Upload Actions -->
+                            <div class="text-end">
+                                <button type="button" class="btn btn-light me-2" onclick="resetForm()">
+                                    <i class="fas fa-times me-1"></i>Reset
+                                </button>
+                                <button type="submit" class="btn btn-primary" id="uploadBtn">
+                                    <i class="fas fa-upload me-1"></i>Upload Document
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Upload Status -->
+                <div id="uploadStatus" class="card" style="display: none;">
+                    <div class="card-body text-center">
+                        <div id="successStatus" style="display: none;">
+                            <div class="text-success mb-3">
+                                <i class="fas fa-check-circle" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="text-success">Upload Successful!</h5>
+                            <p class="text-muted mb-3">Your document has been uploaded and is now being reviewed.</p>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button type="button" class="btn btn-primary" onclick="uploadAnother()">
+                                    <i class="fas fa-plus me-1"></i>Upload Another
+                                </button>
+                                <a href="/partner/documents/list" class="btn btn-outline-primary">
+                                    <i class="fas fa-list me-1"></i>View All Documents
+                                </a>
+                            </div>
+                        </div>
+
+                        <div id="errorStatus" style="display: none;">
+                            <div class="text-danger mb-3">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="text-danger">Upload Failed</h5>
+                            <p id="errorMessage" class="text-muted mb-3"></p>
+                            <button type="button" class="btn btn-primary" onclick="tryAgain()">
+                                <i class="fas fa-redo me-1"></i>Try Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Types Info -->
+            <div class="col-xl-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-file-alt me-2"></i>Document Types
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="document-types">
+                            <div class="doc-type-item mb-3">
+                                <h6 class="mb-1">
+                                    <i class="fas fa-certificate text-primary me-2"></i>Business License
+                                </h6>
+                                <small class="text-muted">Official business registration certificate</small>
+                            </div>
+                            <div class="doc-type-item mb-3">
+                                <h6 class="mb-1">
+                                    <i class="fas fa-file-invoice text-success me-2"></i>Tax Identification
+                                </h6>
+                                <small class="text-muted">Tax ID or EIN certificate</small>
+                            </div>
+                            <div class="doc-type-item mb-3">
+                                <h6 class="mb-1">
+                                    <i class="fas fa-map-marker-alt text-info me-2"></i>Proof of Address
+                                </h6>
+                                <small class="text-muted">Business address verification document</small>
+                            </div>
+                            <div class="doc-type-item mb-3">
+                                <h6 class="mb-1">
+                                    <i class="fas fa-building text-warning me-2"></i>Company Registration
+                                </h6>
+                                <small class="text-muted">Articles of incorporation</small>
+                            </div>
+                            <div class="doc-type-item mb-3">
+                                <h6 class="mb-1">
+                                    <i class="fas fa-university text-secondary me-2"></i>Bank Statement
+                                </h6>
+                                <small class="text-muted">Business bank account statement</small>
+                            </div>
+                            <div class="doc-type-item">
+                                <h6 class="mb-1">
+                                    <i class="fas fa-id-card text-dark me-2"></i>Identity Document
+                                </h6>
+                                <small class="text-muted">Owner/director ID verification</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/partner/document-upload.js"></script>
+}

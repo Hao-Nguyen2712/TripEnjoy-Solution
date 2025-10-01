@@ -1,5 +1,4 @@
 using MediatR;
-using System.Collections.Generic;
 using TripEnjoy.Domain.Common.Models;
 using TripEnjoy.ShareKernel.Dtos;
 

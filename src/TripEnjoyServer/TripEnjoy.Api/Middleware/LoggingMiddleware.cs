@@ -19,7 +19,7 @@ namespace TripEnjoy.Api.Middleware
             var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             var requestPath = context.Request.Path;
             var requestMethod = context.Request.Method;
-
+            
             _logger.LogInformation(
                 "Request Starting: HTTP {RequestMethod} {RequestPath} from IP {IpAddress}",
                 requestMethod, requestPath, ipAddress);

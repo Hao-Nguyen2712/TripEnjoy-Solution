@@ -1,5 +1,6 @@
 ﻿using TripEnjoy.Domain.Account.Enums;
 using TripEnjoy.Domain.Account.ValueObjects;
+using TripEnjoy.Domain.Common.Errors;
 using TripEnjoy.Domain.Common.Models;
 
 namespace TripEnjoy.Domain.Account.Entities
@@ -36,8 +37,41 @@ namespace TripEnjoy.Domain.Account.Entities
 
         public static Result<Partner> Create(AccountId accountId, string? companyName, string? contactNumber, string? address)
         {
+            // Business rule: Company name is required for partners
+            if (string.IsNullOrWhiteSpace(companyName))
+            {
+                return Result<Partner>.Failure(DomainError.Partner.CompanyNameRequired);
+            }
+
+            // Business rule: Company name must be at least 2 characters
+            if (companyName.Length < 2)
+            {
+                return Result<Partner>.Failure(new Error("Partner.CompanyNameTooShort", "Company name must be at least 2 characters long.", ErrorType.Validation));
+            }
+
             var partner = new Partner(PartnerId.CreateUnique(), accountId, companyName, contactNumber, address);
             return Result<Partner>.Success(partner);
         }
+
+        public Result AddDocument(string documentType, string documentUrl)
+        {
+            // Optional: Add validation to prevent duplicate document types if needed
+            if (_partnerDocuments.Any(d => d.DocumentType.Equals(documentType, StringComparison.OrdinalIgnoreCase)))
+            {
+                // Decide if this should be an error or if you should replace the existing one.
+                // For now, let's treat it as a failure.
+                return Result.Failure(new Error("Partner.DuplicateDocumentType", "A document of this type has already been uploaded.", ErrorType.Conflict));
+            }
+
+            var newDocument = new PartnerDocument(
+                PartnerDocumentId.CreateUnique(),
+                Id,
+                documentType,
+                documentUrl,
+                PartnerDocumentStatusEnum.PendingReview.ToString());
+
+            _partnerDocuments.Add(newDocument);
+            return Result.Success();
+        }
     }
-}   
+}

@@ -19,6 +19,21 @@ namespace TripEnjoy.Application.Interfaces.Identity
                 /// The Result indicates success or failure and carries error information on failure.
                 /// </returns>
                 Task<Result<(string UserId, string confirmToken)>> CreateUserAsync(string email, string password, string role);
+                
+                /// <summary>
+                /// Creates a new user account with the specified email, password, and role. Optionally handles email confirmation.
+                /// </summary>
+                /// <param name="email">The user's email address (used as the account identifier).</param>
+                /// <param name="password">The password for the new account.</param>
+                /// <param name="role">The role to assign to the user (e.g., "User", "Partner", "Admin").</param>
+                /// <param name="requireEmailConfirmation">Whether to require email confirmation. False for partners who undergo document approval.</param>
+                /// <returns>
+                /// A Result wrapping a tuple of (UserId, confirmToken) on success:
+                /// - UserId: the created user's identifier.
+                /// - confirmToken: a token used to confirm the user's email (empty if confirmation not required).
+                /// The Result indicates success or failure and carries error information on failure.
+                /// </returns>
+                Task<Result<(string UserId, string confirmToken)>> CreateUserAsync(string email, string password, string role, bool requireEmailConfirmation);
                 /// <summary>
                 /// Performs the first step of the login flow by validating the provided credentials and initiating the next authentication step (e.g., sending an OTP or challenge) if validation succeeds.
                 /// </summary>

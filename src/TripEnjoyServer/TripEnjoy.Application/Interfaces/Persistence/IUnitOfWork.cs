@@ -4,6 +4,7 @@ namespace TripEnjoy.Application.Interfaces.Persistence
         {
                 IAccountRepository AccountRepository { get; }
                 IPropertyRepository Properties { get; }
+                IAuditLogRepository AuditLogs { get; }
                 /// <summary>
                 /// Gets a repository for performing CRUD and query operations on entities of type <typeparamref name="T"/>.
                 /// </summary>

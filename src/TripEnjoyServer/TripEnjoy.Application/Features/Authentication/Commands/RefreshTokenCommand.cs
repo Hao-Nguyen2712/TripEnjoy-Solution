@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MediatR;
+using TripEnjoy.Application.Common.Interfaces;
 using TripEnjoy.Domain.Common.Models;
 using TripEnjoy.ShareKernel.Dtos;
 
@@ -12,6 +13,5 @@ namespace TripEnjoy.Application.Features.Authentication.Commands
     (
         string expiredAccessToken,
         string refreshToken
-    ) : IRequest<Result<AuthResultDTO>>;
-
+    ) : IAuditableCommand<Result<AuthResultDTO>>;
 }

@@ -28,15 +28,44 @@ namespace TripEnjoy.Api.Controllers
 
         /// <summary>
         /// Registers a new user using the provided registration command.
+        /// DEPRECATED: Use register-user or register-partner endpoints instead.
         /// </summary>
         /// <param name="command">The registration command containing the user's signup details.</param>
         /// <returns>An <see cref="IActionResult"/> representing the outcome of the registration operation.</returns>
         [HttpPost("register")]
+        [Obsolete("Use register-user or register-partner endpoints instead. This endpoint will be removed in a future version.", false)]
         public async Task<IActionResult> Register(RegisterCommand command)
         {
             _logger.LogInformation("Attempting to register user with email {Email}", command.email);
             var result = await _sender.Send(command);
             return HandleResult(result, "Register successful");
+        }
+
+        /// <summary>
+        /// Registers a new user account with email, password, and optional full name.
+        /// </summary>
+        /// <param name="command">The user registration command containing email, password, and optional full name.</param>
+        /// <returns>An <see cref="IActionResult"/> representing the outcome of the user registration operation.</returns>
+        [HttpPost("register-user")]
+        public async Task<IActionResult> RegisterUser(RegisterUserCommand command)
+        {
+            _logger.LogInformation("Attempting to register user with email {Email}", command.Email);
+            var result = await _sender.Send(command);
+            return HandleResult(result, "User registration successful");
+        }
+
+        /// <summary>
+        /// Registers a new partner account with email, password, and business information.
+        /// </summary>
+        /// <param name="command">The partner registration command containing email, password, and business details.</param>
+        /// <returns>An <see cref="IActionResult"/> representing the outcome of the partner registration operation.</returns>
+        [HttpPost("register-partner")]
+        public async Task<IActionResult> RegisterPartner(RegisterPartnerCommand command)
+        {
+            _logger.LogInformation("Attempting to register partner {CompanyName} with email {Email}", 
+                command.CompanyName, command.Email);
+            var result = await _sender.Send(command);
+            return HandleResult(result, "Partner registration successful");
         }
 
         /// <summary>

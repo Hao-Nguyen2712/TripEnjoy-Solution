@@ -11,6 +11,10 @@ using TripEnjoy.ShareKernel.Constant;
 
 namespace TripEnjoy.Application.Features.Authentication.Handlers
 {
+    /// <summary>
+    /// Legacy registration handler. Use RegisterUserCommandHandler or RegisterPartnerCommandHandler instead.
+    /// </summary>
+    [Obsolete("Use RegisterUserCommandHandler or RegisterPartnerCommandHandler instead. This will be removed in a future version.", false)]
     public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<AccountId>>
     {
         private readonly IAuthenService _authenService;
