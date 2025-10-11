@@ -1,0 +1,10 @@
+global using Microsoft.Extensions.Logging;
+global using TripEnjoy.Application.Interfaces.External.Cache;
+global using TripEnjoy.Application.Interfaces.External.Email;
+global using TripEnjoy.Application.Interfaces.Identity;
+global using TripEnjoy.Application.Interfaces.Persistence;
+global using TripEnjoy.Domain.Account;
+global using TripEnjoy.Domain.Account.ValueObjects;
+global using TripEnjoy.Domain.Common.Errors;
+global using TripEnjoy.Domain.Common.Models;
+global using TripEnjoy.Domain.PropertyType;

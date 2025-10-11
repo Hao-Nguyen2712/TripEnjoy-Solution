@@ -10,14 +10,48 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <!-- Core Testing Framework -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="xunit" Version="2.5.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    
+    <!-- Unit Testing Dependencies -->
+    <PackageReference Include="Moq" Version="4.20.69" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="AutoFixture" Version="4.18.0" />
+    <PackageReference Include="AutoFixture.Xunit2" Version="4.18.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="FluentAssertions" />
+    <Using Include="Moq" />
+    <Using Include="AutoFixture" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Integration Testing -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
+    
+    <!-- Test Data Generation -->
+    <PackageReference Include="Bogus" Version="35.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- All project references for integration testing -->
+    <ProjectReference Include="..\TripEnjoy.Api\TripEnjoy.Api.csproj" />
+    <ProjectReference Include="..\TripEnjoy.Application\TripEnjoy.Application.csproj" />
+    <ProjectReference Include="..\TripEnjoy.Domain\TripEnjoy.Domain.csproj" />
+    <ProjectReference Include="..\TripEnjoy.Infrastructure\TripEnjoy.Infrastructure.csproj" />
+    <ProjectReference Include="..\TripEnjoy.Infrastructure.Persistence\TripEnjoy.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\TripEnjoy.ShareKernel\TripEnjoy.ShareKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
