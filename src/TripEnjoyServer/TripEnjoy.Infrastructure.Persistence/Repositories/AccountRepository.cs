@@ -24,8 +24,30 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
 
         public async Task<Account?> FindByAspNetUserIdAsync(string aspNetUserId)
         {
-            return await _dbContext.Accounts
+            _logger.LogInformation("Searching for Account with AspNetUserId: {AspNetUserId}", aspNetUserId);
+            
+            var account = await _dbContext.Accounts
                 .FirstOrDefaultAsync(a => a.AspNetUserId == aspNetUserId);
+                
+            if (account == null)
+            {
+                _logger.LogWarning("Account not found with AspNetUserId: {AspNetUserId}", aspNetUserId);
+                
+                // Debug: Let's see what accounts exist
+                var allAccounts = await _dbContext.Accounts.Take(10).ToListAsync();
+                _logger.LogInformation("Found {Count} accounts in database:", allAccounts.Count);
+                foreach (var acc in allAccounts)
+                {
+                    _logger.LogInformation("Account - ID: {Id}, AspNetUserId: {AspNetUserId}, Email: {Email}", 
+                        acc.Id, acc.AspNetUserId, acc.AccountEmail);
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Found Account with ID: {AccountId}", account.Id);
+            }
+            
+            return account;
         }
 
         public async Task<Account?> FindByAspNetUserIdWithTokensAsync(string aspNetUserId)
@@ -37,8 +59,9 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
 
         public async Task<Account?> FindByAspNetUserIdWithBlackListTokensAsync(string aspNetUserId)
         {
-            return await _dbContext.Accounts.
-                            Include(a => a.BlackListTokens)
+            return await _dbContext.Accounts
+                            .Include(a => a.BlackListTokens)
+                            .Include(a => a.RefreshTokens)
                             .FirstOrDefaultAsync(a => a.AspNetUserId == aspNetUserId);
         }
 

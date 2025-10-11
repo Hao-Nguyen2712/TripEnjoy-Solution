@@ -43,14 +43,17 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
         public async Task<Result<AuthResultDTO>> Handle(LoginStepTwoCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Handling LoginStepTwoCommand for user {Email}", request.Email);
+        Console.WriteLine($"[LoginStepTwoCommandHandler] Starting LoginStepTwo for {request.Email}");
 
             var loginResult = await _authenService.LoginStepTwoAsync(request.Email, request.Otp);
             if (loginResult.IsFailure)
             {
+                _logger.LogError("LoginStepTwoAsync failed for {Email}: {Errors}", request.Email, string.Join(", ", loginResult.Errors.Select(e => e.Description)));
                 return Result<AuthResultDTO>.Failure(loginResult.Errors);
             }
 
             var (authResult, cacheKey) = loginResult.Value;
+            _logger.LogInformation("LoginStepTwoAsync succeeded for {Email}, AspNetUserId: {AspNetUserId}", request.Email, authResult.AspNetUserId);
 
             // Note: LoginStepTwoAsync in AuthenService needs to be modified to return AspNetUserId to save the refresh token.
             // For now, assuming it does, we proceed. We will modify AuthenService later.
@@ -58,8 +61,11 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
             var account = await _unitOfWork.AccountRepository.FindByAspNetUserIdAsync(authResult.AspNetUserId); // This line will need authResult to contain AspNetUserId
             if (account is null)
             {
+                _logger.LogError("Account not found for AspNetUserId: {AspNetUserId}", authResult.AspNetUserId);
                 return Result<AuthResultDTO>.Failure(DomainError.Account.NotFound);
             }
+            
+            _logger.LogInformation("Account found for AspNetUserId: {AspNetUserId}, AccountId: {AccountId}", authResult.AspNetUserId, account.Id);
 
             var addTokenResult = account.AddRefreshToken(authResult.RefreshToken);
             if (addTokenResult.IsFailure)

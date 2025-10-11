@@ -76,12 +76,27 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
              
             var newRefreshTokenString = _authenService.GenerateRefreshToken();
             
+            // Debug: Log the tokens available in the account
+            _logger.LogInformation("Account {AccountId} has {TokenCount} refresh tokens: [{Tokens}]", 
+                account.Id, 
+                account.RefreshTokens.Count, 
+                string.Join(", ", account.RefreshTokens.Select(rt => $"'{rt.Token}'")));
+            _logger.LogInformation("Looking for refresh token: '{RefreshToken}'", request.refreshToken);
+            
             var rotateResult = account.RotateRefreshToken(request.refreshToken, newRefreshTokenString, DateTime.UtcNow.AddDays(7));
             if (rotateResult.IsFailure)
             {
                 return Result<AuthResultDTO>.Failure(rotateResult.Errors);
             }
-             var newAccessToken = await _authenService.GenerateAccessTokenAsync(aspNetUserId);
+            
+            // Add the new refresh token to the account
+            var addTokenResult = account.AddRefreshToken(newRefreshTokenString);
+            if (addTokenResult.IsFailure)
+            {
+                return Result<AuthResultDTO>.Failure(addTokenResult.Errors);
+            }
+            
+            var newAccessToken = await _authenService.GenerateAccessTokenAsync(aspNetUserId);
 
             try
             {

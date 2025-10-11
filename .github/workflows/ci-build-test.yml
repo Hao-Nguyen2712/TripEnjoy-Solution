@@ -1,7 +1,7 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-name: Build and Test Ci 
+name: Build and Test CI
 
 on:
   push:
@@ -11,18 +11,46 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
     - uses: actions/checkout@v4
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+        
     - name: Restore dependencies
       run: dotnet restore
+      
     - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet build --no-restore --configuration Release
+      
+    - name: Run Unit Tests Only
+      run: dotnet test --no-build --configuration Release --filter "Category!=Integration" --verbosity normal --logger trx --results-directory TestResults/
+      
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: TestResults/
+        
+    # Uncomment when integration tests are stable
+    # - name: Run Integration Tests
+    #   run: dotnet test --no-build --configuration Release --filter "Category=Integration" --verbosity normal
+    #   env:
+    #     ASPNETCORE_ENVIRONMENT: Testing
+    #     CacheSettings__ConnectionString: localhost:6379
