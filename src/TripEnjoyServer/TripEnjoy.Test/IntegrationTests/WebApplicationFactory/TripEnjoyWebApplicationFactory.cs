@@ -188,6 +188,38 @@ public class TestAuthenService : IAuthenService
         return Result.Success();
     }
 
+    public async Task<Result> LoginStepOneAsync(string email, string password, string expectedRole)
+    {
+        Console.WriteLine($"[TestAuthenService] LoginStepOneAsync with role: {email}, expected role: {expectedRole}");
+        
+        // Find user by email
+        if (!_usersByEmail.TryGetValue(email, out var userInfo))
+        {
+            Console.WriteLine($"[TestAuthenService] LoginStepOneAsync: User not found in dictionary");
+            return Result.Failure(new Error("Account.NotFound", "Account not found", ErrorType.NotFound));
+        }
+
+        if (userInfo.Password != password)
+        {
+            Console.WriteLine($"[TestAuthenService] LoginStepOneAsync: Password mismatch");
+            return Result.Failure(new Error("Auth.InvalidCredentials", "Invalid credentials", ErrorType.Validation));
+        }
+
+        // Check role
+        if (userInfo.Role != expectedRole)
+        {
+            Console.WriteLine($"[TestAuthenService] LoginStepOneAsync: Role mismatch. User role: {userInfo.Role}, expected: {expectedRole}");
+            return Result.Failure(new Error("Account.RoleMismatch", "Role mismatch", ErrorType.Forbidden));
+        }
+
+        // Send OTP
+        var otpKey = $"login_otp_{email}";
+        await _cacheService.SetAsync(otpKey, "123456", TimeSpan.FromMinutes(5));
+        Console.WriteLine($"[TestAuthenService] LoginStepOneAsync: OTP cached with key {otpKey}");
+        
+        return Result.Success();
+    }
+
     public async Task<Result<(AuthResultDTO AuthResult, string CacheKey)>> LoginStepTwoAsync(string email, string otp)
     {
         var otpKey = $"login_otp_{email}";

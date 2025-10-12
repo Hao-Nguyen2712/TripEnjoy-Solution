@@ -136,7 +136,7 @@ namespace TripEnjoy.Client.Areas.Partner.Controllers
             var client = _clientFactory.CreateClient("ApiClient");
 
             // Step 1: Call login-step-one (same for both users and partners)
-            var stepOneRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/login-step-one");
+            var stepOneRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/login-partner-step-one");
             stepOneRequest.Content = new StringContent(JsonConvert.SerializeObject(loginRequest), Encoding.UTF8, "application/json");
 
             var stepOneResponse = await client.SendAsync(stepOneRequest);

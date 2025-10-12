@@ -111,8 +111,8 @@ public class CloudinaryService : ICloudinaryService
             // Since upload was successful, we'll use a lenient validation approach
             // Try to access the file via delivery URL with retry mechanism for propagation delays
             
-            const int maxRetries = 3;
-            const int delayBetweenRetriesMs = 1000; // 1 second
+            const int maxRetries = 5;
+            const int delayBetweenRetriesMs = 2000; // 1 second
 
             for (int attempt = 1; attempt <= maxRetries; attempt++)
             {
@@ -126,7 +126,7 @@ public class CloudinaryService : ICloudinaryService
                         attempt, maxRetries, deliveryUrl);
 
                     // Make a HEAD request to check if the file exists without downloading it
-                    var request = new HttpRequestMessage(HttpMethod.Head, deliveryUrl);
+                    var request = new HttpRequestMessage(HttpMethod.Get, deliveryUrl);
                     var response = await _httpClient.SendAsync(request, cancellationToken);
 
                     if (response.IsSuccessStatusCode)

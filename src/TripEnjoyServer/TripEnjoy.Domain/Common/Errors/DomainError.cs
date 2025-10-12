@@ -70,6 +70,16 @@ namespace TripEnjoy.Domain.Common.Errors
                 "The account has already been deleted.",
                 ErrorType.Failure
             );
+
+            public static readonly Error RoleMismatch = new(
+                "Account.RoleMismatch",
+                "Account role does not match the expected role for this operation.",
+                ErrorType.Forbidden);
+
+            public static readonly Error UnauthorizedRole = new(
+                "Account.UnauthorizedRole", 
+                "This account is not authorized to use this login method.",
+                ErrorType.Forbidden);
         }
 
         public static class User

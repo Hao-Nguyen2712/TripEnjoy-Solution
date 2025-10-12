@@ -45,7 +45,7 @@ namespace TripEnjoy.Infrastructure.Services
         }
 
 
-        public async Task<Result> LoginStepOneAsync(string email, string password)
+        public async Task<Result> LoginStepOneAsync(string email, string password, string expectedRole)
         {
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
@@ -70,10 +70,19 @@ namespace TripEnjoy.Infrastructure.Services
                 return Result.Failure(Domain.Common.Errors.DomainError.Account.LockedOut);
             }
 
-
             if (!await _userManager.IsEmailConfirmedAsync(user))
             {
                 return Result.Failure(Domain.Common.Errors.DomainError.Account.EmailNotConfirmed);
+            }
+
+            // NEW: Validate role if specified
+            if (!string.IsNullOrEmpty(expectedRole))
+            {
+                var userRoles = await _userManager.GetRolesAsync(user);
+                if (!userRoles.Contains(expectedRole))
+                {
+                    return Result.Failure(Domain.Common.Errors.DomainError.Account.RoleMismatch);
+                }
             }
 
             var otp = new Random().Next(100000, 999999).ToString();

@@ -27,21 +27,6 @@ namespace TripEnjoy.Api.Controllers
         }
 
         /// <summary>
-        /// Registers a new user using the provided registration command.
-        /// DEPRECATED: Use register-user or register-partner endpoints instead.
-        /// </summary>
-        /// <param name="command">The registration command containing the user's signup details.</param>
-        /// <returns>An <see cref="IActionResult"/> representing the outcome of the registration operation.</returns>
-        [HttpPost("register")]
-        [Obsolete("Use register-user or register-partner endpoints instead. This endpoint will be removed in a future version.", false)]
-        public async Task<IActionResult> Register(RegisterCommand command)
-        {
-            _logger.LogInformation("Attempting to register user with email {Email}", command.email);
-            var result = await _sender.Send(command);
-            return HandleResult(result, "Register successful");
-        }
-
-        /// <summary>
         /// Registers a new user account with email, password, and optional full name.
         /// </summary>
         /// <param name="command">The user registration command containing email, password, and optional full name.</param>
@@ -69,16 +54,31 @@ namespace TripEnjoy.Api.Controllers
         }
 
         /// <summary>
-        /// Initiates the first step of the login flow by processing the provided LoginStepOneCommand.
+        /// Initiates the first step of the login flow specifically for user accounts by validating role and processing credentials.
+        /// Only accounts with the "User" role can use this endpoint.
         /// </summary>
-        /// <param name="command">Command containing credentials or identifying information required for the first login step (e.g., username or identifier).</param>
-        /// <returns>An <see cref="IActionResult"/> representing the outcome of the command processing (success or failure payload translated to an HTTP response).</returns>
-        [HttpPost("login-step-one")]
-        public async Task<IActionResult> LoginStepOne(LoginStepOneCommand command)
+        /// <param name="command">Command containing user credentials for the first login step.</param>
+        /// <returns>An <see cref="IActionResult"/> representing the outcome of the user login step one operation.</returns>
+        [HttpPost("login-user-step-one")]
+        public async Task<IActionResult> LoginUserStepOne(LoginUserStepOneCommand command)
         {
-            _logger.LogInformation("Attempting login step one for user with email {Email}", command.Email);
+            _logger.LogInformation("Attempting user login step one for user with email {Email}", command.Email);
             var result = await _sender.Send(command);
-            return HandleResult(result, "Login step one successful");
+            return HandleResult(result, "User login step one successful");
+        }
+
+        /// <summary>
+        /// Initiates the first step of the login flow specifically for partner accounts by validating role and processing credentials.
+        /// Only accounts with the "Partner" role can use this endpoint.
+        /// </summary>
+        /// <param name="command">Command containing partner credentials for the first login step.</param>
+        /// <returns>An <see cref="IActionResult"/> representing the outcome of the partner login step one operation.</returns>
+        [HttpPost("login-partner-step-one")]
+        public async Task<IActionResult> LoginPartnerStepOne(LoginPartnerStepOneCommand command)
+        {
+            _logger.LogInformation("Attempting partner login step one for partner with email {Email}", command.Email);
+            var result = await _sender.Send(command);
+            return HandleResult(result, "Partner login step one successful");
         }
 
         /// <summary>
