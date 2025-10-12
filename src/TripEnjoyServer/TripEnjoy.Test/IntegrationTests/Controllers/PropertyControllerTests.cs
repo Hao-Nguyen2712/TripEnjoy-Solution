@@ -18,7 +18,6 @@ public class PropertyControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-
         var responseContent = await DeserializeResponseAsync<ApiResponse<object>>(response);
         responseContent.Should().NotBeNull();
         responseContent!.Status.Should().Be("success");
