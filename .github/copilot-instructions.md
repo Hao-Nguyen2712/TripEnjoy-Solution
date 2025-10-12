@@ -1,5 +1,13 @@
 # TripEnjoy Copilot Instructions
 
+## Development Methodology
+TripEnjoy follows **Test-Driven Development (TDD)** principles. When implementing new features:
+
+1. **Red**: Write failing tests first (unit tests, then integration tests)
+2. **Green**: Write minimal code to make tests pass
+3. **Refactor**: Improve code while keeping tests green
+4. **Document**: Update context documentation in `docs/` folder after completion
+
 ## Architecture Overview
 TripEnjoy is a .NET 8 room booking platform implementing Clean Architecture with DDD (Domain-Driven Design). The solution contains **two nested solution files**:
 - **Root solution**: `TripEnjoyServer.sln` (contains all 7 projects)  
@@ -142,4 +150,31 @@ dotnet run --project src/TripEnjoyServer/TripEnjoy.Api --launch-profile https
 - Domain errors are mapped to appropriate HTTP status codes
 - Consistent ApiResponse format with error details
 
-When adding new features, follow the established CQRS pattern: create command/query → validator → handler → controller endpoint. All database operations should go through the UnitOfWork pattern, and business logic belongs in domain entities, not handlers.
+## TDD Workflow for New Features
+
+When adding new features, follow TDD principles with the established CQRS pattern:
+
+### 1. Test-First Approach
+- **Write unit tests** for command/query handlers first
+- **Write integration tests** for API endpoints
+- **Write validator tests** for input validation
+- Ensure tests fail initially (Red phase)
+
+### 2. Implementation Order
+- Create command/query objects
+- Implement validators with FluentValidation
+- Create handlers implementing business logic
+- Add controller endpoints
+- Ensure all tests pass (Green phase)
+
+### 3. Documentation Requirements
+- **Always update context files** in `docs/TripEnjoy-Project-Context.md` folder after completing tasks
+- Document architectural decisions and patterns used
+- Include test coverage information
+- Update this instruction file when new patterns emerge
+
+### 4. Code Quality Standards
+- All database operations should go through the UnitOfWork pattern
+- Business logic belongs in domain entities, not handlers
+- Follow Result pattern for error handling
+- Maintain comprehensive test coverage

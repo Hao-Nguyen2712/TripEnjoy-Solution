@@ -35,12 +35,13 @@ namespace TripEnjoy.Application.Interfaces.Identity
                 /// </returns>
                 Task<Result<(string UserId, string confirmToken)>> CreateUserAsync(string email, string password, string role, bool requireEmailConfirmation);
                 /// <summary>
-                /// Performs the first step of the login flow by validating the provided credentials and initiating the next authentication step (e.g., sending an OTP or challenge) if validation succeeds.
+                /// Performs the first step of the login flow with role validation by validating the provided credentials and expected role before initiating the next authentication step.
                 /// </summary>
                 /// <param name="email">The user's email address used as the login identifier.</param>
                 /// <param name="password">The user's plaintext password to validate against stored credentials.</param>
-                /// <returns>A <see cref="Result"/> that indicates whether the credential validation and initiation of the next authentication step succeeded or failed (no data payload on success).</returns>
-                Task<Result> LoginStepOneAsync(string email, string password);
+                /// <param name="expectedRole">The expected role for the account (e.g., "User", "Partner"). If provided, validates that the account has this role.</param>
+                /// <returns>A <see cref="Result"/> that indicates whether the credential validation, role validation, and initiation of the next authentication step succeeded or failed.</returns>
+                Task<Result> LoginStepOneAsync(string email, string password, string expectedRole);
                 /// <summary>
                 /// Completes second step of a two-step login by validating the provided one-time password (OTP).
                 /// </summary>

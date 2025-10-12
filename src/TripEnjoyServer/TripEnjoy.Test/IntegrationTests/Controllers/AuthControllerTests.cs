@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using TripEnjoy.ShareKernel.Dtos;
 using TripEnjoy.ShareKernel.Models.ApiResult;
@@ -63,24 +64,24 @@ public class AuthControllerTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task LoginStepOne_WithValidCredentials_ShouldReturnSuccess()
+    public async Task LoginUserStepOne_WithValidUserCredentials_ShouldReturnSuccess()
     {
         // Arrange - First register a user
         var registerCommand = new RegisterUserCommand(
-            Email: "logintest@example.com",
+            Email: "userlogintest@example.com",
             Password: "Test123!@&",
-            FullName: "Login Test"
+            FullName: "User Login Test"
         );
 
         await HttpClient.PostAsJsonAsync("/api/v1/auth/register-user", registerCommand);
 
-        var loginCommand = new LoginStepOneCommand(
-            Email: "logintest@example.com",
+        var loginCommand = new LoginUserStepOneCommand(
+            Email: "userlogintest@example.com",
             Password: "Test123!@&"
         );
 
         // Act
-        var response = await HttpClient.PostAsJsonAsync("/api/v1/auth/login-step-one", loginCommand);
+        var response = await HttpClient.PostAsJsonAsync("/api/v1/auth/login-user-step-one", loginCommand);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -92,16 +93,121 @@ public class AuthControllerTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task LoginStepOne_WithInvalidCredentials_ShouldReturnNotFound()
+    public async Task LoginPartnerStepOne_WithValidPartnerCredentials_ShouldReturnSuccess()
+    {
+        // Arrange - First register a partner
+        var registerCommand = new RegisterPartnerCommand(
+            Email: "partnerlogintest@example.com",
+            Password: "Test123!@&",
+            CompanyName: "Test Partner Company",
+            ContactNumber: "123-456-7890",
+            Address: "123 Partner St"
+        );
+
+        await HttpClient.PostAsJsonAsync("/api/v1/auth/register-partner", registerCommand);
+
+        var loginCommand = new LoginPartnerStepOneCommand(
+            Email: "partnerlogintest@example.com",
+            Password: "Test123!@&"
+        );
+
+        // Act
+        var response = await HttpClient.PostAsJsonAsync("/api/v1/auth/login-partner-step-one", loginCommand);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        
+        var responseContent = await DeserializeResponseAsync<ApiResponse<string>>(response);
+        responseContent.Should().NotBeNull();
+        responseContent!.Status.Should().Be("success");
+        responseContent.Message.Should().Contain("successful");
+    }
+
+    [Fact]
+    public async Task LoginUserStepOne_WithPartnerCredentials_ShouldReturnRoleMismatchError()
+    {
+        // Arrange - First register a partner
+        var registerCommand = new RegisterPartnerCommand(
+            Email: "partnerrolemismatch@example.com",
+            Password: "Test123!@&",
+            CompanyName: "Mismatch Partner Company",
+            ContactNumber: "123-456-7890",
+            Address: "123 Mismatch St"
+        );
+
+        await HttpClient.PostAsJsonAsync("/api/v1/auth/register-partner", registerCommand);
+
+        // Try to login as user with partner credentials
+        var loginCommand = new LoginUserStepOneCommand(
+            Email: "partnerrolemismatch@example.com",
+            Password: "Test123!@&"
+        );
+
+        // Act
+        var response = await HttpClient.PostAsJsonAsync("/api/v1/auth/login-user-step-one", loginCommand);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        
+        var responseContent = await DeserializeResponseAsync<ApiResponse<string>>(response);
+        responseContent.Should().NotBeNull();
+        responseContent!.Status.Should().Be("error");
+        responseContent.Errors.Should().NotBeNull();
+        
+        // Handle JsonElement for errors
+        var jsonElement = (JsonElement)responseContent.Errors!;
+        var errors = JsonSerializer.Deserialize<List<ApiError>>(jsonElement.GetRawText(), JsonOptions);
+        errors.Should().NotBeNull();
+        errors!.Should().ContainSingle(e => e.Code == "Account.RoleMismatch");
+    }
+
+    [Fact]
+    public async Task LoginPartnerStepOne_WithUserCredentials_ShouldReturnRoleMismatchError()
+    {
+        // Arrange - First register a user
+        var registerCommand = new RegisterUserCommand(
+            Email: "userrolemismatch@example.com",
+            Password: "Test123!@&",
+            FullName: "Mismatch User"
+        );
+
+        await HttpClient.PostAsJsonAsync("/api/v1/auth/register-user", registerCommand);
+
+        // Try to login as partner with user credentials
+        var loginCommand = new LoginPartnerStepOneCommand(
+            Email: "userrolemismatch@example.com",
+            Password: "Test123!@&"
+        );
+
+        // Act
+        var response = await HttpClient.PostAsJsonAsync("/api/v1/auth/login-partner-step-one", loginCommand);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        
+        var responseContent = await DeserializeResponseAsync<ApiResponse<string>>(response);
+        responseContent.Should().NotBeNull();
+        responseContent!.Status.Should().Be("error");
+        responseContent.Errors.Should().NotBeNull();
+        
+        // Handle JsonElement for errors
+        var jsonElement = (JsonElement)responseContent.Errors!;
+        var errors = JsonSerializer.Deserialize<List<ApiError>>(jsonElement.GetRawText(), JsonOptions);
+        errors.Should().NotBeNull();
+        errors!.Should().ContainSingle(e => e.Code == "Account.RoleMismatch");
+    }
+
+    [Fact]
+    public async Task LoginUserStepOne_WithInvalidCredentials_ShouldReturnNotFound()
     {
         // Arrange
-        var loginCommand = new LoginStepOneCommand(
+        var loginCommand = new LoginUserStepOneCommand(
             Email: "nonexistent@example.com",
             Password: "WrongPassword123!"
         );
 
         // Act
-        var response = await HttpClient.PostAsJsonAsync("/api/v1/auth/login-step-one", loginCommand);
+        var response = await HttpClient.PostAsJsonAsync("/api/v1/auth/login-user-step-one", loginCommand);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -148,12 +254,12 @@ public class AuthControllerTests : BaseIntegrationTest
         
         // Don't dispose scope - let GC handle it to avoid UnitOfWork disposal issues
 
-        var loginStepOneCommand = new LoginStepOneCommand(
+        var loginStepOneCommand = new LoginPartnerStepOneCommand(
             Email: "otptest@example.com",
             Password: "Test123!@&"
         );
 
-        await HttpClient.PostAsJsonAsync("/api/v1/auth/login-step-one", loginStepOneCommand);
+        await HttpClient.PostAsJsonAsync("/api/v1/auth/login-partner-step-one", loginStepOneCommand);
 
         var loginStepTwoCommand = new LoginStepTwoCommand(
             Email: "otptest@example.com",
@@ -195,12 +301,12 @@ public class AuthControllerTests : BaseIntegrationTest
 
         await HttpClient.PostAsJsonAsync("/api/v1/auth/register-user", registerCommand);
 
-        var loginStepOneCommand = new LoginStepOneCommand(
+        var loginStepOneCommand = new LoginUserStepOneCommand(
             Email: "invalidotptest@example.com",
             Password: "Test123!@&"
         );
 
-        await HttpClient.PostAsJsonAsync("/api/v1/auth/login-step-one", loginStepOneCommand);
+        await HttpClient.PostAsJsonAsync("/api/v1/auth/login-user-step-one", loginStepOneCommand);
 
         var loginStepTwoCommand = new LoginStepTwoCommand(
             Email: "invalidotptest@example.com",
@@ -233,12 +339,12 @@ public class AuthControllerTests : BaseIntegrationTest
         await HttpClient.PostAsJsonAsync("/api/v1/auth/register-partner", registerCommand);
 
         // Step 1: Login
-        var loginStepOneCommand = new LoginStepOneCommand(
+        var loginStepOneCommand = new LoginPartnerStepOneCommand(
             Email: "refreshtest@example.com",
             Password: "Test123!@&"
         );
 
-        await HttpClient.PostAsJsonAsync("/api/v1/auth/login-step-one", loginStepOneCommand);
+        await HttpClient.PostAsJsonAsync("/api/v1/auth/login-partner-step-one", loginStepOneCommand);
 
         // Step 2: Get tokens
         var loginStepTwoCommand = new LoginStepTwoCommand(

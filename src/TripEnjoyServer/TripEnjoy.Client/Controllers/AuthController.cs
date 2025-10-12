@@ -41,7 +41,7 @@ namespace TripEnjoy.Client.Controllers
             }
 
             var client = _clientFactory.CreateClient("ApiClient");
-            var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/login-step-one");
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/login-user-step-one");
             request.Content = new StringContent(JsonConvert.SerializeObject(loginRequest), Encoding.UTF8, "application/json");
 
             var response = await client.SendAsync(request);
