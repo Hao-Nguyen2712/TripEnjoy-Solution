@@ -48,9 +48,15 @@ jobs:
         name: test-results
         path: TestResults/
         
-    # Uncomment when integration tests are stable
-    # - name: Run Integration Tests
-    #   run: dotnet test --no-build --configuration Release --filter "Category=Integration" --verbosity normal
-    #   env:
-    #     ASPNETCORE_ENVIRONMENT: Testing
-    #     CacheSettings__ConnectionString: localhost:6379
+    - name: Run Integration Tests
+      run: dotnet test --no-build --configuration Release --filter "Category=Integration" --verbosity normal --logger trx --results-directory TestResults/
+      env:
+        ASPNETCORE_ENVIRONMENT: Testing
+        CacheSettings__ConnectionString: localhost:6379
+        
+    - name: Upload Integration Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: integration-test-results
+        path: TestResults/
