@@ -47,7 +47,7 @@ namespace TripEnjoy.Api.Controllers
         [HttpPost("register-partner")]
         public async Task<IActionResult> RegisterPartner(RegisterPartnerCommand command)
         {
-            _logger.LogInformation("Attempting to register partner {CompanyName} with email {Email}", 
+            _logger.LogInformation("Attempting to register partner {CompanyName} with email {Email}",
                 command.CompanyName, command.Email);
             var result = await _sender.Send(command);
             return HandleResult(result, "Partner registration successful");

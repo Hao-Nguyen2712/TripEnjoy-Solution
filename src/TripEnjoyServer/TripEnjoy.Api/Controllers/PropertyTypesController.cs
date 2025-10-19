@@ -1,10 +1,10 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TripEnjoy.Application.Features.PropertyType.Commands;
 using TripEnjoy.Application.Features.PropertyType.Queries;
 using TripEnjoy.ShareKernel.Constant;
-using Microsoft.AspNetCore.RateLimiting;
 
 namespace TripEnjoy.Api.Controllers;
 

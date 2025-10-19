@@ -161,6 +161,18 @@ namespace TripEnjoy.Domain.Common.Errors
                 "The specified image was not found on this property.",
                 ErrorType.NotFound
             );
+
+            public static readonly Error InvalidImageUrl = new(
+                "Property.InvalidImageUrl",
+                "The image URL format is invalid and cannot be processed.",
+                ErrorType.Validation
+            );
+
+            public static readonly Error CloudinaryDeletionFailed = new(
+                "Property.CloudinaryDeletionFailed",
+                "Failed to delete the image from cloud storage.",
+                ErrorType.Failure
+            );
         }
 
         public static class Partner

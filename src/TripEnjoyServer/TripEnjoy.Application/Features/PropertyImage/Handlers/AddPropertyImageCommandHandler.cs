@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using TripEnjoy.Application.Features.PropertyImage.Commands;
 using TripEnjoy.Application.Interfaces.External.Cache;
+using TripEnjoy.Application.Interfaces.External.CloudStorage;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Domain.Common.Errors;
 using TripEnjoy.Domain.Common.Models;
@@ -17,13 +18,20 @@ public class AddPropertyImageCommandHandler : IRequestHandler<AddPropertyImageCo
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<AddPropertyImageCommandHandler> _logger;
     private readonly ICacheService _cacheService;
+    private readonly ICloudinaryService _cloudinaryService;
 
-    public AddPropertyImageCommandHandler(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, ILogger<AddPropertyImageCommandHandler> logger, ICacheService cacheService)
+    public AddPropertyImageCommandHandler(
+        IUnitOfWork unitOfWork,
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<AddPropertyImageCommandHandler> logger,
+        ICacheService cacheService,
+        ICloudinaryService cloudinaryService)
     {
         _unitOfWork = unitOfWork;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
         _cacheService = cacheService;
+        _cloudinaryService = cloudinaryService;
     }
 
     public async Task<Result<PropertyImageId>> Handle(AddPropertyImageCommand request, CancellationToken cancellationToken)
@@ -34,7 +42,25 @@ public class AddPropertyImageCommandHandler : IRequestHandler<AddPropertyImageCo
             return Result<PropertyImageId>.Failure(DomainError.Authentication.Unauthorized);
         }
 
-        var property = await _unitOfWork.Properties.GetByIdAsync(request.PropertyId);
+        // Validate Cloudinary upload signature
+        var isValidUpload = await _cloudinaryService.ValidateUploadedFileAsync(
+            request.PublicId,
+            request.Signature,
+            request.Timestamp,
+            cancellationToken);
+
+        if (!isValidUpload)
+        {
+            _logger.LogWarning("Invalid Cloudinary signature for property image upload. PublicId: {PublicId}, PropertyId: {PropertyId}",
+                request.PublicId, request.PropertyId);
+            return Result<PropertyImageId>.Failure(
+                new Error("PropertyImage.InvalidUpload",
+                    "The uploaded image could not be validated. Please try uploading again.",
+                    ErrorType.Validation));
+        }
+
+        var propertyId = PropertyId.Create(request.PropertyId);
+        var property = await _unitOfWork.Properties.GetByIdWithImagesAsync(propertyId);
 
         if (property is null)
         {
@@ -47,7 +73,10 @@ public class AddPropertyImageCommandHandler : IRequestHandler<AddPropertyImageCo
             return Result<PropertyImageId>.Failure(DomainError.Authentication.Forbidden);
         }
 
-        var result = property.AddImage(request.ImageUrl, request.IsCover);
+        // Get the secure URL from Cloudinary
+        var secureUrl = await _cloudinaryService.GetSecureUrlAsync(request.PublicId, cancellationToken);
+
+        var result = property.AddImage(secureUrl, request.IsCover);
         if (result.IsFailure)
         {
             return Result<PropertyImageId>.Failure(result.Errors);

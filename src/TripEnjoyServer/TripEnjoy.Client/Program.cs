@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using TripEnjoy.Client.Handlers;
+using TripEnjoy.Client.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,11 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseAuthentication();
+
+// Add partner authentication redirect middleware after authentication but before authorization
+app.UsePartnerAuthRedirect();
 
 app.UseAuthorization();
 

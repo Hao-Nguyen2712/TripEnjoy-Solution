@@ -1,3 +1,4 @@
+@model TripEnjoy.Client.ViewModels.PagedListVM<TripEnjoy.Client.ViewModels.PartnerDocumentVM>
 @{
     ViewData["Title"] = "My Documents";
 }
@@ -49,7 +50,7 @@
                             <div class="flex-grow-1">
                                 <span class="text-muted mb-3 lh-1 d-block text-truncate">Total Documents</span>
                                 <h4 class="mb-3">
-                                    <span class="counter-value" data-target="0">0</span>
+                                    <span class="counter-value" data-target="@Model.TotalCount">@Model.TotalCount</span>
                                 </h4>
                             </div>
                             <div class="flex-shrink-0">
@@ -71,7 +72,7 @@
                             <div class="flex-grow-1">
                                 <span class="text-muted mb-3 lh-1 d-block text-truncate">Pending Review</span>
                                 <h4 class="mb-3">
-                                    <span class="counter-value" data-target="0">0</span>
+                                    <span class="counter-value" data-target="@Model.Items.Count(d => d.Status == "PendingReview")">@Model.Items.Count(d => d.Status == "PendingReview")</span>
                                 </h4>
                             </div>
                             <div class="flex-shrink-0">
@@ -93,7 +94,7 @@
                             <div class="flex-grow-1">
                                 <span class="text-muted mb-3 lh-1 d-block text-truncate">Approved</span>
                                 <h4 class="mb-3">
-                                    <span class="counter-value" data-target="0">0</span>
+                                    <span class="counter-value" data-target="@Model.Items.Count(d => d.Status == "Approved")">@Model.Items.Count(d => d.Status == "Approved")</span>
                                 </h4>
                             </div>
                             <div class="flex-shrink-0">
@@ -115,7 +116,7 @@
                             <div class="flex-grow-1">
                                 <span class="text-muted mb-3 lh-1 d-block text-truncate">Rejected</span>
                                 <h4 class="mb-3">
-                                    <span class="counter-value" data-target="0">0</span>
+                                    <span class="counter-value" data-target="@Model.Items.Count(d => d.Status == "Rejected")">@Model.Items.Count(d => d.Status == "Rejected")</span>
                                 </h4>
                             </div>
                             <div class="flex-shrink-0">
@@ -141,15 +142,149 @@
                         </h4>
                     </div>
                     <div class="card-body">
-                        <div id="documentsContainer">
-                            <!-- Documents will be loaded here -->
-                            <div class="text-center py-5">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <p class="text-muted mt-2">Loading your documents...</p>
+                        @if (Model.Items.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-nowrap table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col">Document Type</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Uploaded Date</th>
+                                            <th scope="col">Reviewed Date</th>
+                                            <th scope="col">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var document in Model.Items)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="flex-shrink-0 me-3">
+                                                            <div class="avatar-xs">
+                                                                <span class="avatar-title bg-soft-primary text-primary rounded-circle fs-6">
+                                                                    <i class="fas @(GetDocumentIcon(document.DocumentType))"></i>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="mb-0">@document.DocumentTypeName</h6>
+                                                            <small class="text-muted">@document.DocumentType</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    @{
+                                                        var statusClass = document.Status switch
+                                                        {
+                                                            "Approved" => "success",
+                                                            "Rejected" => "danger",
+                                                            "PendingReview" => "warning",
+                                                            _ => "secondary"
+                                                        };
+                                                    }
+                                                    <span class="badge bg-@statusClass-subtle text-@statusClass">
+                                                        @document.StatusDisplayName
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="text-muted">@document.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                                    <br>
+                                                    <small class="text-muted">@document.CreatedAt.ToString("HH:mm")</small>
+                                                </td>
+                                                <td>
+                                                    @if (document.ReviewedAt.HasValue)
+                                                    {
+                                                        <span class="text-muted">@document.ReviewedAt.Value.ToString("MMM dd, yyyy")</span>
+                                                        <br>
+                                                        <small class="text-muted">@document.ReviewedAt.Value.ToString("HH:mm")</small>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">-</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                            <i class="fas fa-ellipsis-v"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li>
+                                                                <a class="dropdown-item" href="@document.DocumentUrl" target="_blank">
+                                                                    <i class="fas fa-eye me-2"></i>View Document
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a class="dropdown-item" href="@document.DocumentUrl" download>
+                                                                    <i class="fas fa-download me-2"></i>Download
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
                             </div>
-                        </div>
+
+                            <!-- Pagination -->
+                            @if (Model.TotalPages > 1)
+                            {
+                                <div class="row mt-4">
+                                    <div class="col-sm-6">
+                                        <div class="dataTables_info">
+                                            Showing @((Model.PageNumber - 1) * Model.PageSize + 1) to @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount)) of @Model.TotalCount entries
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="dataTables_paginate paging_simple_numbers float-end">
+                                            <ul class="pagination pagination-rounded mb-0">
+                                                @if (Model.HasPreviousPage)
+                                                {
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?pageNumber=@(Model.PageNumber - 1)&pageSize=@Model.PageSize">
+                                                            <i class="fas fa-angle-left"></i>
+                                                        </a>
+                                                    </li>
+                                                }
+
+                                                @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                                                {
+                                                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                                        <a class="page-link" href="?pageNumber=@i&pageSize=@Model.PageSize">@i</a>
+                                                    </li>
+                                                }
+
+                                                @if (Model.HasNextPage)
+                                                {
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?pageNumber=@(Model.PageNumber + 1)&pageSize=@Model.PageSize">
+                                                            <i class="fas fa-angle-right"></i>
+                                                        </a>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-folder-open text-muted" style="font-size: 3rem;"></i>
+                                </div>
+                                <h5 class="text-muted">No Documents Uploaded Yet</h5>
+                                <p class="text-muted mb-3">Start by uploading your business verification documents.</p>
+                                <a href="/partner/documents/upload" class="btn btn-primary">
+                                    <i class="fas fa-upload me-1"></i>Upload Your First Document
+                                </a>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -279,26 +414,58 @@
     </div>
 </div>
 
+@functions {
+    private string GetDocumentIcon(string documentType)
+    {
+        return documentType switch
+        {
+            "BusinessLicense" => "fa-certificate",
+            "TaxIdentification" => "fa-file-invoice",
+            "ProofOfAddress" => "fa-map-marker-alt",
+            "CompanyRegistration" => "fa-building",
+            "BankStatement" => "fa-university",
+            "IdentityDocument" => "fa-id-card",
+            _ => "fa-file"
+        };
+    }
+}
+
 @section Scripts {
     <script>
-        // TODO: Implement document listing functionality
+        // Update status counts for checklist
         document.addEventListener('DOMContentLoaded', function() {
-            // Simulate document loading for now
-            setTimeout(() => {
-                const container = document.getElementById('documentsContainer');
-                container.innerHTML = `
-                    <div class="text-center py-4">
-                        <div class="mb-3">
-                            <i class="fas fa-folder-open text-muted" style="font-size: 3rem;"></i>
-                        </div>
-                        <h5 class="text-muted">No Documents Uploaded Yet</h5>
-                        <p class="text-muted mb-3">Start by uploading your business verification documents.</p>
-                        <a href="/partner/documents/upload" class="btn btn-primary">
-                            <i class="fas fa-upload me-1"></i>Upload Your First Document
-                        </a>
-                    </div>
-                `;
-            }, 1000);
+            @foreach (var doc in Model.Items)
+            {
+                <text>
+                updateChecklistStatus('@doc.DocumentType', '@doc.Status');
+                </text>
+            }
         });
+
+        function updateChecklistStatus(documentType, status) {
+            const statusElement = document.getElementById('status-' + documentType);
+            if (statusElement) {
+                let badgeClass, statusText;
+                switch (status) {
+                    case 'Approved':
+                        badgeClass = 'bg-success-subtle text-success';
+                        statusText = 'Approved';
+                        break;
+                    case 'Rejected':
+                        badgeClass = 'bg-danger-subtle text-danger';
+                        statusText = 'Rejected';
+                        break;
+                    case 'PendingReview':
+                        badgeClass = 'bg-warning-subtle text-warning';
+                        statusText = 'Under Review';
+                        break;
+                    default:
+                        badgeClass = 'bg-secondary-subtle text-secondary';
+                        statusText = 'Optional';
+                }
+                statusElement.className = 'badge ' + badgeClass;
+                statusElement.textContent = statusText;
+            }
+        }
     </script>
 }

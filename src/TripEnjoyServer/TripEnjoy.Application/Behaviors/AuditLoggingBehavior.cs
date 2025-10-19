@@ -29,10 +29,10 @@ public class AuditLoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
 
         // Serialize the entire request as the 'NewValue' for the audit log.
         var requestJson = JsonSerializer.Serialize(request);
-        
+
         // Truncate JSON if it's too long to prevent database errors
         const int maxLength = 3800; // Leave some buffer from the 4000 character limit
-        var truncatedJson = requestJson.Length > maxLength 
+        var truncatedJson = requestJson.Length > maxLength
             ? requestJson.Substring(0, maxLength) + "... [TRUNCATED]"
             : requestJson;
 

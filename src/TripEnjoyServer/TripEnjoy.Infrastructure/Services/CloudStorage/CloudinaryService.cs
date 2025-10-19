@@ -22,14 +22,6 @@ public class CloudinaryService : ICloudinaryService
         _apiKey = configuration["Cloudinary:ApiKey"] ?? throw new InvalidOperationException("Cloudinary:ApiKey not configured in appsettings.json");
         _apiSecret = configuration["Cloudinary:ApiSecret"] ?? throw new InvalidOperationException("Cloudinary:ApiSecret not configured in appsettings.json");
 
-        // Validate that the values are not empty
-        if (string.IsNullOrWhiteSpace(_cloudName))
-            throw new InvalidOperationException("Cloudinary:CloudName cannot be empty in appsettings.json");
-        if (string.IsNullOrWhiteSpace(_apiKey))
-            throw new InvalidOperationException("Cloudinary:ApiKey cannot be empty in appsettings.json");
-        if (string.IsNullOrWhiteSpace(_apiSecret))
-            throw new InvalidOperationException("Cloudinary:ApiSecret cannot be empty in appsettings.json");
-
         _logger = logger;
         _httpClient = httpClient;
 
@@ -69,22 +61,26 @@ public class CloudinaryService : ICloudinaryService
             _logger.LogDebug("Signed parameters for Cloudinary upload: {SignedParams}",
                 string.Join("&", signedParams.OrderBy(p => p.Key).Select(p => $"{p.Key}={p.Value}")));
 
+            // Determine resource type based on folder path
+            string resourceType = folder.StartsWith("property_images/") ? "image" : "auto";
+            
             // All upload parameters (signed + unsigned)
             var uploadParams = new Dictionary<string, string>(signedParams)
             {
                 ["signature"] = signature,
                 ["api_key"] = _apiKey,
                 // Unsigned parameters (don't affect signature)
-                ["resource_type"] = "auto",
+                ["resource_type"] = resourceType,
                 ["max_file_size"] = "10485760", // 10MB limit
                 ["quality"] = "auto:best",
                 ["fetch_format"] = "auto"
             };
 
-            var uploadUrl = $"https://api.cloudinary.com/v1_1/{_cloudName}/auto/upload";
+            // Determine upload URL based on folder path
+            var uploadUrl = $"https://api.cloudinary.com/v1_1/{_cloudName}/{resourceType}/upload";
 
-            _logger.LogInformation("Generated upload parameters for file: {FileName} (sanitized: {SanitizedFileName}) in folder: {Folder} with publicId: {PublicId}",
-                fileName, sanitizedFileName, folder, fullPublicId);
+            _logger.LogInformation("Generated upload parameters for file: {FileName} (sanitized: {SanitizedFileName}) in folder: {Folder} with publicId: {PublicId} and resource type: {ResourceType}",
+                fileName, sanitizedFileName, folder, fullPublicId, resourceType);
 
             return Task.FromResult(new DocumentUploadUrlDto(
                 UploadUrl: uploadUrl,
@@ -110,7 +106,7 @@ public class CloudinaryService : ICloudinaryService
         {
             // Since upload was successful, we'll use a lenient validation approach
             // Try to access the file via delivery URL with retry mechanism for propagation delays
-            
+
             const int maxRetries = 5;
             const int delayBetweenRetriesMs = 2000; // 1 second
 
@@ -122,7 +118,7 @@ public class CloudinaryService : ICloudinaryService
                     var encodedPublicId = Uri.EscapeDataString(publicId).Replace("%2F", "/"); // Keep forward slashes
                     var deliveryUrl = $"https://res.cloudinary.com/{_cloudName}/auto/upload/{encodedPublicId}";
 
-                    _logger.LogDebug("Validation attempt {Attempt}/{MaxRetries} for file via delivery URL: {DeliveryUrl}", 
+                    _logger.LogDebug("Validation attempt {Attempt}/{MaxRetries} for file via delivery URL: {DeliveryUrl}",
                         attempt, maxRetries, deliveryUrl);
 
                     // Make a HEAD request to check if the file exists without downloading it
@@ -131,7 +127,7 @@ public class CloudinaryService : ICloudinaryService
 
                     if (response.IsSuccessStatusCode)
                     {
-                        _logger.LogInformation("Successfully validated uploaded file via delivery URL on attempt {Attempt}: {PublicId}", 
+                        _logger.LogInformation("Successfully validated uploaded file via delivery URL on attempt {Attempt}: {PublicId}",
                             attempt, publicId);
                         return true;
                     }
@@ -139,7 +135,7 @@ public class CloudinaryService : ICloudinaryService
                     {
                         if (attempt < maxRetries)
                         {
-                            _logger.LogDebug("File not found on attempt {Attempt}, retrying in {Delay}ms: {PublicId}", 
+                            _logger.LogDebug("File not found on attempt {Attempt}, retrying in {Delay}ms: {PublicId}",
                                 attempt, delayBetweenRetriesMs, publicId);
                             await Task.Delay(delayBetweenRetriesMs, cancellationToken);
                             continue;
@@ -156,7 +152,7 @@ public class CloudinaryService : ICloudinaryService
                     {
                         // For other HTTP errors, consider validation successful since upload completed
                         _logger.LogWarning("Delivery URL check returned {StatusCode} for {PublicId} on attempt {Attempt}, " +
-                            "but considering validation successful since upload completed", 
+                            "but considering validation successful since upload completed",
                             response.StatusCode, publicId, attempt);
                         return true;
                     }
@@ -188,9 +184,11 @@ public class CloudinaryService : ICloudinaryService
         try
         {
             // Generate secure URL using Cloudinary's URL building approach
-            var secureUrl = $"https://res.cloudinary.com/{_cloudName}/auto/upload/{publicId}";
+            // For property images, use /image/upload/; for documents, use /auto/upload/
+            string resourceType = publicId.StartsWith("property_images/") ? "image" : "auto";
+            var secureUrl = $"https://res.cloudinary.com/{_cloudName}/{resourceType}/upload/{publicId}";
 
-            _logger.LogInformation("Generated secure URL for file: {PublicId}", publicId);
+            _logger.LogInformation("Generated secure URL for file: {PublicId} with resource type: {ResourceType}", publicId, resourceType);
             return Task.FromResult(secureUrl);
         }
         catch (Exception ex)
@@ -204,7 +202,15 @@ public class CloudinaryService : ICloudinaryService
     {
         try
         {
+            _logger.LogInformation("Attempting to delete file with public ID: {PublicId}", publicId);
+
             var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            
+            // Determine resource type based on public ID - same logic as in other methods
+            string resourceType = publicId.StartsWith("property_images/") ? "image" : "auto";
+            
+            // For delete operations, only public_id and timestamp are included in the signature
+            // resource_type is NOT included in the signature for delete operations
             var deleteParams = new Dictionary<string, string>
             {
                 ["public_id"] = publicId,
@@ -212,6 +218,11 @@ public class CloudinaryService : ICloudinaryService
             };
 
             var signature = GenerateSignature(deleteParams, _apiSecret);
+
+            // Debug logging to show what we're signing
+            var signatureString = string.Join("&", deleteParams.OrderBy(p => p.Key).Select(p => $"{p.Key}={p.Value}"));
+            _logger.LogDebug("Signature string for delete: '{SignatureString}'", signatureString);
+            _logger.LogDebug("Generated signature: {Signature}", signature);
 
             var formData = new List<KeyValuePair<string, string>>
             {
@@ -221,18 +232,25 @@ public class CloudinaryService : ICloudinaryService
                 new("signature", signature)
             };
 
+            // Note: resource_type is not needed in form data when using specific endpoint
+            // The endpoint URL (/image/destroy vs /auto/destroy) determines the resource type
+
             var formContent = new FormUrlEncodedContent(formData);
-            var url = $"https://api.cloudinary.com/v1_1/{_cloudName}/auto/destroy";
+            var url = $"https://api.cloudinary.com/v1_1/{_cloudName}/{resourceType}/destroy";
+
+            _logger.LogInformation("Deleting file using endpoint: {Url} with resource type: {ResourceType}", url, resourceType);
 
             var response = await _httpClient.PostAsync(url, formContent, cancellationToken);
+            var responseContent = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogInformation("Successfully deleted file: {PublicId}", publicId);
+                _logger.LogInformation("Successfully deleted file: {PublicId}. Response: {Response}", publicId, responseContent);
                 return true;
             }
 
-            _logger.LogWarning("Failed to delete file: {PublicId}, Status: {StatusCode}", publicId, response.StatusCode);
+            _logger.LogWarning("Failed to delete file: {PublicId}, Status: {StatusCode}, Response: {Response}", 
+                publicId, response.StatusCode, responseContent);
             return false;
         }
         catch (Exception ex)

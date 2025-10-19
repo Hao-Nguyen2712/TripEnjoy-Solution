@@ -55,6 +55,7 @@ namespace TripEnjoy.Infrastructure
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IPropertyRepository, PropertyRepository>();
+            services.AddScoped<IPartnerDocumentRepository, PartnerDocumentRepository>();
             services.AddScoped<ICacheService, CacheService>();
             services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             services.AddScoped<IAuditLogService, AuditLogService>();

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using TripEnjoy.Application.Features.Partner.Commands;
+using TripEnjoy.Application.Features.Partner.Queries;
 using TripEnjoy.ShareKernel.Constant;
 
 namespace TripEnjoy.Api.Controllers;
@@ -30,6 +31,20 @@ public class PartnerController : ApiControllerBase
     {
         var result = await _sender.Send(command);
         return HandleResult(result, "Upload URL generated successfully");
+    }
+
+    /// <summary>
+    /// Gets paginated list of partner documents ordered by latest submission date
+    /// </summary>
+    /// <param name="pageNumber">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10)</param>
+    /// <returns>Paginated list of partner documents</returns>
+    [HttpGet("documents")]
+    public async Task<IActionResult> GetDocuments([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    {
+        var query = new GetPartnerDocumentsQuery(pageNumber, pageSize);
+        var result = await _sender.Send(query);
+        return HandleResult(result, "Documents retrieved successfully");
     }
 
     /// <summary>

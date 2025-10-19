@@ -1,0 +1,225 @@
+@model TripEnjoy.Client.ViewModels.EditPropertyVM
+@{
+    ViewData["Title"] = "Edit Property";
+}
+
+<div class="container-fluid p-4">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="d-flex align-items-center justify-content-between">
+                   
+                    <div>
+                        <a asp-controller="Properties" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-building me-2"></i>Property Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" class="needs-validation" novalidate>
+                        <input asp-for="Id" type="hidden" />
+                        
+                    
+
+                        <div class="row">
+                            <!-- Property Type -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PropertyTypeId" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>@Html.DisplayNameFor(m => m.PropertyTypeId)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="PropertyTypeId" class="form-select" required>
+                                    <option value="">Select Property Type</option>
+                                    @foreach (var propertyType in Model.PropertyTypes)
+                                    {
+                                        <option value="@propertyType.Id">@propertyType.Name</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="PropertyTypeId" class="text-danger"></span>
+                            </div>
+
+                            <!-- Property Name -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Name" class="form-label">
+                                    <i class="fas fa-home me-1"></i>@Html.DisplayNameFor(m => m.Name)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Name" class="form-control" placeholder="Enter property name" required />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Address -->
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="Address" class="form-label">
+                                    <i class="fas fa-map-marker-alt me-1"></i>@Html.DisplayNameFor(m => m.Address)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Address" class="form-control" placeholder="Enter street address" required />
+                                <span asp-validation-for="Address" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- City -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="City" class="form-label">
+                                    <i class="fas fa-city me-1"></i>@Html.DisplayNameFor(m => m.City)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="City" class="form-control" placeholder="Enter city" required />
+                                <span asp-validation-for="City" class="text-danger"></span>
+                            </div>
+
+                            <!-- Country -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Country" class="form-label">
+                                    <i class="fas fa-globe me-1"></i>@Html.DisplayNameFor(m => m.Country)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Country" class="form-control" placeholder="Enter country" required />
+                                <span asp-validation-for="Country" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="Description" class="form-label">
+                                    <i class="fas fa-align-left me-1"></i>@Html.DisplayNameFor(m => m.Description)
+                                </label>
+                                <textarea asp-for="Description" class="form-control" rows="4" 
+                                         placeholder="Describe your property (optional)"></textarea>
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                                <div class="form-text">Optional: Provide a detailed description of your property</div>
+                            </div>
+                        </div>
+
+                        <!-- Coordinates (Optional) -->
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <h6 class="text-muted">
+                                    <i class="fas fa-map me-1"></i>Location Coordinates (Optional)
+                                </h6>
+                                <small class="text-muted">Adding coordinates helps guests find your property more easily</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Latitude -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Latitude" class="form-label">
+                                    <i class="fas fa-crosshairs me-1"></i>@Html.DisplayNameFor(m => m.Latitude)
+                                </label>
+                                <input asp-for="Latitude" class="form-control" type="number" step="any" 
+                                       placeholder="e.g., 40.7128" />
+                                <span asp-validation-for="Latitude" class="text-danger"></span>
+                            </div>
+
+                            <!-- Longitude -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Longitude" class="form-label">
+                                    <i class="fas fa-crosshairs me-1"></i>@Html.DisplayNameFor(m => m.Longitude)
+                                </label>
+                                <input asp-for="Longitude" class="form-control" type="number" step="any" 
+                                       placeholder="e.g., -74.0060" />
+                                <span asp-validation-for="Longitude" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row">
+                            <div class="col-12">
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <a asp-controller="Properties" asp-action="Details" asp-route-id="@Model.Id" 
+                                       class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-1"></i>Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>Update Property
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .page-title-box {
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+        
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .text-danger {
+            font-size: 0.875em;
+        }
+        
+        .needs-validation .form-control:invalid {
+            border-color: #dc3545;
+        }
+        
+        .needs-validation .form-control:valid {
+            border-color: #198754;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Enable Bootstrap validation
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+
+            // Show validation summary if there are errors
+            if ($('.alert-danger ul li').length > 0) {
+                $('.alert-danger').show();
+            }
+        });
+    </script>
+}

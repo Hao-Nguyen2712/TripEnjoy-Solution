@@ -25,6 +25,7 @@ public class PropertyRepository : GenericRepository<Property>, IPropertyReposito
         return await _dbContext.Set<Property>()
             .Where(p => p.PartnerId == partnerIdValueObject)
             .Include(p => p.PropertyType)
+            .Include(p => p.PropertyImages)
             .ToListAsync(cancellationToken);
     }
 
