@@ -29,6 +29,20 @@ public class PropertiesController : ApiControllerBase
     }
 
     [Authorize(Roles = RoleConstant.Partner)]
+    [HttpPut("{propertyId:guid}")]
+    public async Task<IActionResult> UpdateProperty(Guid propertyId, [FromBody] UpdatePropertyCommand command)
+    {
+        // Ensure the route parameter matches the command
+        if (propertyId != command.PropertyId)
+        {
+            return BadRequest("Property ID in route does not match command");
+        }
+
+        var result = await _sender.Send(command);
+        return HandleResult(result, "Property updated successfully");
+    }
+
+    [Authorize(Roles = RoleConstant.Partner)]
     [HttpGet("mine")]
     public async Task<IActionResult> GetMyProperties()
     {

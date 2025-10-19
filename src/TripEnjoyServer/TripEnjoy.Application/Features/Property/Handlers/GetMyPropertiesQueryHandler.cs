@@ -43,7 +43,14 @@ public class GetMyPropertiesQueryHandler : IRequestHandler<GetMyPropertiesQuery,
             Status = p.Status,
             AverageRating = p.AverageRating,
             ReviewCount = p.ReviewCount,
-            CreatedAt = p.CreatedAt
+            CreatedAt = p.CreatedAt,
+            Images = p.PropertyImages.Select(img => new PropertyImageDto
+            {
+                Id = img.Id.Id,
+                ImageUrl = img.ImageUrl,
+                IsMain = img.IsMain,
+                UploadAt = img.UploadAt
+            }).ToList()
         });
 
         return Result<IEnumerable<PropertyDto>>.Success(propertyDtos);

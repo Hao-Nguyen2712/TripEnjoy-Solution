@@ -2,8 +2,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using System;
-using System.Threading.Tasks;
 using TripEnjoy.Application.Features.PropertyImage.Commands;
 using TripEnjoy.ShareKernel.Constant;
 
@@ -22,12 +20,39 @@ public class PropertyImagesController : ApiControllerBase
         _sender = sender;
     }
 
+    /// <summary>
+    /// Generates a secure upload URL for property image upload to Cloudinary
+    /// </summary>
+    /// <param name="propertyId">The ID of the property</param>
+    /// <param name="command">The command containing file name and optional caption</param>
+    /// <returns>Upload parameters including URL, signature, and other required fields</returns>
+    [HttpPost("upload-url")]
+    public async Task<IActionResult> GeneratePhotoUploadUrl(Guid propertyId, [FromBody] GeneratePhotoUploadUrlRequest request)
+    {
+        var command = new GeneratePhotoUploadUrlCommand(propertyId, request.FileName, request.Caption);
+        var result = await _sender.Send(command);
+        return HandleResult(result, "Upload URL generated successfully");
+    }
+
+    /// <summary>
+    /// Adds a property image after successful upload to Cloudinary
+    /// </summary>
+    /// <param name="propertyId">The ID of the property</param>
+    /// <param name="request">The request containing image details from Cloudinary</param>
+    /// <returns>The ID of the created property image</returns>
     [HttpPost]
     public async Task<IActionResult> AddPropertyImage(Guid propertyId, [FromBody] AddPropertyImageRequest request)
     {
-        var command = new AddPropertyImageCommand(propertyId, request.ImageUrl, request.IsCover);
+        var command = new AddPropertyImageCommand(
+            propertyId,
+            request.PublicId,
+            request.ImageUrl,
+            request.Signature,
+            request.Timestamp,
+            request.IsCover,
+            request.Caption);
         var result = await _sender.Send(command);
-        return HandleResult(result);
+        return HandleResult(result, "Image added successfully");
     }
 
     [HttpDelete("{imageId:guid}")]
@@ -47,4 +72,12 @@ public class PropertyImagesController : ApiControllerBase
     }
 }
 
-public record AddPropertyImageRequest(string ImageUrl, bool IsCover);
+public record GeneratePhotoUploadUrlRequest(string FileName, string? Caption = null);
+
+public record AddPropertyImageRequest(
+    string PublicId,
+    string ImageUrl,
+    string Signature,
+    long Timestamp,
+    bool IsCover,
+    string? Caption = null);

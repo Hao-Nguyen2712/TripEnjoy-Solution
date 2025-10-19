@@ -114,13 +114,20 @@ namespace TripEnjoy.Client.Areas.Partner.Controllers
         }
 
         [Route("sign-in")]
-        public IActionResult SignIn()
+        public IActionResult SignIn(string? returnUrl = null)
         {
             var model = new LoginRequestVM();
             if (TempData["LoginEmail"] is string email)
             {
                 model.Email = email;
             }
+            
+            // Store return URL for after successful login
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                TempData["ReturnUrl"] = returnUrl;
+            }
+            
             return View(model);
         }
 
@@ -146,6 +153,13 @@ namespace TripEnjoy.Client.Areas.Partner.Controllers
                 // Store email in TempData for OTP verification
                 TempData["Email"] = loginRequest.Email;
                 TempData["IsPartner"] = true; // Flag to identify partner login
+                
+                // Preserve return URL through the OTP verification process
+                if (TempData["ReturnUrl"] is string returnUrl)
+                {
+                    TempData.Keep("ReturnUrl");
+                }
+                
                 return RedirectToAction("VerifyOtp");
             }
             else
@@ -189,6 +203,12 @@ namespace TripEnjoy.Client.Areas.Partner.Controllers
             {
                 // If email is not in TempData, redirect to sign-in
                 return RedirectToAction("SignIn");
+            }
+
+            // Preserve return URL for the POST action
+            if (TempData["ReturnUrl"] is string returnUrl)
+            {
+                TempData.Keep("ReturnUrl");
             }
 
             var model = new VerifyOtpRequestVM { Email = email };
@@ -261,7 +281,15 @@ namespace TripEnjoy.Client.Areas.Partner.Controllers
 
                     TempData["ClearOtpTimer"] = true;
 
-                    // Redirect to partner dashboard (you can create this later)
+                    // Check if there's a return URL to redirect to
+                    if (TempData["ReturnUrl"] is string returnUrl && 
+                        !string.IsNullOrEmpty(returnUrl) && 
+                        returnUrl.StartsWith("/partner", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Redirect(returnUrl);
+                    }
+
+                    // Default redirect to partner dashboard
                     return RedirectToAction("Index", "Home", new { area = "Partner" });
                 }
             }

@@ -59,17 +59,22 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <h4 class="mb-1">Upload Documents</h4>
-                            <p class="text-muted mb-0">Submit business verification documents</p>
+                            <h4 class="mb-1">Manage Documents</h4>
+                            <p class="text-muted mb-0">Upload & view verification documents</p>
                         </div>
                         <div class="avatar-sm bg-soft-info rounded">
-                            <i class="fas fa-upload text-info avatar-title"></i>
+                            <i class="fas fa-file-alt text-info avatar-title"></i>
                         </div>
                     </div>
                     <div class="mt-3">
-                        <a href="/partner/documents/upload" class="btn btn-sm btn-soft-info">
-                            <i class="fas fa-arrow-right me-1"></i>Get Started
-                        </a>
+                        <div class="btn-group" role="group" aria-label="Document actions">
+                            <a href="/partner/documents/upload" class="btn btn-sm btn-soft-info">
+                                <i class="fas fa-upload me-1"></i>Upload
+                            </a>
+                            <a href="/partner/documents" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-list me-1"></i>View All
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -80,17 +85,22 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <h4 class="mb-1">Add Properties</h4>
-                            <p class="text-muted mb-0">List your accommodations</p>
+                            <h4 class="mb-1">Manage Properties</h4>
+                            <p class="text-muted mb-0">List & manage your accommodations</p>
                         </div>
                         <div class="avatar-sm bg-soft-success rounded">
-                            <i class="fas fa-plus text-success avatar-title"></i>
+                            <i class="fas fa-building text-success avatar-title"></i>
                         </div>
                     </div>
                     <div class="mt-3">
-                        <a href="#" class="btn btn-sm btn-soft-success">
-                            <i class="fas fa-arrow-right me-1"></i>Add Property
-                        </a>
+                        <div class="btn-group" role="group" aria-label="Property actions">
+                            <a asp-area="Partner" asp-controller="Properties" asp-action="Index" class="btn btn-sm btn-soft-success">
+                                <i class="fas fa-list me-1"></i>View All
+                            </a>
+                            <a asp-area="Partner" asp-controller="Properties" asp-action="Create" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-plus me-1"></i>Add New
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -139,6 +149,35 @@
         </div>
     </div>
 
+    <!-- Quick Property Management -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="text-white mb-2">Ready to list your properties?</h5>
+                            <p class="text-white-50 mb-3">
+                                Start managing your property portfolio and attract more guests with our comprehensive listing tools.
+                            </p>
+                            <div class="btn-group" role="group">
+                                <a asp-area="Partner" asp-controller="Properties" asp-action="Index" class="btn btn-light">
+                                    <i class="fas fa-list me-1"></i>View My Properties
+                                </a>
+                                <a asp-area="Partner" asp-controller="Properties" asp-action="Create" class="btn btn-outline-light">
+                                    <i class="fas fa-plus me-1"></i>Add New Property
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center d-none d-md-block">
+                            <i class="fas fa-home fa-4x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Status Information -->
     <div class="row">
         <div class="col-12">
@@ -176,7 +215,7 @@
                                         <a href="/partner/documents/upload" class="btn btn-sm btn-primary">
                                             <i class="fas fa-plus me-1"></i>Upload
                                         </a>
-                                        <a href="/partner/documents/list" class="btn btn-sm btn-outline-primary">
+                                        <a href="/partner/documents" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-list me-1"></i>View All
                                         </a>
                                     </div>
@@ -258,6 +297,14 @@
         .card:hover {
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
+        }
+        
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .text-white-50 {
+            color: rgba(255, 255, 255, 0.75) !important;
         }
     </style>
 }

@@ -1,11 +1,5 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System;
 using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
-using TripEnjoy.Domain.Common.Models;
-using Microsoft.AspNetCore.Builder;
 
 namespace TripEnjoy.Api.Middleware;
 

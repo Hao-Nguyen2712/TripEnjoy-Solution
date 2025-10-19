@@ -72,6 +72,26 @@ namespace TripEnjoy.Domain.Property
             return Result<Property>.Success(property);
         }
 
+        public Result Update(PropertyTypeId propertyTypeId, string name, string address, string city, string country, string? description = null, double? latitude = null, double? longitude = null)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return Result.Failure(DomainError.Property.NameIsRequired);
+            }
+
+            PropertyTypeId = propertyTypeId;
+            Name = name;
+            Address = address;
+            City = city;
+            Country = country;
+            Description = description;
+            Latitude = latitude;
+            Longitude = longitude;
+            UpdatedAt = DateTime.UtcNow;
+
+            return Result.Success();
+        }
+
         public Result AddImage(string imageUrl, bool isCover)
         {
             var propertyImage = new PropertyImage(PropertyImageId.CreateUnique(), Id, imageUrl);

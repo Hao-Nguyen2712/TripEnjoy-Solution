@@ -121,10 +121,62 @@ namespace TripEnjoy.Client.Areas.Partner.Controllers
         }
 
         [HttpGet]
-        public IActionResult List()
+        public async Task<IActionResult> List(int pageNumber = 1, int pageSize = 10)
         {
-            // TODO: Implement document list view
-            return View();
+            try
+            {
+                var client = _httpClientFactory.CreateClient("ApiClient");
+                var response = await client.GetAsync($"api/v1/partner/documents?pageNumber={pageNumber}&pageSize={pageSize}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var apiResponse = JsonConvert.DeserializeObject<ApiResponseVM<PagedListVM<PartnerDocumentVM>>>(responseContent);
+                    return View(apiResponse?.Data ?? new PagedListVM<PartnerDocumentVM>());
+                }
+                else
+                {
+                    _logger.LogWarning("API call failed. Status: {StatusCode}", response.StatusCode);
+                    return View(new PagedListVM<PartnerDocumentVM>());
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading partner documents");
+                return View(new PagedListVM<PartnerDocumentVM>());
+            }
+        }
+
+        [HttpGet]
+        [Route("api")]
+        public async Task<IActionResult> GetDocumentsApi(int pageNumber = 1, int pageSize = 10)
+        {
+            try
+            {
+                var client = _httpClientFactory.CreateClient("ApiClient");
+                var response = await client.GetAsync($"api/v1/partner/documents?pageNumber={pageNumber}&pageSize={pageSize}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var apiResponse = JsonConvert.DeserializeObject<ApiResponseVM<PagedListVM<PartnerDocumentVM>>>(responseContent);
+                    return Json(new { success = true, data = apiResponse?.Data });
+                }
+                else
+                {
+                    _logger.LogWarning("API call failed. Status: {StatusCode}, Response: {ResponseContent}",
+                        response.StatusCode, responseContent);
+
+                    var errorResponse = JsonConvert.DeserializeObject<ApiResponseVM<object>>(responseContent);
+                    var errorMessages = ExtractErrorMessages(errorResponse?.Errors);
+                    return Json(new { success = false, message = string.Join(", ", errorMessages) });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading partner documents via API");
+                return Json(new { success = false, message = "An error occurred while loading documents." });
+            }
         }
 
         private static Dictionary<string, string> GetDocumentTypes()

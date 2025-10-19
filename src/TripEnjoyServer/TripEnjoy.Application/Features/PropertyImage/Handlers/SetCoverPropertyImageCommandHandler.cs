@@ -31,7 +31,8 @@ public class SetCoverPropertyImageCommandHandler : IRequestHandler<SetCoverPrope
             return Result.Failure(DomainError.Authentication.Unauthorized);
         }
 
-        var property = await _unitOfWork.Properties.GetByIdAsync(request.PropertyId);
+        var propertyId = PropertyId.Create(request.PropertyId);
+        var property = await _unitOfWork.Properties.GetByIdWithImagesAsync(propertyId);
         if (property is null)
         {
             return Result.Failure(DomainError.Property.NotFound);
