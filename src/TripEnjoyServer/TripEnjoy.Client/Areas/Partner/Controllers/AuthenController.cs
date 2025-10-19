@@ -298,6 +298,44 @@ namespace TripEnjoy.Client.Areas.Partner.Controllers
             ModelState.AddModelError(string.Empty, "Invalid OTP. Please try again.");
             return View(verifyOtpRequest);
         }
+
+        [HttpPost]
+        [Route("sign-out")]
+        public new async Task<IActionResult> SignOut()
+        {
+            try
+            {
+                var refreshToken = Request.Cookies["refreshToken"];
+
+                if (!string.IsNullOrEmpty(refreshToken))
+                {
+                    // Call the logout API endpoint
+                    var client = _clientFactory.CreateClient("ApiClient");
+                    var logoutRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/logout");
+                    logoutRequest.Content = new StringContent(
+                        JsonConvert.SerializeObject(new { RefreshToken = refreshToken }),
+                        Encoding.UTF8,
+                        "application/json");
+
+                    await client.SendAsync(logoutRequest);
+                    // We don't check the response as we'll clear cookies regardless
+                }
+            }
+            catch
+            {
+                // Log the error but continue with logout process
+            }
+
+            // Clear cookies
+            Response.Cookies.Delete("accessToken");
+            Response.Cookies.Delete("refreshToken");
+
+            // Sign out of ASP.NET Core authentication
+            await HttpContext.SignOutAsync();
+
+            // Redirect to partner sign-in page
+            return RedirectToAction("SignIn", "Authen", new { area = "Partner" });
+        }
     }
 
     // Helper class for validation problem details

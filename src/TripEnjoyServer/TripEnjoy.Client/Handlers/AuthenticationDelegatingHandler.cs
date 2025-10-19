@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Newtonsoft.Json;
 using System.Net;
 using System.Net.Http.Headers;
@@ -10,11 +11,13 @@ namespace TripEnjoy.Client.Handlers
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
 
-        public AuthenticationDelegatingHandler(IHttpContextAccessor httpContextAccessor, IHttpClientFactory httpClientFactory)
+        public AuthenticationDelegatingHandler(IHttpContextAccessor httpContextAccessor, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _httpContextAccessor = httpContextAccessor;
             _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -52,8 +55,13 @@ namespace TripEnjoy.Client.Handlers
                     }
                 }
 
-                // If refresh fails, redirect to login
-                httpContext.Response.Redirect("/auth/sign-in");
+                // If refresh fails, clear cookies and redirect to appropriate login page
+                ClearAuthCookies();
+                var loginUrl = GetAppropriateLoginUrl(httpContext);
+                return new HttpResponseMessage(HttpStatusCode.Unauthorized)
+                {
+                    Headers = { Location = new Uri(loginUrl, UriKind.RelativeOrAbsolute) }
+                };
             }
 
             return response;
@@ -69,7 +77,8 @@ namespace TripEnjoy.Client.Handlers
 
             // Use a specific HttpClient that doesn't have this handler to avoid an infinite loop
             var client = _httpClientFactory.CreateClient("AuthApiClient");
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7199/api/v1/auth/refresh-token");
+            var apiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7199";
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{apiBaseUrl}/api/v1/auth/refresh-token");
             request.Content = new StringContent(JsonConvert.SerializeObject(tokenRequest), Encoding.UTF8, "application/json");
 
             var response = await client.SendAsync(request, cancellationToken);
@@ -100,6 +109,44 @@ namespace TripEnjoy.Client.Handlers
             context.Response.Cookies.Append("accessToken", tokens.Token, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
         }
 
+        private void ClearAuthCookies()
+        {
+            var context = _httpContextAccessor.HttpContext;
+            if (context == null) return;
+
+            context.Response.Cookies.Delete("accessToken");
+            context.Response.Cookies.Delete("refreshToken");
+            context.SignOutAsync();
+        }
+
+        private string GetAppropriateLoginUrl(HttpContext httpContext)
+        {
+            // Check if the request is coming from partner area
+            var requestPath = httpContext.Request.Path.Value?.ToLowerInvariant();
+            var referer = httpContext.Request.Headers.Referer.FirstOrDefault();
+
+            // Check if current request path indicates partner area
+            if (requestPath?.StartsWith("/partner") == true)
+            {
+                return "/partner/auth/sign-in";
+            }
+
+            // Check if referer indicates partner area
+            if (!string.IsNullOrEmpty(referer) && referer.Contains("/partner", StringComparison.OrdinalIgnoreCase))
+            {
+                return "/partner/auth/sign-in";
+            }
+
+            // Check if user has partner role in claims
+            if (httpContext.User?.IsInRole("Partner") == true)
+            {
+                return "/partner/auth/sign-in";
+            }
+
+            // Default to regular user login
+            return "/auth/sign-in";
+        }
+
         private async Task<HttpRequestMessage> CloneRequestAsync(HttpRequestMessage request)
         {
             var clone = new HttpRequestMessage(request.Method, request.RequestUri);
@@ -120,7 +167,7 @@ namespace TripEnjoy.Client.Handlers
 
             foreach (var prop in request.Options)
             {
-                clone.Options.Set(new HttpRequestOptionsKey<object>(prop.Key), prop.Value);
+                clone.Options.Set(new HttpRequestOptionsKey<object?>(prop.Key), prop.Value);
             }
 
             foreach (var header in request.Headers)

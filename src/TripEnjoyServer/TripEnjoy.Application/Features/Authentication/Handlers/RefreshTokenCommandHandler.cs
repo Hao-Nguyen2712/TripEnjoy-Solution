@@ -48,13 +48,13 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
         public async Task<Result<AuthResultDTO>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
             var principal = await _authenService.GetPrincipalFromExpiredToken(request.refreshToken);
-            if (principal is null)
+            if (principal.IsFailure || principal.Value is null)
             {
                 _logger.LogError("Invalid token for user {Email}", request.expiredAccessToken);
                 return Result<AuthResultDTO>.Failure(DomainError.Account.InvalidToken);
             }
 
-            var aspNetUserId = principal.Value?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            var aspNetUserId = principal.Value.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             if (aspNetUserId is null)
             {
                 _logger.LogError("User is null");
@@ -100,7 +100,7 @@ namespace TripEnjoy.Application.Features.Authentication.Handlers
 
             try
             {
-               await _unitOfWork.Repository<Domain.Account.Account>().UpdateAsync(account);
+                await _unitOfWork.AccountRepository.UpdateAsync(account);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
             }
             catch (Exception ex)

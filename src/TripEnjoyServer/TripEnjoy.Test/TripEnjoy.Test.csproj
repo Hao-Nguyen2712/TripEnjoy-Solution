@@ -44,6 +44,7 @@
     <!-- All project references for integration testing -->
     <ProjectReference Include="..\TripEnjoy.Api\TripEnjoy.Api.csproj" />
     <ProjectReference Include="..\TripEnjoy.Application\TripEnjoy.Application.csproj" />
+    <ProjectReference Include="..\TripEnjoy.Client\TripEnjoy.Client.csproj" />
     <ProjectReference Include="..\TripEnjoy.Domain\TripEnjoy.Domain.csproj" />
     <ProjectReference Include="..\TripEnjoy.Infrastructure\TripEnjoy.Infrastructure.csproj" />
     <ProjectReference Include="..\TripEnjoy.Infrastructure.Persistence\TripEnjoy.Infrastructure.Persistence.csproj" />
