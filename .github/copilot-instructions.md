@@ -178,3 +178,360 @@ When adding new features, follow TDD principles with the established CQRS patter
 - Business logic belongs in domain entities, not handlers
 - Follow Result pattern for error handling
 - Maintain comprehensive test coverage
+
+## Testing Strategy
+
+### Test Commands
+```bash
+# Run all tests
+dotnet test
+
+# Run unit tests only (faster, no external dependencies)
+dotnet test --filter "Category!=Integration"
+
+# Run integration tests (requires Redis and SQL Server)
+dotnet test --filter "Category=Integration"
+
+# Run tests with detailed output
+dotnet test --verbosity detailed
+
+# Run specific test project
+dotnet test src/TripEnjoyServer/TripEnjoy.Test/TripEnjoy.Test.csproj
+
+# Run tests with coverage (if configured)
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+### Test Organization
+- **Unit Tests**: Located in `TripEnjoy.Test/UnitTests/`
+  - Test handlers, validators, domain logic in isolation
+  - Use Moq for mocking dependencies
+  - No database or external service dependencies
+  
+- **Integration Tests**: Located in `TripEnjoy.Test/IntegrationTests/`
+  - Test API endpoints end-to-end
+  - Require running Redis (localhost:6379)
+  - Use in-memory database or test database
+  - Tagged with `[Trait("Category", "Integration")]`
+
+### Test Naming Convention
+```csharp
+// Pattern: MethodName_Scenario_ExpectedBehavior
+[Fact]
+public async Task Handle_ValidCommand_ReturnsSuccess()
+
+[Fact]
+public async Task Handle_InvalidPropertyId_ReturnsNotFoundError()
+```
+
+### Test Data Generation
+- Use AutoFixture for test data generation
+- Use FluentAssertions for readable assertions
+- Mock external services (Cloudinary, Email) in unit tests
+
+## Code Quality & Linting
+
+### Code Style
+- Follow C# coding conventions and .NET naming guidelines
+- Use nullable reference types (`#nullable enable`)
+- Prefer explicit over implicit typing for clarity
+- Keep methods small and focused (Single Responsibility)
+
+### EditorConfig
+The project uses `.editorconfig` for consistent formatting:
+- 4 spaces for indentation (no tabs)
+- UTF-8 encoding
+- LF line endings
+- Trim trailing whitespace
+
+### Common Code Patterns to Follow
+```csharp
+// ✅ Good: Using Result pattern
+public async Task<Result<PropertyId>> Handle(CreatePropertyCommand request)
+{
+    var property = Property.Create(...);
+    await _unitOfWork.PropertyRepository.AddAsync(property);
+    await _unitOfWork.SaveChangesAsync();
+    return Result<PropertyId>.Success(property.Id);
+}
+
+// ❌ Bad: Throwing exceptions for business logic
+public async Task<PropertyId> Handle(CreatePropertyCommand request)
+{
+    if (!await _propertyTypeRepository.ExistsAsync(request.PropertyTypeId))
+        throw new NotFoundException("Property type not found");
+    // ...
+}
+
+// ✅ Good: Strongly-typed IDs
+var propertyId = PropertyId.CreateUnique();
+var property = await _repository.GetByIdAsync(propertyId);
+
+// ❌ Bad: Using raw Guids
+Guid propertyId = Guid.NewGuid();
+var property = await _repository.GetByIdAsync(propertyId);
+```
+
+## Environment Setup
+
+### Prerequisites
+1. **.NET 8 SDK** - Download from https://dotnet.microsoft.com/download
+2. **SQL Server** - Local instance or connection to remote server
+3. **Redis** - Required for caching and integration tests
+   ```bash
+   # Run Redis via Docker
+   docker run -d -p 6379:6379 redis:7-alpine
+   
+   # Or install locally on Windows/Mac/Linux
+   # Windows: https://github.com/microsoftarchive/redis/releases
+   # Mac: brew install redis
+   # Linux: apt-get install redis-server
+   ```
+4. **Cloudinary Account** (for image storage) - Sign up at https://cloudinary.com
+
+### Configuration
+Update `appsettings.Development.json` in the API project:
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=TripEnjoyDb;Trusted_Connection=true;TrustServerCertificate=true"
+  },
+  "CacheSettings": {
+    "ConnectionString": "localhost:6379"
+  },
+  "CloudinarySettings": {
+    "CloudName": "your-cloud-name",
+    "ApiKey": "your-api-key",
+    "ApiSecret": "your-api-secret"
+  }
+}
+```
+
+### Database Setup
+```bash
+# Navigate to API project
+cd src/TripEnjoyServer/TripEnjoy.Api
+
+# Apply migrations (creates database and schema)
+dotnet ef database update
+
+# Or run the API (auto-applies migrations on startup)
+dotnet run
+```
+
+## Troubleshooting Common Issues
+
+### Database Issues
+**Problem**: "Cannot open database" or connection errors
+**Solution**: 
+- Verify SQL Server is running
+- Check connection string in `appsettings.Development.json`
+- Run `dotnet ef database update` manually
+- Check if database exists with proper permissions
+
+### Redis Issues
+**Problem**: Integration tests failing with "Redis connection failed"
+**Solution**:
+- Ensure Redis is running on localhost:6379
+- Test connection: `redis-cli ping` should return `PONG`
+- Check firewall settings
+- For Docker: `docker ps` to verify container is running
+
+### Migration Issues
+**Problem**: "Pending model changes" error
+**Solution**:
+```bash
+# Add new migration
+cd src/TripEnjoyServer/TripEnjoy.Infrastructure.Persistence
+dotnet ef migrations add YourMigrationName --startup-project ../TripEnjoy.Api
+
+# Remove last migration if needed
+dotnet ef migrations remove --startup-project ../TripEnjoy.Api
+```
+
+### Authentication Issues
+**Problem**: JWT token invalid or expired
+**Solution**:
+- Tokens expire after configured time (check JWT settings)
+- Use refresh token endpoint to get new access token
+- Clear browser cookies/local storage for client app
+- Check token is included in Authorization header: `Bearer {token}`
+
+### Build Issues
+**Problem**: "The type or namespace could not be found"
+**Solution**:
+```bash
+# Clean and restore
+dotnet clean
+dotnet restore
+
+# Build in correct order
+dotnet build TripEnjoyServer.sln
+```
+
+## Security Best Practices
+
+### Input Validation
+- **Always validate** input at multiple layers:
+  1. Client-side validation (DataAnnotations in ViewModels)
+  2. FluentValidation in Application layer
+  3. Domain entity validation in Create/Update methods
+
+### Authentication & Authorization
+- Use `[Authorize(Roles = RoleConstant.Partner)]` for role-based endpoints
+- Verify resource ownership in handlers (e.g., partner can only edit own properties)
+- Never trust client-provided IDs without verification
+- Use rate limiting on sensitive endpoints
+
+### Sensitive Data
+- **Never** commit secrets to source control
+- Use User Secrets for local development: `dotnet user-secrets set "Key" "Value"`
+- Use environment variables or Azure Key Vault in production
+- Cloudinary API keys should be in configuration, not code
+
+### SQL Injection Prevention
+- EF Core parameterizes queries automatically
+- Avoid raw SQL queries when possible
+- If using raw SQL, always use parameterized queries
+
+### XSS Prevention
+- Razor automatically HTML-encodes output
+- Be careful with `@Html.Raw()` - only use with trusted content
+- Validate and sanitize all user input
+
+## Common Development Scenarios
+
+### Adding a New Feature (TDD Approach)
+
+1. **Write failing unit test** for command/query handler
+   ```csharp
+   [Fact]
+   public async Task Handle_ValidRequest_ReturnsSuccess()
+   {
+       // Arrange
+       var command = new CreateFeatureCommand(...);
+       // Act & Assert - expect NotImplementedException initially
+   }
+   ```
+
+2. **Create command/query** in `TripEnjoy.Application/Features/{Domain}/Commands/`
+   ```csharp
+   public record CreateFeatureCommand(...) : IRequest<Result<FeatureId>>;
+   ```
+
+3. **Create validator** with FluentValidation
+   ```csharp
+   public class CreateFeatureCommandValidator : AbstractValidator<CreateFeatureCommand>
+   {
+       public CreateFeatureCommandValidator()
+       {
+           RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+       }
+   }
+   ```
+
+4. **Create handler** implementing business logic
+   ```csharp
+   public class CreateFeatureCommandHandler : IRequestHandler<CreateFeatureCommand, Result<FeatureId>>
+   {
+       public async Task<Result<FeatureId>> Handle(CreateFeatureCommand request, CancellationToken ct)
+       {
+           // Implementation
+       }
+   }
+   ```
+
+5. **Add controller endpoint** in `TripEnjoy.Api/Controllers/`
+   ```csharp
+   [HttpPost]
+   public async Task<IActionResult> CreateFeature([FromBody] CreateFeatureCommand command)
+   {
+       var result = await _sender.Send(command);
+       return HandleResult(result);
+   }
+   ```
+
+6. **Run tests** and ensure they pass
+   ```bash
+   dotnet test --filter "Category!=Integration"
+   ```
+
+7. **Add integration test** for API endpoint
+   ```csharp
+   [Fact]
+   [Trait("Category", "Integration")]
+   public async Task CreateFeature_WithValidData_ReturnsOk()
+   {
+       // Test API endpoint end-to-end
+   }
+   ```
+
+### Adding a Database Entity
+
+1. **Create domain entity** in `TripEnjoy.Domain/Entities/`
+2. **Add strongly-typed ID** value object
+3. **Add entity configuration** in `TripEnjoy.Infrastructure.Persistence/Configurations/`
+4. **Add DbSet** to `TripEnjoyDbContext`
+5. **Create migration**:
+   ```bash
+   cd src/TripEnjoyServer/TripEnjoy.Infrastructure.Persistence
+   dotnet ef migrations add AddNewEntity --startup-project ../TripEnjoy.Api
+   ```
+6. **Review migration** file for correctness
+7. **Apply migration**: `dotnet ef database update --startup-project ../TripEnjoy.Api`
+
+## Performance Considerations
+
+### Database Queries
+- Use `AsNoTracking()` for read-only queries
+- Include related entities explicitly: `.Include(x => x.RelatedEntity)`
+- Avoid N+1 queries - use eager loading or projection
+- Add pagination for list queries to prevent loading too much data
+
+### Caching
+- Cache frequently accessed, rarely changing data
+- Use `ICacheService` for distributed caching
+- Set appropriate expiration times
+- Cache invalidation on entity updates
+
+### Background Jobs
+- Use Hangfire for long-running operations
+- Don't block HTTP requests with heavy processing
+- Examples: Email sending, image processing, report generation
+
+## Documentation Requirements
+
+After implementing a feature, update:
+1. **This file** (copilot-instructions.md) if new patterns emerge
+2. **docs/TripEnjoy-Project-Context.md** for business context changes
+3. **API documentation** via XML comments for Swagger
+4. **README.md** if setup instructions change
+
+## Quick Reference
+
+### Useful Commands
+```bash
+# Check solution builds
+dotnet build
+
+# Run API with hot reload
+dotnet watch run --project src/TripEnjoyServer/TripEnjoy.Api
+
+# Run client MVC app
+dotnet run --project src/TripEnjoyServer/TripEnjoy.Client
+
+# Format code (if dotnet-format is installed)
+dotnet format
+
+# List migrations
+dotnet ef migrations list --project src/TripEnjoyServer/TripEnjoy.Infrastructure.Persistence --startup-project src/TripEnjoyServer/TripEnjoy.Api
+```
+
+### Key Directories
+- `TripEnjoy.Api/Controllers/` - API endpoints
+- `TripEnjoy.Application/Features/` - CQRS handlers and commands
+- `TripEnjoy.Domain/Entities/` - Domain models and business logic
+- `TripEnjoy.Infrastructure.Persistence/` - Database configurations and repositories
+- `TripEnjoy.Client/Views/` - MVC Razor views
+- `TripEnjoy.Test/UnitTests/` - Unit tests
+- `TripEnjoy.Test/IntegrationTests/` - API integration tests
