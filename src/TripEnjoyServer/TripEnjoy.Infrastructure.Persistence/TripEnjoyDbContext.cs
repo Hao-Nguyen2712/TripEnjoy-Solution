@@ -26,6 +26,8 @@ namespace TripEnjoy.Infrastructure.Persistence
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Partner> Partners { get; set; } = null!;
         public DbSet<Wallet> Wallets { get; set; } = null!;
+        public DbSet<Transaction> Transactions { get; set; } = null!;
+        public DbSet<Settlement> Settlements { get; set; } = null!;
         public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
         public DbSet<BlackListToken> BlackListTokens { get; set; } = null!;
         public DbSet<Property> Properties { get; set; } = null!;
