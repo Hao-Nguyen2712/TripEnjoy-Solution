@@ -1,79 +1,30 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.DataProtection;
-using TripEnjoy.Client.Handlers;
-using TripEnjoy.Client.Middleware;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Components.Authorization;
+using MudBlazor.Services;
+using Blazored.LocalStorage;
+using TripEnjoy.Client;
+using TripEnjoy.Client.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+// Configure API base address
+var apiBaseAddress = builder.Configuration.GetValue<string>("ApiBaseAddress") ?? "https://localhost:7199";
 
-// Configure Antiforgery for CSRF protection
-builder.Services.AddAntiforgery(options =>
-{
-    options.HeaderName = "X-CSRF-TOKEN";
-});
+// Add MudBlazor services
+builder.Services.AddMudServices();
 
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddTransient<AuthenticationDelegatingHandler>();
+// Add Blazored LocalStorage
+builder.Services.AddBlazoredLocalStorage();
 
-// This client is used by the AuthenticationDelegatingHandler to refresh the token.
-// It does NOT have the handler itself, to avoid an infinite loop.
-builder.Services.AddHttpClient("AuthApiClient");
+// Add HttpClient for API calls
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseAddress) });
 
-// This is the main client for calling protected APIs.
-// It has the handler that will automatically refresh tokens.
-builder.Services.AddHttpClient("ApiClient", client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7199");
-}).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
+// Add custom services
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+builder.Services.AddAuthorizationCore();
 
-// Configure Data Protection to persist keys to the file system
-builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "DataProtectionKeys")))
-    .SetApplicationName("TripEnjoy");
-
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-})
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/authen/sign-in";
-        options.LogoutPath = "/authen/sign-out";
-        options.AccessDeniedPath = "/authen/access-denied"; // Add path for access denied
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Ensure cookies are only sent over HTTPS
-        options.Cookie.SameSite = SameSiteMode.Lax; // Changed from Strict to Lax to allow cross-site redirects for OAuth
-        options.Cookie.Name = "TripEnjoy.Auth"; // Custom name for the cookie
-    });
-
-
-var app = builder.Build();
-
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-app.UseRouting();
-
-app.UseAuthentication();
-
-// Add partner authentication redirect middleware after authentication but before authorization
-app.UsePartnerAuthRedirect();
-
-app.UseAuthorization();
-
-app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-app.Run();
+await builder.Build().RunAsync();

@@ -1,0 +1,139 @@
+@page "/login"
+@inject IAuthenticationService AuthService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Login - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Elevation="4" Class="pa-8">
+        <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true">Welcome to TripEnjoy</MudText>
+        <MudText Typo="Typo.body1" Align="Align.Center" Class="mb-6">Sign in to your account</MudText>
+
+        @if (!_otpSent)
+        {
+            <EditForm Model="@_loginModel" OnValidSubmit="HandleLoginStepOne">
+                <DataAnnotationsValidator />
+                <MudTextField @bind-Value="_loginModel.Email" 
+                             Label="Email" 
+                             Variant="Variant.Outlined" 
+                             InputType="InputType.Email"
+                             Required="true"
+                             Class="mb-4" />
+                <MudTextField @bind-Value="_loginModel.Password" 
+                             Label="Password" 
+                             Variant="Variant.Outlined" 
+                             InputType="InputType.Password"
+                             Required="true"
+                             Class="mb-4" />
+                <MudButton ButtonType="ButtonType.Submit" 
+                          Variant="Variant.Filled" 
+                          Color="Color.Primary" 
+                          FullWidth="true"
+                          Disabled="@_isLoading">
+                    @if (_isLoading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <span>Continue</span>
+                    }
+                </MudButton>
+            </EditForm>
+        }
+        else
+        {
+            <EditForm Model="@_otpModel" OnValidSubmit="HandleLoginStepTwo">
+                <DataAnnotationsValidator />
+                <MudText Typo="Typo.body2" Class="mb-4">
+                    An OTP has been sent to your email. Please enter it below.
+                </MudText>
+                <MudTextField @bind-Value="_otpModel.Otp" 
+                             Label="OTP Code" 
+                             Variant="Variant.Outlined" 
+                             Required="true"
+                             Class="mb-4" />
+                <MudButton ButtonType="ButtonType.Submit" 
+                          Variant="Variant.Filled" 
+                          Color="Color.Primary" 
+                          FullWidth="true"
+                          Disabled="@_isLoading">
+                    @if (_isLoading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <span>Sign In</span>
+                    }
+                </MudButton>
+                <MudButton OnClick="@(() => _otpSent = false)" 
+                          Variant="Variant.Text" 
+                          Color="Color.Default" 
+                          FullWidth="true"
+                          Class="mt-2">
+                    Back
+                </MudButton>
+            </EditForm>
+        }
+
+        <MudDivider Class="my-4" />
+        <MudStack Row="true" Justify="Justify.SpaceBetween">
+            <MudLink Href="/register">Create Account</MudLink>
+            <MudLink Href="/forgot-password">Forgot Password?</MudLink>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private LoginRequest _loginModel = new();
+    private VerifyOtpRequest _otpModel = new();
+    private bool _otpSent = false;
+    private bool _isLoading = false;
+
+    private async Task HandleLoginStepOne()
+    {
+        _isLoading = true;
+        try
+        {
+            var result = await AuthService.LoginStepOneAsync(_loginModel);
+            if (result.IsSuccess)
+            {
+                _otpModel.Email = _loginModel.Email;
+                _otpSent = true;
+                Snackbar.Add("OTP sent to your email", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task HandleLoginStepTwo()
+    {
+        _isLoading = true;
+        try
+        {
+            var result = await AuthService.LoginStepTwoAsync(_otpModel);
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Login successful!", Severity.Success);
+                NavigationManager.NavigateTo("/", true);
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}
