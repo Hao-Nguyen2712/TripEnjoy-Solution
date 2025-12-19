@@ -225,5 +225,53 @@ namespace TripEnjoy.Domain.Common.Errors
                 "You do not have permission to perform this action.",
                 ErrorType.Forbidden);
         }
+
+        public static class Booking
+        {
+            public static readonly Error NotFound = new(
+                "Booking.NotFound",
+                "The booking was not found.",
+                ErrorType.NotFound);
+
+            public static readonly Error InvalidCheckInDate = new(
+                "Booking.InvalidCheckInDate",
+                "Check-in date cannot be in the past.",
+                ErrorType.Validation);
+
+            public static readonly Error InvalidCheckOutDate = new(
+                "Booking.InvalidCheckOutDate",
+                "Check-out date must be after check-in date.",
+                ErrorType.Validation);
+
+            public static readonly Error InvalidGuestCount = new(
+                "Booking.InvalidGuestCount",
+                "Number of guests must be greater than zero.",
+                ErrorType.Validation);
+
+            public static readonly Error InvalidTotalPrice = new(
+                "Booking.InvalidTotalPrice",
+                "Total price cannot be negative.",
+                ErrorType.Validation);
+
+            public static readonly Error InvalidStatusTransition = new(
+                "Booking.InvalidStatusTransition",
+                "Invalid booking status transition.",
+                ErrorType.Failure);
+
+            public static readonly Error CannotCancelBooking = new(
+                "Booking.CannotCancelBooking",
+                "This booking cannot be cancelled.",
+                ErrorType.Failure);
+
+            public static readonly Error CheckInTooEarly = new(
+                "Booking.CheckInTooEarly",
+                "Check-in date has not arrived yet.",
+                ErrorType.Failure);
+
+            public static readonly Error Unauthorized = new(
+                "Booking.Unauthorized",
+                "You are not authorized to access this booking.",
+                ErrorType.Unauthorized);
+        }
     }
 }
