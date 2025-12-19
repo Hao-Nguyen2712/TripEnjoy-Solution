@@ -5,6 +5,8 @@ using TripEnjoy.Domain.Account;
 using TripEnjoy.Domain.Account.Entities;
 using TripEnjoy.Domain.Property;
 using TripEnjoy.Domain.Property.Entities;
+using TripEnjoy.Domain.Room;
+using TripEnjoy.Domain.Room.Entities;
 
 namespace TripEnjoy.Infrastructure.Persistence
 {
@@ -27,6 +29,10 @@ namespace TripEnjoy.Infrastructure.Persistence
         public DbSet<Property> Properties { get; set; } = null!;
         public DbSet<Domain.PropertyType.PropertyType> PropertyTypes { get; set; } = null!;
         public DbSet<PropertyImage> PropertyImages { get; set; } = null!;
+        public DbSet<RoomType> RoomTypes { get; set; } = null!;
+        public DbSet<RoomTypeImage> RoomTypeImages { get; set; } = null!;
+        public DbSet<RoomAvailability> RoomAvailabilities { get; set; } = null!;
+        public DbSet<RoomPromotion> RoomPromotions { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
