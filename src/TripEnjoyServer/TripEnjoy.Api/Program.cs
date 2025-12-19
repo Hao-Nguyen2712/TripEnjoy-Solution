@@ -1,5 +1,5 @@
 ﻿using Hangfire;
-using Hangfire.Redis.StackExchange;
+using Hangfire.PostgreSql;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -116,7 +116,8 @@ builder.Services.AddHangfire(config => config
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
-    .UseRedisStorage(configuration.GetValue<string>("CacheSettings:ConnectionString")));
+    .UsePostgreSqlStorage(options => 
+        options.UseNpgsqlConnection(configuration.GetConnectionString("DefaultConnection"))));
 
 builder.Services.AddHangfireServer();
 

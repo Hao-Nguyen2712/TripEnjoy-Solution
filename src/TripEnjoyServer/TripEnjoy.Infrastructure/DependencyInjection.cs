@@ -32,7 +32,7 @@ namespace TripEnjoy.Infrastructure
             });
 
             services.AddDbContext<TripEnjoyDbContext>(options =>
-                options.UseSqlServer(
+                options.UseNpgsql(
                     configuration.GetConnectionString("DefaultConnection"),
                     b => b.MigrationsAssembly(typeof(TripEnjoyDbContext).Assembly.FullName)));
 
