@@ -1,5 +1,5 @@
-using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using TripEnjoy.Application.Interfaces.Persistence;
 
 namespace TripEnjoy.Infrastructure.Persistence.Repositories
@@ -36,7 +36,7 @@ namespace TripEnjoy.Infrastructure.Persistence.Repositories
         /// <returns>A completed task returning the same entity instance.</returns>
         public Task<T> UpdateAsync(T entity)
         {
-            
+
             _dbContext.Entry(entity).State = EntityState.Modified;
             return Task.FromResult(entity);
         }
