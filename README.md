@@ -27,10 +27,9 @@ TripEnjoy is an enterprise-grade room booking platform built with .NET 8 that co
 - **Cloudinary** - Image storage
 
 ### Frontend
-- **ASP.NET Core MVC** - Server-side rendering
-- **Razor** - View engine
-- **Bootstrap 5** - CSS framework
-- **jQuery** - JavaScript library
+- **Blazor WebAssembly** - Client-side SPA framework
+- **MudBlazor** - Material Design component library
+- **Blazored.LocalStorage** - Browser local storage abstraction
 
 ### Testing
 - **xUnit 2.5** - Test framework
@@ -119,7 +118,7 @@ dotnet ef database update
 dotnet run --project src/TripEnjoyServer/TripEnjoy.Api
 ```
 
-5. Run the MVC Client (separate terminal)
+5. Run the Blazor WebAssembly Client (separate terminal)
 ```bash
 dotnet run --project src/TripEnjoyServer/TripEnjoy.Client
 ```
@@ -129,7 +128,7 @@ dotnet run --project src/TripEnjoyServer/TripEnjoy.Client
 - **API**: https://localhost:7199
 - **Swagger**: https://localhost:7199/swagger
 - **Hangfire Dashboard**: https://localhost:7199/hangfire
-- **MVC Client**: https://localhost:7100 (check launchSettings.json)
+- **Blazor WASM Client**: https://localhost:7100 (check launchSettings.json)
 
 ## 📚 Documentation
 
