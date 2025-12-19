@@ -10,6 +10,7 @@ using TripEnjoy.Test.IntegrationTests.WebApplicationFactory;
 namespace TripEnjoy.Test.IntegrationTests.Controllers;
 
 [Collection("IntegrationTest")]
+[Trait("Category", "Integration")]
 public class PartnerDocumentsControllerTests : BaseIntegrationTest
 {
     public PartnerDocumentsControllerTests(TripEnjoyWebApplicationFactory factory) : base(factory)

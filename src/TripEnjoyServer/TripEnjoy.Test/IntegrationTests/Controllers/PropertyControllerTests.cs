@@ -4,6 +4,7 @@ using TripEnjoy.Test.IntegrationTests.WebApplicationFactory;
 
 namespace TripEnjoy.Test.IntegrationTests.Controllers;
 
+[Trait("Category", "Integration")]
 public class PropertyControllerTests : BaseIntegrationTest
 {
     public PropertyControllerTests(TripEnjoyWebApplicationFactory factory) : base(factory)

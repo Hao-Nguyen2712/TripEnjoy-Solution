@@ -77,7 +77,7 @@ public class CreatePropertyCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Errors.Should().Contain(e => e.Type == ErrorType.Unauthorized);
         
-        _propertyRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Domain.Property.Property>()), Times.Never);
+        _propertyRepositoryMock.Verify(x => x.AddAsync(It.IsAny<TripEnjoy.Domain.Property.Property>()), Times.Never);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -96,7 +96,7 @@ public class CreatePropertyCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Errors.Should().Contain(e => e.Type == ErrorType.Unauthorized);
         
-        _propertyRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Domain.Property.Property>()), Times.Never);
+        _propertyRepositoryMock.Verify(x => x.AddAsync(It.IsAny<TripEnjoy.Domain.Property.Property>()), Times.Never);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
