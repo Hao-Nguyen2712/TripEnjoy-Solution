@@ -272,6 +272,65 @@ namespace TripEnjoy.Domain.Common.Errors
                 "Booking.Unauthorized",
                 "You are not authorized to access this booking.",
                 ErrorType.Unauthorized);
+
+            // BookingDetail errors
+            public static readonly Error InvalidRoomQuantity = new(
+                "Booking.InvalidRoomQuantity",
+                "Room quantity must be greater than zero.",
+                ErrorType.Validation);
+
+            public static readonly Error InvalidNights = new(
+                "Booking.InvalidNights",
+                "Number of nights must be greater than zero.",
+                ErrorType.Validation);
+
+            public static readonly Error InvalidPricePerNight = new(
+                "Booking.InvalidPricePerNight",
+                "Price per night cannot be negative.",
+                ErrorType.Validation);
+
+            public static readonly Error InvalidDiscountAmount = new(
+                "Booking.InvalidDiscountAmount",
+                "Discount amount cannot be negative.",
+                ErrorType.Validation);
+        }
+
+        public static class Payment
+        {
+            public static readonly Error NotFound = new(
+                "Payment.NotFound",
+                "The payment was not found.",
+                ErrorType.NotFound);
+
+            public static readonly Error InvalidAmount = new(
+                "Payment.InvalidAmount",
+                "Payment amount must be greater than zero.",
+                ErrorType.Validation);
+
+            public static readonly Error InvalidStatusTransition = new(
+                "Payment.InvalidStatusTransition",
+                "Invalid payment status transition.",
+                ErrorType.Failure);
+
+            public static readonly Error InvalidTransactionId = new(
+                "Payment.InvalidTransactionId",
+                "Transaction ID is required.",
+                ErrorType.Validation);
+
+            public static readonly Error CannotFailCompletedPayment = new(
+                "Payment.CannotFailCompletedPayment",
+                "Cannot mark a completed or refunded payment as failed.",
+                ErrorType.Failure);
+
+            public static readonly Error CanOnlyRefundSuccessfulPayment = new(
+                "Payment.CanOnlyRefundSuccessfulPayment",
+                "Only successful payments can be refunded.",
+                ErrorType.Failure);
+
+            public static readonly Error CannotCancelCompletedPayment = new(
+                "Payment.CannotCancelCompletedPayment",
+                "Cannot cancel a completed or refunded payment.",
+                ErrorType.Failure);
         }
 
         public static class RoomType
