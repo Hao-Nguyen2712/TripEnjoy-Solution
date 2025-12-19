@@ -198,7 +198,7 @@ public class GetAllPropertiesQueryHandlerTests
 
     #region Helper Methods
 
-    private List<Domain.Property.Property> CreatePropertiesList(int count)
+    private List<TripEnjoy.Domain.Property.Property> CreatePropertiesList(int count)
     {
         var properties = new List<Domain.Property.Property>();
         
@@ -212,7 +212,7 @@ public class GetAllPropertiesQueryHandlerTests
         return properties;
     }
 
-    private List<Domain.Property.Property> CreatePropertiesListWithSpecificData()
+    private List<TripEnjoy.Domain.Property.Property> CreatePropertiesListWithSpecificData()
     {
         var propertyType1 = CreatePropertyType("Hotel");
         var propertyType2 = CreatePropertyType("Apartment");
@@ -227,7 +227,7 @@ public class GetAllPropertiesQueryHandlerTests
 
 
 
-    private Domain.Property.Property CreateProperty(string name, string city, string country, Domain.PropertyType.PropertyType propertyType, decimal? rating = null)
+    private TripEnjoy.Domain.Property.Property CreateProperty(string name, string city, string country, TripEnjoy.Domain.PropertyType.PropertyType propertyType, decimal? rating = null)
     {
         var partnerId = PartnerId.Create(Guid.NewGuid());
         var propertyResult = Domain.Property.Property.Create(
@@ -267,9 +267,9 @@ public class GetAllPropertiesQueryHandlerTests
         return property;
     }
 
-    private Domain.PropertyType.PropertyType CreatePropertyType(string name)
+    private TripEnjoy.Domain.PropertyType.PropertyType CreatePropertyType(string name)
     {
-        var result = Domain.PropertyType.PropertyType.Create(name);
+        var result = TripEnjoy.Domain.PropertyType.PropertyType.Create(name);
         return result.Value;
     }
 

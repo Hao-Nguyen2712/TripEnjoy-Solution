@@ -531,6 +531,158 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
                     b.ToTable("PropertyTypes", (string)null);
                 });
 
+            modelBuilder.Entity("TripEnjoy.Domain.Room.Entities.RoomAvailability", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AvailableQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("RoomTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoomTypeId", "Date")
+                        .IsUnique()
+                        .HasDatabaseName("IX_RoomAvailabilities_RoomTypeId_Date");
+
+                    b.ToTable("RoomAvailabilities", (string)null);
+                });
+
+            modelBuilder.Entity("TripEnjoy.Domain.Room.Entities.RoomPromotion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("DiscountAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("DiscountPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("RoomTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoomTypeId")
+                        .HasDatabaseName("IX_RoomPromotions_RoomTypeId");
+
+                    b.ToTable("RoomPromotions", (string)null);
+                });
+
+            modelBuilder.Entity("TripEnjoy.Domain.Room.Entities.RoomTypeImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsMain")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("RoomTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoomTypeId");
+
+                    b.ToTable("RoomTypeImages", (string)null);
+                });
+
+            modelBuilder.Entity("TripEnjoy.Domain.Room.RoomType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("AverageRating")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal>("BasePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("PropertyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ReviewCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RoomTypeName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("TotalQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PropertyId");
+
+                    b.ToTable("RoomTypes", (string)null);
+                });
+
             modelBuilder.Entity("TripEnjoy.Infrastructure.Persistence.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -740,6 +892,44 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
                     b.Navigation("PropertyType");
                 });
 
+            modelBuilder.Entity("TripEnjoy.Domain.Room.Entities.RoomAvailability", b =>
+                {
+                    b.HasOne("TripEnjoy.Domain.Room.RoomType", null)
+                        .WithMany("RoomAvailabilities")
+                        .HasForeignKey("RoomTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TripEnjoy.Domain.Room.Entities.RoomPromotion", b =>
+                {
+                    b.HasOne("TripEnjoy.Domain.Room.RoomType", null)
+                        .WithMany("RoomPromotions")
+                        .HasForeignKey("RoomTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TripEnjoy.Domain.Room.Entities.RoomTypeImage", b =>
+                {
+                    b.HasOne("TripEnjoy.Domain.Room.RoomType", null)
+                        .WithMany("RoomTypeImages")
+                        .HasForeignKey("RoomTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TripEnjoy.Domain.Room.RoomType", b =>
+                {
+                    b.HasOne("TripEnjoy.Domain.Property.Property", "Property")
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Property");
+                });
+
             modelBuilder.Entity("TripEnjoy.Domain.Account.Account", b =>
                 {
                     b.Navigation("BlackListTokens");
@@ -761,6 +951,15 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("TripEnjoy.Domain.Property.Property", b =>
                 {
                     b.Navigation("PropertyImages");
+                });
+
+            modelBuilder.Entity("TripEnjoy.Domain.Room.RoomType", b =>
+                {
+                    b.Navigation("RoomAvailabilities");
+
+                    b.Navigation("RoomPromotions");
+
+                    b.Navigation("RoomTypeImages");
                 });
 #pragma warning restore 612, 618
         }

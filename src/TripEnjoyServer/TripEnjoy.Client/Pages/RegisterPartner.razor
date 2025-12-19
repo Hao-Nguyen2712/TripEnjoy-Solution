@@ -1,0 +1,116 @@
+@page "/register-partner"
+@inject IAuthenticationService AuthService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Partner Registration - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Elevation="4" Class="pa-8">
+        <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true">Become a Partner</MudText>
+        <MudText Typo="Typo.body1" Align="Align.Center" Class="mb-6">List your properties on TripEnjoy</MudText>
+
+        <EditForm Model="@_registerModel" OnValidSubmit="HandleRegister">
+            <DataAnnotationsValidator />
+            
+            <MudTextField @bind-Value="_registerModel.Email" 
+                         Label="Email" 
+                         Variant="Variant.Outlined" 
+                         InputType="InputType.Email"
+                         Required="true"
+                         Class="mb-4" />
+            
+            <MudTextField @bind-Value="_registerModel.CompanyName" 
+                         Label="Company/Business Name" 
+                         Variant="Variant.Outlined"
+                         Required="true"
+                         Class="mb-4" />
+            
+            <MudTextField @bind-Value="_registerModel.ContactNumber" 
+                         Label="Contact Number (Optional)" 
+                         Variant="Variant.Outlined"
+                         Class="mb-4" />
+            
+            <MudTextField @bind-Value="_registerModel.Address" 
+                         Label="Business Address (Optional)" 
+                         Variant="Variant.Outlined"
+                         Lines="2"
+                         Class="mb-4" />
+            
+            <MudTextField @bind-Value="_registerModel.Password" 
+                         Label="Password" 
+                         Variant="Variant.Outlined" 
+                         InputType="InputType.Password"
+                         Required="true"
+                         Class="mb-4" />
+            
+            <MudTextField @bind-Value="_registerModel.ConfirmPassword" 
+                         Label="Confirm Password" 
+                         Variant="Variant.Outlined" 
+                         InputType="InputType.Password"
+                         Required="true"
+                         Class="mb-4" />
+
+            <MudText Typo="Typo.caption" Class="mb-4">
+                Password must be at least 8 characters with uppercase, lowercase, digit, and special character.
+            </MudText>
+            
+            <MudButton ButtonType="ButtonType.Submit" 
+                      Variant="Variant.Filled" 
+                      Color="Color.Primary" 
+                      FullWidth="true"
+                      Disabled="@_isLoading">
+                @if (_isLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                }
+                else
+                {
+                    <span>Create Partner Account</span>
+                }
+            </MudButton>
+        </EditForm>
+
+        <MudDivider Class="my-4" />
+        <MudStack Row="true" Justify="Justify.SpaceBetween">
+            <MudLink Href="/login">Already have an account? Sign in</MudLink>
+            <MudLink Href="/register">Register as User</MudLink>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private RegisterPartnerRequest _registerModel = new();
+    private bool _isLoading = false;
+
+    private async Task HandleRegister()
+    {
+        if (_registerModel.Password != _registerModel.ConfirmPassword)
+        {
+            Snackbar.Add("Passwords do not match", Severity.Error);
+            return;
+        }
+
+        _isLoading = true;
+        try
+        {
+            var result = await AuthService.RegisterPartnerAsync(_registerModel);
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Partner registration successful! Please check your email to confirm your account.", Severity.Success);
+                NavigationManager.NavigateTo("/login");
+            }
+            else
+            {
+                var errorMessage = result.Errors?.Any() == true 
+                    ? string.Join(", ", result.Errors) 
+                    : result.Message;
+                Snackbar.Add(errorMessage, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

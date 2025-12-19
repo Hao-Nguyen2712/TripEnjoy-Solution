@@ -1,0 +1,104 @@
+@page "/register"
+@inject IAuthenticationService AuthService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Register - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Elevation="4" Class="pa-8">
+        <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true">Create Your Account</MudText>
+        <MudText Typo="Typo.body1" Align="Align.Center" Class="mb-6">Join TripEnjoy to start booking amazing properties</MudText>
+
+        <EditForm Model="@_registerModel" OnValidSubmit="HandleRegister">
+            <DataAnnotationsValidator />
+            
+            <MudTextField @bind-Value="_registerModel.Email" 
+                         Label="Email" 
+                         Variant="Variant.Outlined" 
+                         InputType="InputType.Email"
+                         Required="true"
+                         Class="mb-4" />
+            
+            <MudTextField @bind-Value="_registerModel.FullName" 
+                         Label="Full Name" 
+                         Variant="Variant.Outlined"
+                         Class="mb-4" />
+            
+            <MudTextField @bind-Value="_registerModel.Password" 
+                         Label="Password" 
+                         Variant="Variant.Outlined" 
+                         InputType="InputType.Password"
+                         Required="true"
+                         Class="mb-4" />
+            
+            <MudTextField @bind-Value="_registerModel.ConfirmPassword" 
+                         Label="Confirm Password" 
+                         Variant="Variant.Outlined" 
+                         InputType="InputType.Password"
+                         Required="true"
+                         Class="mb-4" />
+
+            <MudText Typo="Typo.caption" Class="mb-4">
+                Password must be at least 8 characters with uppercase, lowercase, digit, and special character.
+            </MudText>
+            
+            <MudButton ButtonType="ButtonType.Submit" 
+                      Variant="Variant.Filled" 
+                      Color="Color.Primary" 
+                      FullWidth="true"
+                      Disabled="@_isLoading">
+                @if (_isLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                }
+                else
+                {
+                    <span>Create Account</span>
+                }
+            </MudButton>
+        </EditForm>
+
+        <MudDivider Class="my-4" />
+        <MudStack Row="true" Justify="Justify.SpaceBetween">
+            <MudLink Href="/login">Already have an account? Sign in</MudLink>
+            <MudLink Href="/register-partner">Register as Partner</MudLink>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private RegisterRequest _registerModel = new();
+    private bool _isLoading = false;
+
+    private async Task HandleRegister()
+    {
+        if (_registerModel.Password != _registerModel.ConfirmPassword)
+        {
+            Snackbar.Add("Passwords do not match", Severity.Error);
+            return;
+        }
+
+        _isLoading = true;
+        try
+        {
+            var result = await AuthService.RegisterAsync(_registerModel);
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Registration successful! Please check your email to confirm your account.", Severity.Success);
+                NavigationManager.NavigateTo("/login");
+            }
+            else
+            {
+                var errorMessage = result.Errors?.Any() == true 
+                    ? string.Join(", ", result.Errors) 
+                    : result.Message;
+                Snackbar.Add(errorMessage, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

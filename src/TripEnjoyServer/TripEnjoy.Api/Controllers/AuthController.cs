@@ -173,5 +173,13 @@ namespace TripEnjoy.Api.Controllers
             var result = await _sender.Send(command);
             return HandleResult(result, "OTP verified successfully. Please reset your password.");
         }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordCommand command)
+        {
+            _logger.LogInformation("Resetting password for email {Email}", command.Email);
+            var result = await _sender.Send(command);
+            return HandleResult(result, "Password has been reset successfully.");
+        }
     }
 }

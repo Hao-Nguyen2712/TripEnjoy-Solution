@@ -1,0 +1,14 @@
+﻿<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+    <AuthorizeView>
+        <Authorized>
+            <MudNavLink Href="/properties" Icon="@Icons.Material.Filled.Hotel">Properties</MudNavLink>
+            <MudNavLink Href="/bookings" Icon="@Icons.Material.Filled.BookOnline">Bookings</MudNavLink>
+            <MudNavGroup Title="Partner" Icon="@Icons.Material.Filled.Business" Expanded="false">
+                <MudNavLink Href="/partner" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+                <MudNavLink Href="/partner/properties" Icon="@Icons.Material.Filled.Hotel">My Properties</MudNavLink>
+                <MudNavLink Href="/partner/documents" Icon="@Icons.Material.Filled.Description">Documents</MudNavLink>
+            </MudNavGroup>
+        </Authorized>
+    </AuthorizeView>
+</MudNavMenu>

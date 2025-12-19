@@ -175,9 +175,11 @@ TripEnjoy supports diverse property types to cater to different travel needs:
 
 ## Domain-Driven Design (DDD) Aggregate Analysis
 
+> **📘 Detailed ERD Documentation**: For comprehensive database schema documentation including all 23 entities, business rules, constraints, and relationships, see [DATABASE-ERD.md](./DATABASE-ERD.md)
+
 ### Current Implementation Status
 
-Based on the database schema and existing domain structure, TripEnjoy follows DDD principles with the following aggregate boundaries:
+Based on the complete ERD analysis and existing domain structure, TripEnjoy follows DDD principles with the following aggregate boundaries:
 
 #### ✅ **IMPLEMENTED AGGREGATES**
 
@@ -193,6 +195,17 @@ Based on the database schema and existing domain structure, TripEnjoy follows DD
 - **Document Status Tracking**: Enhanced status display names and type categorization
 - **Partner Dashboard Integration**: Complete document workflow in partner portal
 - **Enhanced Authentication Middleware**: Partner-specific route protection and role validation
+- **Token Management**: RefreshToken with 7-day expiry, IsUsed flag, and revocation support
+- **Security Enhancement**: BlackListToken for logout and security incident handling
+
+**Domain Entities Implemented**:
+- ✅ Account (AccountId, AspNetUserId, Email, IsDeleted, CreateAt, UpdateAt)
+- ✅ User (UserId, AccountId, Fullname, PhoneNumber, Address, DateOfBirth, Gender)
+- ✅ Partner (PartnerId, AccountId, CompanyName, Status)
+- ✅ PartnerDocument (DocumentId, PartnerId, DocumentType, FilePath, Status, UploadedAt, ReviewedAt)
+- ✅ Wallet (WalletId, AccountId, Balance, CreatedAt, UpdatedAt)
+- ✅ RefreshToken (RefreshTokenId, AccountId, Token, ExpiryDate, CreatedAt, RevokedAt, IsUsed)
+- ✅ BlackListToken (BlacklistedTokenId, AccountId, Token, ExpiredAt, CreatedAt)
 
 ### 2. **Property Aggregate** *(SIGNIFICANTLY ENHANCED)*
 - **Root**: Property  
@@ -209,11 +222,27 @@ Based on the database schema and existing domain structure, TripEnjoy follows DD
 - **Property Details Views**: Comprehensive property information display with image galleries
 - **Authorization Controls**: Partner-only access with ownership verification
 
+**Domain Entities Implemented**:
+- ✅ Property (PropertyId, PartnerId, PropertyTypeId, Name, Description, Address, City, Country, Latitude, Longitude, Status, AverageRating, ReviewCount, CreatedAt, UpdatedAt)
+- ✅ PropertyImage (ImageId, PropertyId, FilePath, IsMain, UploadedAt)
+
+**Domain Entities Missing**:
+- ❌ RoomType (RoomTypeId, PropertyId, RoomTypeName, Description, Capacity, BasePrice, TotalQuantity, Status, AverageRating, ReviewCount, CreatedAt, UpdatedAt)
+- ❌ RoomTypeImage (ImageId, RoomTypeId, FilePath, IsMain, UploadedAt)
+- ❌ RoomAvailability (AvailabilityId, RoomTypeId, Date, AvailableQuantity, Price, CreatedAt, UpdatedAt)
+- ❌ RoomPromotion (PromotionId, RoomTypeId, DiscountPercent, DiscountAmount, StartDate, EndDate, Status, CreatedAt)
+
 ### 3. **PropertyType Aggregate** *(IMPLEMENTED)*
 - **Root**: PropertyType
 - **Business Boundary**: Property categorization (Hotel, Apartment, Resort, Villa, etc.)
 - **Current Status**: ✅ Fully implemented with 8 property types seeded
 - **Key Features**: Property classification system with status management
+
+**Domain Entities Implemented**:
+- ✅ PropertyType (PropertyTypeId, Name, Status)
+
+**Supported Property Types**:
+- Hotel, Apartment, Resort, Villa, Cabin, Guest House, Hostel, Motel
 
 ### 4. **AuditLog Aggregate** *(IMPLEMENTED)*
 - **Root**: AuditLog
@@ -221,62 +250,163 @@ Based on the database schema and existing domain structure, TripEnjoy follows DD
 - **Current Status**: ✅ Basic audit logging implemented
 - **Key Features**: Entity change tracking with old/new value comparison
 
+**Domain Entities Implemented**:
+- ✅ AuditLog (AuditLogId, AccountId, Action, EntityName, EntityId, OldValue, NewValue, CreatedAt)
+
 #### ❌ **MISSING AGGREGATES** (Database Designed but Not Implemented)
 
-### 5. **Booking Aggregate** *(NOT IMPLEMENTED)*
+### 5. **Booking Aggregate** *(PARTIALLY IMPLEMENTED)*
 - **Root**: Booking
-- **Entities**: BookingDetail, BookingHistory, Payment
+- **Entities**: BookingDetail ❌, BookingHistory ❌, Payment ❌, BookingVoucher ❌
 - **Business Boundary**: Reservation management, payment processing, booking lifecycle
-- **Required Tables**: 
-  - Booking (reservations)
-  - BookingDetail (room-specific booking items)
-  - BookingHistory (status change tracking)
-  - Payment (transaction processing)
+- **Current Status**: ⚠️ **Basic Booking entity exists but NOT in database**
+- **Implementation Gap**: Domain entity created but EF Core configuration and DbSet missing
+
+**Domain Entities Status**:
+- ⚠️ Booking (BookingId, UserId, PropertyId, CheckInDate, CheckOutDate, NumberOfGuests, TotalPrice, Status, CreatedAt, UpdatedAt, SpecialRequests) - **Domain model exists, not persisted**
+- ❌ BookingDetail (BookingDetailId, BookingId, RoomTypeId, Quantity, Nights, PricePerNight, DiscountAmount, TotalPrice)
+- ❌ BookingHistory (HistoryId, BookingId, Description, Status, ChangedAt, ChangedBy)
+- ❌ Payment (PaymentId, BookingId, Amount, PaymentMethod, TransactionId, Status, PaidAt)
+- ❌ BookingVoucher (BookingVoucherId, BookingId, VoucherId, AppliedDiscount)
+
+**Business Rules Required**:
+- Booking status workflow: Pending → Confirmed → CheckedIn → CheckedOut → Completed
+- CheckOutDate must be > CheckInDate
+- TotalAmount calculated from BookingDetails
+- Payment required before confirmation
+- Support for multi-room bookings via BookingDetail
 
 ### 6. **Room Aggregate** *(NOT IMPLEMENTED)*
 - **Root**: RoomType
 - **Entities**: RoomAvailability, RoomPromotion, RoomTypeImage
 - **Business Boundary**: Room inventory, pricing, availability calendar
-- **Required Tables**: 
-  - RoomType (room categories per property)
-  - RoomAvailability (daily availability and pricing)
-  - RoomPromotion (discount campaigns)
-  - RoomTypeImage (room photos)
+- **Current Status**: ❌ **Complete aggregate missing**
+- **Priority**: 🔴 **HIGH** - Core booking functionality depends on room inventory
+
+**Required Domain Entities**:
+- ❌ RoomType (RoomTypeId, PropertyId, RoomTypeName, Description, Capacity, BasePrice, TotalQuantity, Status, AverageRating, ReviewCount, CreatedAt, UpdatedAt)
+- ❌ RoomTypeImage (ImageId, RoomTypeId, FilePath, IsMain, UploadedAt)
+- ❌ RoomAvailability (AvailabilityId, RoomTypeId, Date, AvailableQuantity, Price, CreatedAt, UpdatedAt)
+- ❌ RoomPromotion (PromotionId, RoomTypeId, DiscountPercent, DiscountAmount, StartDate, EndDate, Status, CreatedAt)
+
+**Business Rules Required**:
+- Room types belong to specific properties
+- BasePrice can be overridden by RoomAvailability.Price per date
+- AvailableQuantity decreases with bookings
+- Promotions: Either percentage OR fixed amount discount
+- One RoomAvailability record per RoomType per Date
 
 ### 7. **Review Aggregate** *(NOT IMPLEMENTED)*
 - **Root**: Review
 - **Entities**: ReviewImage, ReviewReply
 - **Business Boundary**: Guest feedback, property ratings, response management
-- **Required Tables**: 
-  - Review (guest feedback tied to bookings)
-  - ReviewImage (photo reviews)
-  - ReviewReply (partner/admin responses)
+- **Current Status**: ❌ **Complete aggregate missing**
+- **Priority**: 🟡 **MEDIUM** - Quality assurance and trust building
+
+**Required Domain Entities**:
+- ❌ Review (ReviewId, BookingDetailId, UserId, RoomTypeId, Rating, Comment, Status, CreatedAt, UpdatedAt)
+- ❌ ReviewImage (ImageId, ReviewId, FilePath, UploadedAt)
+- ❌ ReviewReply (ReplyId, ReviewId, ReplierType, ReplierId, Content, CreatedAt, UpdatedAt)
+
+**Business Rules Required**:
+- Users can only review rooms they have booked and stayed in
+- One review per BookingDetail
+- Rating must be 1-5 stars
+- Reviews affect RoomType.AverageRating and Property.AverageRating
+- Partners can reply to reviews on their properties
+- Admins can reply to any review
 
 ### 8. **Voucher Aggregate** *(NOT IMPLEMENTED)*
 - **Root**: Voucher
 - **Entities**: VoucherTarget, BookingVoucher
 - **Business Boundary**: Promotional campaigns, discount management, usage tracking
-- **Required Tables**: 
-  - Voucher (discount codes and rules)
-  - VoucherTarget (scope: partner/property/room specific)
-  - BookingVoucher (applied discounts tracking)
+- **Current Status**: ❌ **Complete aggregate missing**
+- **Priority**: 🟢 **LOW** - Marketing and promotional campaigns
+
+**Required Domain Entities**:
+- ❌ Voucher (VoucherId, Code, Description, DiscountType, DiscountValue, MaxDiscountAmount, MinBookingAmount, UsageLimit, UsagePerUser, StartDate, EndDate, Status, CreatedByType, CreatedById, CreatedAt, UpdatedAt)
+- ❌ VoucherTarget (VoucherTargetId, VoucherId, TargetType, TargetId)
+- ❌ BookingVoucher (BookingVoucherId, BookingId, VoucherId, AppliedDiscount)
+
+**Business Rules Required**:
+- Voucher codes must be unique system-wide
+- DiscountType: PERCENT (0-100) or AMOUNT (fixed)
+- Can be scoped to specific partners, properties, or rooms via VoucherTarget
+- UsageLimit enforced globally and per user
+- Active vouchers only between StartDate and EndDate
 
 ### 9. **Financial Aggregate** *(PARTIALLY IMPLEMENTED)*
 - **Root**: Wallet ✅
 - **Entities**: Transaction ❌ | Settlement ❌
 - **Business Boundary**: Financial operations, partner payouts, commission management
 - **Current Status**: ⚠️ Basic wallet implemented, missing transaction history and settlements
+- **Priority**: 🟡 **MEDIUM** - Transaction tracking and settlements
 - **Missing Components**: Detailed transaction logging, partner payout processing
+
+**Domain Entities Status**:
+- ✅ Wallet (WalletId, AccountId, Balance, CreatedAt, UpdatedAt)
+- ❌ Transaction (TransactionId, WalletId, BookingId, Amount, Type, Status, CreatedAt)
+- ❌ Settlement (SettlementId, WalletId, PeriodStart, PeriodEnd, TotalAmount, CommissionAmount, Status, PaidAt)
+
+**Business Rules Required**:
+- Wallet balance cannot be negative
+- All balance changes tracked via Transaction records
+- Transaction types: PAYMENT, REFUND, SETTLEMENT, COMMISSION
+- Settlements processed periodically (weekly/monthly)
+- TotalAmount = Booking Revenue - CommissionAmount
 
 ### **Implementation Roadmap Priority**
 
 Based on business impact and dependencies:
 
-1. **HIGH PRIORITY**: Room Aggregate - Core booking functionality depends on room inventory
-2. **HIGH PRIORITY**: Booking Aggregate - Primary business revenue driver
-3. **MEDIUM PRIORITY**: Financial Aggregate completion - Transaction tracking and settlements
-4. **MEDIUM PRIORITY**: Review Aggregate - Quality assurance and trust building
-5. **LOW PRIORITY**: Voucher Aggregate - Marketing and promotional campaigns
+1. **🔴 HIGH PRIORITY**: Room Aggregate - Core booking functionality depends on room inventory
+   - RoomType, RoomTypeImage, RoomAvailability, RoomPromotion
+   - **Blocking**: Booking system cannot function without room inventory
+
+2. **🔴 HIGH PRIORITY**: Booking Aggregate Enhancement - Primary business revenue driver
+   - BookingDetail, BookingHistory, Payment, BookingVoucher
+   - **Blocking**: Multi-room bookings, payment processing, booking lifecycle
+
+3. **🟡 MEDIUM PRIORITY**: Financial Aggregate Completion - Transaction tracking and settlements
+   - Transaction, Settlement
+   - **Required**: Partner payout processing, commission management
+
+4. **🟡 MEDIUM PRIORITY**: Review Aggregate - Quality assurance and trust building
+   - Review, ReviewImage, ReviewReply
+   - **Impact**: User trust, property quality metrics
+
+5. **🟢 LOW PRIORITY**: Voucher Aggregate - Marketing and promotional campaigns
+   - Voucher, VoucherTarget, BookingVoucher
+   - **Enhancement**: Marketing capabilities, promotional campaigns
+
+### **Aggregate Implementation Statistics**
+
+```
+┌────────────────────────────┬──────────┬───────────┬────────────┐
+│ Aggregate                  │ Status   │ Entities  │ Priority   │
+├────────────────────────────┼──────────┼───────────┼────────────┤
+│ Account Aggregate          │    ✅    │   7/7     │     -      │
+│ Property Aggregate         │    ⚠️    │   2/6     │   HIGH     │
+│ PropertyType Aggregate     │    ✅    │   1/1     │     -      │
+│ Booking Aggregate          │    ❌    │   1/5     │   HIGH     │
+│ Review Aggregate           │    ❌    │   0/3     │  MEDIUM    │
+│ Voucher Aggregate          │    ❌    │   0/3     │    LOW     │
+│ Financial Aggregate        │    ⚠️    │   1/3     │  MEDIUM    │
+│ AuditLog Aggregate         │    ✅    │   1/1     │     -      │
+├────────────────────────────┼──────────┼───────────┼────────────┤
+│ TOTAL                      │    -     │  13/29    │     -      │
+└────────────────────────────┴──────────┴───────────┴────────────┘
+
+Overall Implementation: 45% Complete (13 of 29 domain entities)
+
+Legend:
+✅ = Fully Implemented
+⚠️ = Partially Implemented  
+❌ = Not Implemented
+🔴 = High Priority
+🟡 = Medium Priority
+🟢 = Low Priority
+```
 
 ### **Domain Architecture Insights**
 
