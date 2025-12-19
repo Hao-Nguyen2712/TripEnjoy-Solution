@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: tripenjoy-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=TripEnjoy@2024
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - tripenjoy-network
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P TripEnjoy@2024 -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: tripenjoy-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - tripenjoy-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Seq Logging (Optional - for structured logging)
+  seq:
+    image: datalust/seq:latest
+    container_name: tripenjoy-seq
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - "5341:80"
+    volumes:
+      - seq_data:/data
+    networks:
+      - tripenjoy-network
+
+  # TripEnjoy API
+  api:
+    build:
+      context: ../src/TripEnjoyServer
+      dockerfile: TripEnjoy.Api/Dockerfile
+    container_name: tripenjoy-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=TripEnjoy;User Id=sa;Password=TripEnjoy@2024;TrustServerCertificate=True;
+      - JWT__ValidAudience=http://localhost:8080
+      - JWT__ValidIssuer=http://localhost:8080
+      - JWT__Secret=ThisIsAStrongAndLongSecretKeyForJWTSecurity-ChangeThisInProduction
+      - CacheSettings__ConnectionString=redis:6379
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
+      - EMAIL_CONFIGURATION__Host=smtp.gmail.com
+      - EMAIL_CONFIGURATION__Port=587
+      - EMAIL_CONFIGURATION__Email=${EMAIL_ADDRESS}
+      - EMAIL_CONFIGURATION__Password=${EMAIL_PASSWORD}
+      - Cloudinary__CloudName=${CLOUDINARY_CLOUD_NAME}
+      - Cloudinary__ApiKey=${CLOUDINARY_API_KEY}
+      - Cloudinary__ApiSecret=${CLOUDINARY_API_SECRET}
+    ports:
+      - "7199:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - tripenjoy-network
+    healthcheck:
+      test: curl --fail http://localhost:8080/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # TripEnjoy Blazor Client
+  client:
+    build:
+      context: ../src/TripEnjoyServer/TripEnjoy.Client
+      dockerfile: Dockerfile
+    container_name: tripenjoy-client
+    ports:
+      - "7100:80"
+    depends_on:
+      - api
+    networks:
+      - tripenjoy-network
+    environment:
+      - API_BASE_URL=http://api:8080
+
+networks:
+  tripenjoy-network:
+    driver: bridge
+
+volumes:
+  sqlserver_data:
+    driver: local
+  redis_data:
+    driver: local
+  seq_data:
+    driver: local

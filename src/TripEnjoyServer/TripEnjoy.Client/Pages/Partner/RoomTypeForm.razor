@@ -1,0 +1,231 @@
+@page "/partner/properties/{PropertyId:guid}/room-types/create"
+@page "/partner/properties/{PropertyId:guid}/room-types/edit/{RoomTypeId:guid}"
+@inject IRoomTypeService RoomTypeService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@using System.ComponentModel.DataAnnotations
+
+<PageTitle>@(_isEditMode ? "Edit Room Type" : "Create Room Type") - TripEnjoy</PageTitle>
+
+<AuthorizeView Roles="Partner" Context="authContext">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+            <MudPaper Elevation="3" Class="pa-6">
+                <MudText Typo="Typo.h4" GutterBottom="true">
+                    @(_isEditMode ? "Edit Room Type" : "Create Room Type")
+                </MudText>
+
+                <EditForm Model="@_model" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+
+                    <MudTextField @bind-Value="_model.RoomTypeName" 
+                                 Label="Room Type Name" 
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Class="mb-4"
+                                 For="@(() => _model.RoomTypeName)" />
+
+                    <MudTextField @bind-Value="_model.Description" 
+                                 Label="Description" 
+                                 Variant="Variant.Outlined"
+                                 Lines="4"
+                                 Class="mb-4"
+                                 For="@(() => _model.Description)" />
+
+                    <MudGrid>
+                        <MudItem xs="12" sm="4">
+                            <MudNumericField @bind-Value="_model.Capacity" 
+                                           Label="Capacity" 
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           Min="1"
+                                           Max="20"
+                                           Class="mb-4"
+                                           T="int"
+                                           For="@(() => _model.Capacity)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudNumericField @bind-Value="_model.BasePrice" 
+                                           Label="Base Price" 
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           Min="0"
+                                           Class="mb-4"
+                                           T="decimal"
+                                           Format="F2"
+                                           For="@(() => _model.BasePrice)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudNumericField @bind-Value="_model.TotalQuantity" 
+                                           Label="Total Quantity" 
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           Min="1"
+                                           Max="1000"
+                                           Class="mb-4"
+                                           T="int"
+                                           For="@(() => _model.TotalQuantity)" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudStack Row="true" Spacing="2" Class="mt-4">
+                        <MudButton ButtonType="ButtonType.Submit" 
+                                  Variant="Variant.Filled" 
+                                  Color="Color.Primary"
+                                  Disabled="@_isLoading">
+                            @if (_isLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                            }
+                            else
+                            {
+                                <span>@(_isEditMode ? "Update" : "Create")</span>
+                            }
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" 
+                                  Color="Color.Default"
+                                  OnClick="Cancel"
+                                  Disabled="@_isLoading">
+                            Cancel
+                        </MudButton>
+                    </MudStack>
+                </EditForm>
+            </MudPaper>
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public Guid PropertyId { get; set; }
+
+    [Parameter]
+    public Guid? RoomTypeId { get; set; }
+
+    private RoomTypeFormModel _model = new();
+    private bool _isEditMode => RoomTypeId.HasValue;
+    private bool _isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_isEditMode)
+        {
+            await LoadRoomType();
+        }
+    }
+
+    private async Task LoadRoomType()
+    {
+        _isLoading = true;
+        
+        if (RoomTypeId.HasValue)
+        {
+            var result = await RoomTypeService.GetRoomTypeByIdAsync(RoomTypeId.Value);
+            
+            if (result.IsSuccess && result.Data != null)
+            {
+                var roomType = result.Data;
+                _model = new RoomTypeFormModel
+                {
+                    RoomTypeName = roomType.RoomTypeName,
+                    Description = roomType.Description,
+                    Capacity = roomType.Capacity,
+                    BasePrice = roomType.BasePrice,
+                    TotalQuantity = roomType.TotalQuantity
+                };
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? "Failed to load room type", Severity.Error);
+            }
+        }
+        
+        _isLoading = false;
+    }
+
+    private async Task HandleSubmit()
+    {
+        _isLoading = true;
+
+        if (_isEditMode && RoomTypeId.HasValue)
+        {
+            var request = new UpdateRoomTypeRequest
+            {
+                RoomTypeId = RoomTypeId.Value,
+                RoomTypeName = _model.RoomTypeName,
+                Description = _model.Description,
+                Capacity = _model.Capacity,
+                BasePrice = _model.BasePrice,
+                TotalQuantity = _model.TotalQuantity
+            };
+
+            var result = await RoomTypeService.UpdateRoomTypeAsync(request);
+            
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Room type updated successfully", Severity.Success);
+                NavigationManager.NavigateTo($"/partner/properties/{PropertyId}/room-types");
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? "Failed to update room type", Severity.Error);
+            }
+        }
+        else
+        {
+            var request = new CreateRoomTypeRequest
+            {
+                PropertyId = PropertyId,
+                RoomTypeName = _model.RoomTypeName,
+                Description = _model.Description,
+                Capacity = _model.Capacity,
+                BasePrice = _model.BasePrice,
+                TotalQuantity = _model.TotalQuantity
+            };
+
+            var result = await RoomTypeService.CreateRoomTypeAsync(request);
+            
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Room type created successfully", Severity.Success);
+                NavigationManager.NavigateTo($"/partner/properties/{PropertyId}/room-types");
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? "Failed to create room type", Severity.Error);
+            }
+        }
+
+        _isLoading = false;
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo($"/partner/properties/{PropertyId}/room-types");
+    }
+
+    public class RoomTypeFormModel
+    {
+        [Required(ErrorMessage = "Room type name is required")]
+        [StringLength(100, ErrorMessage = "Room type name must not exceed 100 characters")]
+        public string RoomTypeName { get; set; } = string.Empty;
+
+        [StringLength(500, ErrorMessage = "Description must not exceed 500 characters")]
+        public string? Description { get; set; }
+
+        [Required(ErrorMessage = "Capacity is required")]
+        [Range(1, 20, ErrorMessage = "Capacity must be between 1 and 20")]
+        public int Capacity { get; set; } = 2;
+
+        [Required(ErrorMessage = "Base price is required")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Base price must be greater than 0")]
+        public decimal BasePrice { get; set; } = 100;
+
+        [Required(ErrorMessage = "Total quantity is required")]
+        [Range(1, 1000, ErrorMessage = "Total quantity must be between 1 and 1000")]
+        public int TotalQuantity { get; set; } = 1;
+    }
+}
