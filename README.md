@@ -8,7 +8,7 @@ TripEnjoy is an enterprise-grade room booking platform built with .NET 8 that co
 - **Platform**: .NET 8
 - **Projects**: 8 (Domain, Application, Infrastructure, API, Client, Tests)
 - **Lines of Code**: ~13,845
-- **Test Coverage**: 50+ test cases
+- **Test Coverage**: 139 test cases (114 unit + 25 integration)
 - **API Endpoints**: 20+
 - **Production Ready**: 60%
 
@@ -27,10 +27,9 @@ TripEnjoy is an enterprise-grade room booking platform built with .NET 8 that co
 - **Cloudinary** - Image storage
 
 ### Frontend
-- **ASP.NET Core MVC** - Server-side rendering
-- **Razor** - View engine
-- **Bootstrap 5** - CSS framework
-- **jQuery** - JavaScript library
+- **Blazor WebAssembly** - Client-side SPA framework
+- **MudBlazor** - Material Design component library
+- **Blazored.LocalStorage** - Browser local storage abstraction
 
 ### Testing
 - **xUnit 2.5** - Test framework
@@ -119,7 +118,7 @@ dotnet ef database update
 dotnet run --project src/TripEnjoyServer/TripEnjoy.Api
 ```
 
-5. Run the MVC Client (separate terminal)
+5. Run the Blazor WebAssembly Client (separate terminal)
 ```bash
 dotnet run --project src/TripEnjoyServer/TripEnjoy.Client
 ```
@@ -129,7 +128,7 @@ dotnet run --project src/TripEnjoyServer/TripEnjoy.Client
 - **API**: https://localhost:7199
 - **Swagger**: https://localhost:7199/swagger
 - **Hangfire Dashboard**: https://localhost:7199/hangfire
-- **MVC Client**: https://localhost:7100 (check launchSettings.json)
+- **Blazor WASM Client**: https://localhost:7100 (check launchSettings.json)
 
 ## 📚 Documentation
 
@@ -143,15 +142,32 @@ Comprehensive documentation is available in the `docs/` folder:
 
 ## 🧪 Testing
 
-Run all tests:
+The project includes comprehensive unit and integration tests with proper categorization.
+
+### Run All Tests
 ```bash
 dotnet test
 ```
 
-Run specific test project:
+### Run Unit Tests Only
+```bash
+dotnet test --filter "Category!=Integration"
+```
+
+### Run Integration Tests Only
+```bash
+dotnet test --filter "Category=Integration"
+```
+
+### Run Specific Test Project
 ```bash
 dotnet test src/TripEnjoyServer/TripEnjoy.Test
 ```
+
+### Test Results
+- **Unit Tests**: 114 tests ✅ All passing
+- **Integration Tests**: 25 tests (require Redis and SQL Server)
+- **Test Framework**: xUnit with FluentAssertions and Moq
 
 ## 📈 Project Status
 
@@ -160,7 +176,7 @@ dotnet test src/TripEnjoyServer/TripEnjoy.Test
 | Authentication | ✅ Complete | 100% |
 | Partner Onboarding | ✅ Complete | 100% |
 | Property Management | ✅ Complete | 100% |
-| Room Management | ❌ Todo | 0% |
+| Room Management | 🚧 In Progress | 30% |
 | Booking System | ❌ Todo | 0% |
 | Review System | ❌ Todo | 0% |
 | **Overall** | ⚠️ Partial | **60%** |

@@ -300,7 +300,7 @@ public class GetPartnerDocumentsQueryHandlerTests
     private void SetupAccountWithPartner(Guid accountId, PartnerId partnerId)
     {
         var account = Account.Create("test-user-id", "test@example.com").Value;
-        var partner = new Domain.Account.Entities.Partner(partnerId, AccountId.Create(accountId), "Test Company", "123456789", "Test Address");
+        var partner = new TripEnjoy.Domain.Account.Entities.Partner(partnerId, AccountId.Create(accountId), "Test Company", "123456789", "Test Address");
         
         // Use reflection to set the Partner property since it's private setter
         var partnerProperty = typeof(Account).GetProperty("Partner");

@@ -14,6 +14,7 @@ using FluentAssertions;
 
 namespace TripEnjoy.Test.IntegrationTests.Controllers;
 
+[Trait("Category", "Integration")]
 public class AuthControllerTests : BaseIntegrationTest
 {
     public AuthControllerTests(TripEnjoyWebApplicationFactory factory) : base(factory)
