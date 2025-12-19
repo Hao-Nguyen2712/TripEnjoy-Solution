@@ -11,6 +11,12 @@ namespace TripEnjoy.Domain.Account.Entities
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
 
+        // Navigation properties
+        private readonly List<Transaction> _transactions = new();
+        public IReadOnlyList<Transaction> Transactions => _transactions.AsReadOnly();
+
+        private readonly List<Settlement> _settlements = new();
+        public IReadOnlyList<Settlement> Settlements => _settlements.AsReadOnly();
 
         private Wallet() : base(WalletId.CreateUnique())
         {

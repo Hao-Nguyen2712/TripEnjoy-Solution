@@ -126,6 +126,74 @@ namespace TripEnjoy.Domain.Common.Errors
                 "The transaction amount must be greater than zero.",
                 ErrorType.Validation
             );
+            public static readonly Error NotFound = new(
+                "Wallet.NotFound",
+                "The wallet was not found.",
+                ErrorType.NotFound
+            );
+        }
+
+        public static class Transaction
+        {
+            public static readonly Error NotFound = new(
+                "Transaction.NotFound",
+                "The transaction was not found.",
+                ErrorType.NotFound
+            );
+            public static readonly Error InvalidAmount = new(
+                "Transaction.InvalidAmount",
+                "The transaction amount must not be zero.",
+                ErrorType.Validation
+            );
+            public static readonly Error InvalidStatus = new(
+                "Transaction.InvalidStatus",
+                "The transaction status is invalid.",
+                ErrorType.Validation
+            );
+            public static readonly Error AlreadyCompleted = new(
+                "Transaction.AlreadyCompleted",
+                "The transaction has already been completed.",
+                ErrorType.Failure
+            );
+            public static readonly Error CannotReverse = new(
+                "Transaction.CannotReverse",
+                "Only completed transactions can be reversed.",
+                ErrorType.Failure
+            );
+        }
+
+        public static class Settlement
+        {
+            public static readonly Error NotFound = new(
+                "Settlement.NotFound",
+                "The settlement was not found.",
+                ErrorType.NotFound
+            );
+            public static readonly Error InvalidPeriod = new(
+                "Settlement.InvalidPeriod",
+                "Period end date must be after period start date.",
+                ErrorType.Validation
+            );
+            public static readonly Error InvalidAmount = new(
+                "Settlement.InvalidAmount",
+                "Settlement total amount must be greater than zero.",
+                ErrorType.Validation
+            );
+            public static readonly Error InvalidCommission = new(
+                "Settlement.InvalidCommission",
+                "Commission amount cannot be negative or exceed total amount.",
+                ErrorType.Validation
+            );
+            public static readonly Error AlreadyProcessed = new(
+                "Settlement.AlreadyProcessed",
+                "The settlement has already been processed.",
+                ErrorType.Failure
+            );
+            public static readonly Error CannotCancel = new(
+                "Settlement.CannotCancel",
+                "Only pending settlements can be cancelled.",
+                ErrorType.Failure
+            );
         }
 
         public static class RefreshToken
