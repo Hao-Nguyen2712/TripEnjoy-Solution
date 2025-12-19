@@ -315,6 +315,13 @@ public class TestAuthenService : IAuthenService
         return Result<string>.Success(resetToken);
     }
 
+    public Task<Result> ResetPasswordAsync(string email, string newPassword)
+    {
+        // Mock implementation for testing
+        // In real scenarios, this would update the user's password
+        return Task.FromResult(Result.Success());
+    }
+
     private string GenerateTestJwtToken(string userId, string email, string role)
     {
         var claims = new List<Claim>

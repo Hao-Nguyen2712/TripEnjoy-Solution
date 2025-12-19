@@ -1,0 +1,157 @@
+@page "/properties/{PropertyId:guid}"
+@inject IPropertyService PropertyService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>@_property?.Name - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (_property == null)
+    {
+        <MudAlert Severity="Severity.Error">Property not found</MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+            <MudItem xs="12" md="8">
+                <MudPaper Elevation="3" Class="pa-4">
+                    @if (_property.Images.Any())
+                    {
+                        <MudCarousel TData="object" Style="height:400px;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" AutoCycle="false">
+                            @foreach (var image in _property.Images)
+                            {
+                                <MudCarouselItem>
+                                    <img src="@image.ImageUrl" style="width:100%; height:400px; object-fit:cover;" alt="@_property.Name" />
+                                </MudCarouselItem>
+                            }
+                        </MudCarousel>
+                    }
+                    else
+                    {
+                        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 400px; background-color: #f0f0f0;">
+                            <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Default" />
+                            <MudText Typo="Typo.body1">No images available</MudText>
+                        </MudStack>
+                    }
+
+                    <MudStack Class="mt-4">
+                        <MudText Typo="Typo.h4">@_property.Name</MudText>
+                        <MudText Typo="Typo.body1" Color="Color.Secondary">
+                            <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
+                            @_property.Address, @_property.City, @_property.Country
+                        </MudText>
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                            <MudChip T="string" Color="Color.Primary" Size="Size.Small">@_property.PropertyTypeName</MudChip>
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small">@_property.Status</MudChip>
+                            @if (_property.AverageRating.HasValue)
+                            {
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                    <MudRating ReadOnly="true" SelectedValue="@((int)_property.AverageRating.Value)" Size="Size.Small" />
+                                    <MudText Typo="Typo.body2">(@_property.ReviewCount reviews)</MudText>
+                                </MudStack>
+                            }
+                        </MudStack>
+
+                        @if (!string.IsNullOrEmpty(_property.Description))
+                        {
+                            <MudDivider Class="my-4" />
+                            <MudText Typo="Typo.h6">Description</MudText>
+                            <MudText Typo="Typo.body1">@_property.Description</MudText>
+                        }
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="3" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Book This Property</MudText>
+                    <AuthorizeView Roles="User">
+                        <Authorized>
+                            <MudButton Variant="Variant.Filled" 
+                                      Color="Color.Primary" 
+                                      FullWidth="true"
+                                      OnClick="BookProperty">
+                                Book Now
+                            </MudButton>
+                        </Authorized>
+                        <NotAuthorized>
+                            <MudAlert Severity="Severity.Info">Please login as a user to book this property</MudAlert>
+                            <MudButton Variant="Variant.Filled" 
+                                      Color="Color.Primary" 
+                                      FullWidth="true"
+                                      Href="/login"
+                                      Class="mt-2">
+                                Login to Book
+                            </MudButton>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </MudPaper>
+
+                <MudPaper Elevation="3" Class="pa-4 mt-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Property Information</MudText>
+                    <MudStack Spacing="3">
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                            <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small" />
+                            <MudText Typo="Typo.body2">Type: @_property.PropertyTypeName</MudText>
+                        </MudStack>
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                            <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Small" />
+                            <MudText Typo="Typo.body2">City: @_property.City</MudText>
+                        </MudStack>
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                            <MudIcon Icon="@Icons.Material.Filled.Public" Size="Size.Small" />
+                            <MudText Typo="Typo.body2">Country: @_property.Country</MudText>
+                        </MudStack>
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                            <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Size="Size.Small" />
+                            <MudText Typo="Typo.body2">Listed: @_property.CreatedAt.ToString("MMM dd, yyyy")</MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid PropertyId { get; set; }
+
+    private PropertyDto? _property;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProperty();
+    }
+
+    private async Task LoadProperty()
+    {
+        _isLoading = true;
+        try
+        {
+            var result = await PropertyService.GetPropertyByIdAsync(PropertyId);
+            if (result.IsSuccess && result.Data != null)
+            {
+                _property = result.Data;
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void BookProperty()
+    {
+        NavigationManager.NavigateTo($"/bookings/create/{PropertyId}");
+    }
+}

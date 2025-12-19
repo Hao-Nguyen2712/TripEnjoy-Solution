@@ -1,0 +1,236 @@
+@page "/partner/properties/create"
+@page "/partner/properties/edit/{PropertyId:guid}"
+@inject IPropertyService PropertyService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>@(_isEditMode ? "Edit Property" : "Create Property") - TripEnjoy</PageTitle>
+
+<AuthorizeView Roles="Partner" Context="authContext">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+    <MudPaper Elevation="3" Class="pa-6">
+        <MudText Typo="Typo.h4" GutterBottom="true">@(_isEditMode ? "Edit Property" : "Create Property")</MudText>
+
+        <EditForm Model="@_propertyModel" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <MudSelect @bind-Value="_propertyModel.PropertyTypeId" 
+                      Label="Property Type" 
+                      Variant="Variant.Outlined"
+                      Required="true"
+                      Class="mb-4"
+                      T="Guid">
+                @foreach (var type in _propertyTypes)
+                {
+                    <MudSelectItem Value="@type.Id">@type.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudTextField @bind-Value="_propertyModel.Name" 
+                         Label="Property Name" 
+                         Variant="Variant.Outlined"
+                         Required="true"
+                         Class="mb-4" />
+
+            <MudTextField @bind-Value="_propertyModel.Description" 
+                         Label="Description" 
+                         Variant="Variant.Outlined"
+                         Lines="4"
+                         Class="mb-4" />
+
+            <MudTextField @bind-Value="_propertyModel.Address" 
+                         Label="Address" 
+                         Variant="Variant.Outlined"
+                         Required="true"
+                         Class="mb-4" />
+
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="_propertyModel.City" 
+                                 Label="City" 
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Class="mb-4" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="_propertyModel.Country" 
+                                 Label="Country" 
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Class="mb-4" />
+                </MudItem>
+            </MudGrid>
+
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField @bind-Value="_propertyModel.Latitude" 
+                                    Label="Latitude (Optional)" 
+                                    Variant="Variant.Outlined"
+                                    Class="mb-4"
+                                    T="double?" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField @bind-Value="_propertyModel.Longitude" 
+                                    Label="Longitude (Optional)" 
+                                    Variant="Variant.Outlined"
+                                    Class="mb-4"
+                                    T="double?" />
+                </MudItem>
+            </MudGrid>
+
+            <MudStack Row="true" Spacing="2" Class="mt-4">
+                <MudButton ButtonType="ButtonType.Submit" 
+                          Variant="Variant.Filled" 
+                          Color="Color.Primary"
+                          Disabled="@_isLoading">
+                    @if (_isLoading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <span>@(_isEditMode ? "Update" : "Create")</span>
+                    }
+                </MudButton>
+                <MudButton Variant="Variant.Text" 
+                          Color="Color.Default"
+                          OnClick="Cancel">
+                    Cancel
+                </MudButton>
+            </MudStack>
+        </EditForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid? PropertyId { get; set; }
+
+    private CreatePropertyRequest _propertyModel = new();
+    private UpdatePropertyRequest _updateModel = new();
+    private List<PropertyTypeDto> _propertyTypes = new();
+    private bool _isEditMode = false;
+    private bool _isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isEditMode = PropertyId.HasValue;
+        await LoadPropertyTypes();
+
+        if (_isEditMode)
+        {
+            await LoadProperty();
+        }
+    }
+
+    private async Task LoadPropertyTypes()
+    {
+        var result = await PropertyService.GetPropertyTypesAsync();
+        if (result.IsSuccess && result.Data != null)
+        {
+            _propertyTypes = result.Data.Where(t => t.Status == "Active").ToList();
+        }
+        else
+        {
+            Snackbar.Add("Failed to load property types", Severity.Error);
+        }
+    }
+
+    private async Task LoadProperty()
+    {
+        if (!PropertyId.HasValue) return;
+
+        var result = await PropertyService.GetPropertyByIdAsync(PropertyId.Value);
+        if (result.IsSuccess && result.Data != null)
+        {
+            var property = result.Data;
+            _propertyModel = new CreatePropertyRequest
+            {
+                PropertyTypeId = property.PropertyTypeId,
+                Name = property.Name,
+                Description = property.Description,
+                Address = property.Address,
+                City = property.City,
+                Country = property.Country,
+                Latitude = null, // Note: Latitude not included in PropertyDto, would need to be added
+                Longitude = null  // Note: Longitude not included in PropertyDto, would need to be added
+            };
+        }
+        else
+        {
+            Snackbar.Add("Failed to load property", Severity.Error);
+            NavigationManager.NavigateTo("/partner/dashboard");
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        _isLoading = true;
+        try
+        {
+            if (_isEditMode && PropertyId.HasValue)
+            {
+                _updateModel = new UpdatePropertyRequest
+                {
+                    PropertyId = PropertyId.Value,
+                    PropertyTypeId = _propertyModel.PropertyTypeId,
+                    Name = _propertyModel.Name,
+                    Description = _propertyModel.Description,
+                    Address = _propertyModel.Address,
+                    City = _propertyModel.City,
+                    Country = _propertyModel.Country,
+                    Latitude = _propertyModel.Latitude,
+                    Longitude = _propertyModel.Longitude
+                };
+
+                var result = await PropertyService.UpdatePropertyAsync(_updateModel);
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Property updated successfully", Severity.Success);
+                    NavigationManager.NavigateTo("/partner/dashboard");
+                }
+                else
+                {
+                    var errorMessage = result.Errors?.Any() == true 
+                        ? string.Join(", ", result.Errors) 
+                        : result.Message;
+                    Snackbar.Add(errorMessage, Severity.Error);
+                }
+            }
+            else
+            {
+                var result = await PropertyService.CreatePropertyAsync(_propertyModel);
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Property created successfully", Severity.Success);
+                    NavigationManager.NavigateTo("/partner/dashboard");
+                }
+                else
+                {
+                    var errorMessage = result.Errors?.Any() == true 
+                        ? string.Join(", ", result.Errors) 
+                        : result.Message;
+                    Snackbar.Add(errorMessage, Severity.Error);
+                }
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/partner/dashboard");
+    }
+}
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+            <MudAlert Severity="Severity.Warning">You must be logged in as a Partner to access this page.</MudAlert>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login" Class="mt-4">Login</MudButton>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
