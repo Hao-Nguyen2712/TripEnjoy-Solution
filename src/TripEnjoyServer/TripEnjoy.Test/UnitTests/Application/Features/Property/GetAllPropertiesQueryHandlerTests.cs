@@ -57,7 +57,7 @@ public class GetAllPropertiesQueryHandlerTests
     {
         // Arrange
         var query = new GetAllPropertiesQuery(PageNumber: 1, PageSize: 10);
-        var emptyProperties = new List<Domain.Property.Property>();
+        var emptyProperties = new List<TripEnjoy.Domain.Property.Property>();
         var totalCount = 0;
 
         _propertyRepositoryMock
@@ -166,7 +166,7 @@ public class GetAllPropertiesQueryHandlerTests
     {
         // Arrange
         var query = new GetAllPropertiesQuery(PageNumber: pageNumber, PageSize: pageSize);
-        var emptyProperties = new List<Domain.Property.Property>();
+        var emptyProperties = new List<TripEnjoy.Domain.Property.Property>();
 
         _propertyRepositoryMock
             .Setup(x => x.GetAllPaginatedAsync(pageNumber, pageSize, It.IsAny<CancellationToken>()))
@@ -200,7 +200,7 @@ public class GetAllPropertiesQueryHandlerTests
 
     private List<TripEnjoy.Domain.Property.Property> CreatePropertiesList(int count)
     {
-        var properties = new List<Domain.Property.Property>();
+        var properties = new List<TripEnjoy.Domain.Property.Property>();
         
         for (int i = 0; i < count; i++)
         {
@@ -217,7 +217,7 @@ public class GetAllPropertiesQueryHandlerTests
         var propertyType1 = CreatePropertyType("Hotel");
         var propertyType2 = CreatePropertyType("Apartment");
 
-        return new List<Domain.Property.Property>
+        return new List<TripEnjoy.Domain.Property.Property>
         {
             CreateProperty("Beach Resort", "Miami", "USA", propertyType1, 4.5m),
             CreateProperty("City Apartment", "New York", "USA", propertyType2, 4.2m),
@@ -230,7 +230,7 @@ public class GetAllPropertiesQueryHandlerTests
     private TripEnjoy.Domain.Property.Property CreateProperty(string name, string city, string country, TripEnjoy.Domain.PropertyType.PropertyType propertyType, decimal? rating = null)
     {
         var partnerId = PartnerId.Create(Guid.NewGuid());
-        var propertyResult = Domain.Property.Property.Create(
+        var propertyResult = TripEnjoy.Domain.Property.Property.Create(
             partnerId,
             propertyType.Id,
             name,
