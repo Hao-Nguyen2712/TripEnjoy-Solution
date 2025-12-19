@@ -21,17 +21,21 @@ The architecture is organized into **7 main projects**:
 - **TripEnjoy.Infrastructure** - External service implementations (email, caching, auth services)
 - **TripEnjoy.Infrastructure.Persistence** - EF Core, repositories, configurations, and data access
 - **TripEnjoy.ShareKernel** - Cross-cutting concerns, shared DTOs, and common models
-- **TripEnjoy.Client** - ASP.NET Core MVC frontend with cookie authentication and API integration
+- **TripEnjoy.Client** - Blazor WebAssembly frontend with JWT token-based authentication
 
 ## TripEnjoy.Client (Frontend)
-The `TripEnjoy.Client` project is an ASP.NET Core MVC application that serves as the frontend.
+The `TripEnjoy.Client` project is a Blazor WebAssembly application that serves as the frontend.
 
-- **Authentication**: Uses cookie-based authentication (`CookieAuthenticationDefaults.AuthenticationScheme`).
-- **API Communication**: Interacts with the `TripEnjoy.Api` using a typed `HttpClient` named `ApiClient`.
-- **Token Management**: An `AuthenticationDelegatingHandler` is used to automatically manage and refresh JWT tokens for API requests.
+- **Architecture**: Client-side Single Page Application (SPA) running in the browser
+- **UI Framework**: MudBlazor (Material Design components for Blazor)
+- **Authentication**: JWT token-based authentication with local storage via Blazored.LocalStorage
+- **API Communication**: Direct HttpClient calls to `TripEnjoy.Api` from the browser
+- **State Management**: Custom `AuthenticationStateProvider` for managing user authentication state
 - **Key Routes**:
-    - Login: `/authen/sign-in`
-    - Logout: `/authen/sign-out`
+    - Login: `/login`
+    - Register: `/register`
+    - Partner Dashboard: `/partner/dashboard`
+    - Property Details: `/property/{id}`
 
 ## Core Patterns
 
@@ -122,7 +126,7 @@ dotnet build src/TripEnjoyServer/TripEnjoyServer.sln
 # Run API project (auto-applies migrations and seeds data)
 dotnet run --project src/TripEnjoyServer/TripEnjoy.Api
 
-# Run MVC Client
+# Run Blazor WASM Client
 dotnet run --project src/TripEnjoyServer/TripEnjoy.Client
 
 # Run with specific launch profile
@@ -132,7 +136,7 @@ dotnet run --project src/TripEnjoyServer/TripEnjoy.Api --launch-profile https
 ### Key Development URLs
 - API Swagger: `https://localhost:7199/swagger`
 - Hangfire Dashboard: `https://localhost:7199/hangfire`
-- MVC Client: `https://localhost:7100` (or check launchSettings.json)
+- Blazor WASM Client: `https://localhost:7100` (or check launchSettings.json)
 
 ## Common Conventions
 
@@ -517,7 +521,7 @@ dotnet build
 # Run API with hot reload
 dotnet watch run --project src/TripEnjoyServer/TripEnjoy.Api
 
-# Run client MVC app
+# Run client Blazor WASM app
 dotnet run --project src/TripEnjoyServer/TripEnjoy.Client
 
 # Format code (if dotnet-format is installed)
@@ -532,6 +536,7 @@ dotnet ef migrations list --project src/TripEnjoyServer/TripEnjoy.Infrastructure
 - `TripEnjoy.Application/Features/` - CQRS handlers and commands
 - `TripEnjoy.Domain/Entities/` - Domain models and business logic
 - `TripEnjoy.Infrastructure.Persistence/` - Database configurations and repositories
-- `TripEnjoy.Client/Views/` - MVC Razor views
+- `TripEnjoy.Client/Pages/` - Blazor pages and components
+- `TripEnjoy.Client/Services/` - Client-side services for API communication
 - `TripEnjoy.Test/UnitTests/` - Unit tests
 - `TripEnjoy.Test/IntegrationTests/` - API integration tests
