@@ -10,7 +10,7 @@ public class CreatePropertyCommandHandlerTests
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<ILogger<CreatePropertyCommandHandler>> _loggerMock;
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
-    private readonly Mock<IGenericRepository<Domain.Property.Property>> _propertyRepositoryMock;
+    private readonly Mock<IGenericRepository<TripEnjoy.Domain.Property.Property>> _propertyRepositoryMock;
     private readonly CreatePropertyCommandHandler _handler;
     private readonly IFixture _fixture;
 
@@ -19,11 +19,11 @@ public class CreatePropertyCommandHandlerTests
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _loggerMock = new Mock<ILogger<CreatePropertyCommandHandler>>();
         _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-        _propertyRepositoryMock = new Mock<IGenericRepository<Domain.Property.Property>>();
+        _propertyRepositoryMock = new Mock<IGenericRepository<TripEnjoy.Domain.Property.Property>>();
         _fixture = new Fixture();
 
         // Setup the unit of work to return our mocked repository
-        _unitOfWorkMock.Setup(x => x.Repository<Domain.Property.Property>())
+        _unitOfWorkMock.Setup(x => x.Repository<TripEnjoy.Domain.Property.Property>())
             .Returns(_propertyRepositoryMock.Object);
 
         _handler = new CreatePropertyCommandHandler(
@@ -58,7 +58,7 @@ public class CreatePropertyCommandHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
         
-        _propertyRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Domain.Property.Property>()), Times.Once);
+        _propertyRepositoryMock.Verify(x => x.AddAsync(It.IsAny<TripEnjoy.Domain.Property.Property>()), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -123,7 +123,7 @@ public class CreatePropertyCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         
-        _propertyRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Domain.Property.Property>()), Times.Never);
+        _propertyRepositoryMock.Verify(x => x.AddAsync(It.IsAny<TripEnjoy.Domain.Property.Property>()), Times.Never);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -151,7 +151,7 @@ public class CreatePropertyCommandHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
         
-        _propertyRepositoryMock.Verify(x => x.AddAsync(It.Is<Domain.Property.Property>(p => 
+        _propertyRepositoryMock.Verify(x => x.AddAsync(It.Is<TripEnjoy.Domain.Property.Property>(p => 
             p.Name == command.Name &&
             p.Address == command.Address &&
             p.Description == null &&
@@ -171,7 +171,7 @@ public class CreatePropertyCommandHandlerTests
         SetupHttpContextWithPartnerId(partnerIdGuid);
         
         _propertyRepositoryMock
-            .Setup(x => x.AddAsync(It.IsAny<Domain.Property.Property>()))
+            .Setup(x => x.AddAsync(It.IsAny<TripEnjoy.Domain.Property.Property>()))
             .ThrowsAsync(new InvalidOperationException("Database error"));
 
         // Act & Assert
@@ -229,7 +229,7 @@ public class CreatePropertyCommandHandlerTests
         // Current implementation allows invalid coordinates
         result.IsSuccess.Should().BeTrue();
         
-        _propertyRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Domain.Property.Property>()), Times.Once);
+        _propertyRepositoryMock.Verify(x => x.AddAsync(It.IsAny<TripEnjoy.Domain.Property.Property>()), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
