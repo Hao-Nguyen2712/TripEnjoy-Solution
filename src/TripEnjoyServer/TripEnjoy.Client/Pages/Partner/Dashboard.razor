@@ -1,0 +1,163 @@
+@page "/partner/dashboard"
+@inject IPropertyService PropertyService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Partner Dashboard - TripEnjoy</PageTitle>
+
+<AuthorizeView Roles="Partner">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" GutterBottom="true">Partner Dashboard</MudText>
+    <MudText Typo="Typo.body1" Class="mb-6">Manage your properties and bookings</MudText>
+
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="3">
+                <MudCardContent>
+                    <MudText Typo="Typo.h5">@_properties.Count</MudText>
+                    <MudText Typo="Typo.body2">Total Properties</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="3">
+                <MudCardContent>
+                    <MudText Typo="Typo.h5">0</MudText>
+                    <MudText Typo="Typo.body2">Total Bookings</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="3">
+                <MudCardContent>
+                    <MudText Typo="Typo.h5">0</MudText>
+                    <MudText Typo="Typo.body2">Pending Reviews</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="3">
+                <MudCardContent>
+                    <MudText Typo="Typo.h5">$0</MudText>
+                    <MudText Typo="Typo.body2">Total Revenue</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <MudDivider Class="my-6" />
+
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+        <MudText Typo="Typo.h5">My Properties</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateProperty">
+            Add Property
+        </MudButton>
+    </MudStack>
+
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (!_properties.Any())
+    {
+        <MudAlert Severity="Severity.Info">You haven't added any properties yet. Click "Add Property" to get started.</MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var property in _properties)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Elevation="3">
+                        @if (!string.IsNullOrEmpty(property.CoverImageUrl))
+                        {
+                            <MudCardMedia Image="@property.CoverImageUrl" Height="200" />
+                        }
+                        else
+                        {
+                            <MudCardMedia Height="200">
+                                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%; background-color: #f0f0f0;">
+                                    <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Default" />
+                                </MudStack>
+                            </MudCardMedia>
+                        }
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">@property.Name</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                @property.City, @property.Country
+                            </MudText>
+                            <MudText Typo="Typo.caption">@property.PropertyTypeName</MudText>
+                            @if (property.AverageRating.HasValue)
+                            {
+                                <MudRating ReadOnly="true" SelectedValue="@((int)property.AverageRating.Value)" />
+                            }
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => ViewProperty(property.Id))">
+                                View
+                            </MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="@(() => EditProperty(property.Id))">
+                                Edit
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<PropertySummaryDto> _properties = new();
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProperties();
+    }
+
+    private async Task LoadProperties()
+    {
+        _isLoading = true;
+        try
+        {
+            var result = await PropertyService.GetMyPropertiesAsync();
+            if (result.IsSuccess && result.Data != null)
+            {
+                _properties = result.Data;
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void CreateProperty()
+    {
+        NavigationManager.NavigateTo("/partner/properties/create");
+    }
+
+    private void ViewProperty(Guid propertyId)
+    {
+        NavigationManager.NavigateTo($"/properties/{propertyId}");
+    }
+
+    private void EditProperty(Guid propertyId)
+    {
+        NavigationManager.NavigateTo($"/partner/properties/edit/{propertyId}");
+    }
+}
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+            <MudAlert Severity="Severity.Warning">You must be logged in as a Partner to access this page.</MudAlert>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login" Class="mt-4">Login</MudButton>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>

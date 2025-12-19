@@ -1,12 +1,15 @@
 ﻿@page "/"
+@inject IPropertyService PropertyService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
 
 <PageTitle>Home - TripEnjoy</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge">
-    <MudText Typo="Typo.h3" Class="mb-4">Welcome to TripEnjoy</MudText>
-    <MudText Typo="Typo.h6" Class="mb-8">Your Room Booking Platform</MudText>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h3" Align="Align.Center" Class="mb-2">Welcome to TripEnjoy</MudText>
+    <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-8">Your Room Booking Platform</MudText>
 
-    <MudGrid>
+    <MudGrid Class="mb-8">
         <MudItem xs="12" sm="6" md="4">
             <MudCard Elevation="4">
                 <MudCardContent>
@@ -15,7 +18,7 @@
                     <MudText Typo="Typo.body2">Browse through our wide selection of properties</MudText>
                 </MudCardContent>
                 <MudCardActions>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/properties">View Properties</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => _currentPage = 1)">View All Properties</MudButton>
                 </MudCardActions>
             </MudCard>
         </MudItem>
@@ -28,7 +31,14 @@
                     <MudText Typo="Typo.body2">Book your stay with just a few clicks</MudText>
                 </MudCardContent>
                 <MudCardActions>
-                    <MudButton Variant="Variant.Text" Color="Color.Secondary" Href="/bookings">My Bookings</MudButton>
+                    <AuthorizeView Roles="User">
+                        <Authorized>
+                            <MudButton Variant="Variant.Text" Color="Color.Secondary" Href="/bookings">My Bookings</MudButton>
+                        </Authorized>
+                        <NotAuthorized>
+                            <MudButton Variant="Variant.Text" Color="Color.Secondary" Href="/login">Login to View</MudButton>
+                        </NotAuthorized>
+                    </AuthorizeView>
                 </MudCardActions>
             </MudCard>
         </MudItem>
@@ -41,11 +51,75 @@
                     <MudText Typo="Typo.body2">Manage your properties and bookings</MudText>
                 </MudCardContent>
                 <MudCardActions>
-                    <MudButton Variant="Variant.Text" Color="Color.Tertiary" Href="/partner">Partner Dashboard</MudButton>
+                    <AuthorizeView Roles="Partner">
+                        <Authorized>
+                            <MudButton Variant="Variant.Text" Color="Color.Tertiary" Href="/partner/dashboard">Dashboard</MudButton>
+                        </Authorized>
+                        <NotAuthorized>
+                            <MudButton Variant="Variant.Text" Color="Color.Tertiary" Href="/register-partner">Become a Partner</MudButton>
+                        </NotAuthorized>
+                    </AuthorizeView>
                 </MudCardActions>
             </MudCard>
         </MudItem>
     </MudGrid>
+
+    <MudDivider Class="my-6" />
+
+    <MudText Typo="Typo.h4" Class="mb-4">Featured Properties</MudText>
+
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (_properties.Any())
+    {
+        <MudGrid>
+            @foreach (var property in _properties)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Elevation="3" Class="cursor-pointer" @onclick="@(() => ViewProperty(property.Id))">
+                        @if (!string.IsNullOrEmpty(property.CoverImageUrl))
+                        {
+                            <MudCardMedia Image="@property.CoverImageUrl" Height="200" />
+                        }
+                        else
+                        {
+                            <MudCardMedia Height="200">
+                                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%; background-color: #f0f0f0;">
+                                    <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Default" />
+                                </MudStack>
+                            </MudCardMedia>
+                        }
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">@property.Name</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
+                                @property.City, @property.Country
+                            </MudText>
+                            <MudText Typo="Typo.caption">@property.PropertyTypeName</MudText>
+                            @if (property.AverageRating.HasValue)
+                            {
+                                <MudRating ReadOnly="true" SelectedValue="@((int)property.AverageRating.Value)" Size="Size.Small" />
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+
+        @if (_pagedResult != null && _pagedResult.TotalPages > 1)
+        {
+            <MudPagination Class="mt-4" 
+                          Count="@_pagedResult.TotalPages" 
+                          Selected="@_currentPage" 
+                          SelectedChanged="OnPageChanged" />
+        }
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info">No properties available at the moment.</MudAlert>
+    }
 
     <AuthorizeView>
         <NotAuthorized>
@@ -60,3 +134,54 @@
     </AuthorizeView>
 </MudContainer>
 
+@code {
+    private List<PropertySummaryDto> _properties = new();
+    private PagedResult<PropertySummaryDto>? _pagedResult;
+    private bool _isLoading = true;
+    private int _currentPage = 1;
+    private int _pageSize = 8;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProperties();
+    }
+
+    private async Task LoadProperties()
+    {
+        _isLoading = true;
+        try
+        {
+            var result = await PropertyService.GetAllPropertiesAsync(_currentPage, _pageSize);
+            if (result.IsSuccess && result.Data != null)
+            {
+                _pagedResult = result.Data;
+                _properties = result.Data.Items;
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _currentPage = page;
+        await LoadProperties();
+    }
+
+    private void ViewProperty(Guid propertyId)
+    {
+        NavigationManager.NavigateTo($"/properties/{propertyId}");
+    }
+}
+
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+    }
+</style>
