@@ -1,0 +1,62 @@
+﻿@page "/"
+
+<PageTitle>Home - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudText Typo="Typo.h3" Class="mb-4">Welcome to TripEnjoy</MudText>
+    <MudText Typo="Typo.h6" Class="mb-8">Your Room Booking Platform</MudText>
+
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Elevation="4">
+                <MudCardContent>
+                    <MudIcon Icon="@Icons.Material.Filled.Hotel" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
+                    <MudText Typo="Typo.h6">Find Properties</MudText>
+                    <MudText Typo="Typo.body2">Browse through our wide selection of properties</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/properties">View Properties</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Elevation="4">
+                <MudCardContent>
+                    <MudIcon Icon="@Icons.Material.Filled.BookOnline" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                    <MudText Typo="Typo.h6">Easy Booking</MudText>
+                    <MudText Typo="Typo.body2">Book your stay with just a few clicks</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Secondary" Href="/bookings">My Bookings</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Elevation="4">
+                <MudCardContent>
+                    <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Tertiary" Class="mb-2" />
+                    <MudText Typo="Typo.h6">Partner Area</MudText>
+                    <MudText Typo="Typo.body2">Manage your properties and bookings</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Tertiary" Href="/partner">Partner Dashboard</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <MudPaper Elevation="4" Class="pa-8 mt-8" Style="text-align: center;">
+                <MudText Typo="Typo.h5" Class="mb-4">Ready to start?</MudText>
+                <MudStack Row="true" Justify="Justify.Center" Spacing="4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login" Size="Size.Large">Sign In</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/register" Size="Size.Large">Create Account</MudButton>
+                </MudStack>
+            </MudPaper>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudContainer>
+
