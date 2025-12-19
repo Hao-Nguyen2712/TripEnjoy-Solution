@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using TripEnjoy.Domain.Account;
 using TripEnjoy.Domain.Account.Entities;
+using TripEnjoy.Domain.Booking;
+using TripEnjoy.Domain.Booking.Entities;
 using TripEnjoy.Domain.Property;
 using TripEnjoy.Domain.Property.Entities;
 using TripEnjoy.Domain.Room;
@@ -33,6 +35,12 @@ namespace TripEnjoy.Infrastructure.Persistence
         public DbSet<RoomTypeImage> RoomTypeImages { get; set; } = null!;
         public DbSet<RoomAvailability> RoomAvailabilities { get; set; } = null!;
         public DbSet<RoomPromotion> RoomPromotions { get; set; } = null!;
+        
+        // Booking Aggregate
+        public DbSet<Booking> Bookings { get; set; } = null!;
+        public DbSet<BookingDetail> BookingDetails { get; set; } = null!;
+        public DbSet<BookingHistory> BookingHistories { get; set; } = null!;
+        public DbSet<Payment> Payments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

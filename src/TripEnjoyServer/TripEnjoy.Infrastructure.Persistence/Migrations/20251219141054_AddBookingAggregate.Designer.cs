@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TripEnjoy.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using TripEnjoy.Infrastructure.Persistence;
 namespace TripEnjoy.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TripEnjoyDbContext))]
-    partial class TripEnjoyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251219141054_AddBookingAggregate")]
+    partial class AddBookingAggregate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
