@@ -6,5 +6,8 @@ public enum PaymentMethodEnum
     DebitCard,
     BankTransfer,
     EWallet,
-    Cash
+    Cash,
+    VNPay,
+    Momo,
+    ZaloPay
 }
