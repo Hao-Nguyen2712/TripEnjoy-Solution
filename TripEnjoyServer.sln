@@ -17,10 +17,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Infrastructure.Pe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Test", "src\TripEnjoyServer\TripEnjoy.Test\TripEnjoy.Test.csproj", "{A4DCF314-42AC-459D-B2BC-E42F01060061}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TripEnjoyServer", "TripEnjoyServer", "{06F2F610-54BA-6FCA-A4C6-CD297FC400B8}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Client", "src\TripEnjoyServer\TripEnjoy.Client\TripEnjoy.Client.csproj", "{46FD92E1-AE03-4398-8D1A-E084325EBFBD}"
 EndProject
 Global
