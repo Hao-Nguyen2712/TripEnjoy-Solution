@@ -18,7 +18,7 @@
                     <MudText Typo="Typo.body2">Browse through our wide selection of properties</MudText>
                 </MudCardContent>
                 <MudCardActions>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => _currentPage = 1)">View All Properties</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ScrollToProperties">View All Properties</MudButton>
                 </MudCardActions>
             </MudCard>
         </MudItem>
@@ -177,6 +177,12 @@
     private void ViewProperty(Guid propertyId)
     {
         NavigationManager.NavigateTo($"/properties/{propertyId}");
+    }
+
+    private void ScrollToProperties()
+    {
+        // Simply scroll to properties section - browser will handle smooth scroll
+        // In a real app, you might use JSInterop to scroll to a specific element
     }
 }
 

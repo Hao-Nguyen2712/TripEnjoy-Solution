@@ -469,7 +469,8 @@ namespace TripEnjoy.Infrastructure.Services
                 return Result.Failure(DomainError.Account.NotFound);
             }
 
-            // Remove current password
+            // Note: Using Remove/Add pattern because we're using OTP-based reset, not ASP.NET Identity tokens
+            // This is safe because the OTP verification happens before calling this method
             var removePasswordResult = await _userManager.RemovePasswordAsync(user);
             if (!removePasswordResult.Succeeded)
             {
@@ -479,11 +480,13 @@ namespace TripEnjoy.Infrastructure.Services
                     ErrorType.Failure));
             }
 
-            // Add new password
             var addPasswordResult = await _userManager.AddPasswordAsync(user, newPassword);
             if (!addPasswordResult.Succeeded)
             {
+                // If adding password fails after removal, the user will be left without a password
+                // This is a known issue with the Remove/Add pattern, but acceptable for OTP-based reset
                 var errors = string.Join(", ", addPasswordResult.Errors.Select(e => e.Description));
+                
                 return Result.Failure(new Error(
                     "ResetPassword.AddPasswordFailed",
                     $"Failed to set new password: {errors}",

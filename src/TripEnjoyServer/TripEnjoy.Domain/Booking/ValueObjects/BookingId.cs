@@ -18,6 +18,10 @@ namespace TripEnjoy.Domain.Booking.ValueObjects
 
         public static BookingId Create(Guid id)
         {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentException("BookingId cannot be empty", nameof(id));
+            }
             return new BookingId(id);
         }
 
