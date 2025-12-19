@@ -7,11 +7,15 @@ using TripEnjoy.Application.Interfaces.External.Cache;
 using TripEnjoy.Application.Interfaces.External.CloudStorage;
 using TripEnjoy.Application.Interfaces.External.Email;
 using TripEnjoy.Application.Interfaces.Identity;
+using TripEnjoy.Application.Interfaces.Logging;
+using TripEnjoy.Application.Interfaces.Payment;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Infrastructure.Persistence;
 using TripEnjoy.Infrastructure.Persistence.Repositories;
 using TripEnjoy.Infrastructure.Services;
 using TripEnjoy.Infrastructure.Services.CloudStorage;
+using TripEnjoy.Infrastructure.Services.Payment;
+using TripEnjoy.Infrastructure.Logging;
 using TripEnjoy.ShareKernel.Email;
 
 namespace TripEnjoy.Infrastructure
@@ -30,7 +34,7 @@ namespace TripEnjoy.Infrastructure
             });
 
             services.AddDbContext<TripEnjoyDbContext>(options =>
-                options.UseSqlServer(
+                options.UseNpgsql(
                     configuration.GetConnectionString("DefaultConnection"),
                     b => b.MigrationsAssembly(typeof(TripEnjoyDbContext).Assembly.FullName)));
 
@@ -64,6 +68,12 @@ namespace TripEnjoy.Infrastructure
             services.AddHttpClient<CloudinaryService>();
             services.AddScoped<ICloudinaryService, CloudinaryService>();
 
+            // Enhanced Logging Service
+            services.AddSingleton<ILogService, LogService>();
+
+            // Payment Services
+            services.Configure<VNPayConfiguration>(configuration.GetSection("VNPay"));
+            services.AddScoped<IPaymentService, VNPayPaymentService>();
 
             return services;
         }

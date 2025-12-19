@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TripEnjoy.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using TripEnjoy.Infrastructure.Persistence;
 namespace TripEnjoy.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TripEnjoyDbContext))]
-    partial class TripEnjoyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251219142038_InitialPostgreSQLMigration")]
+    partial class InitialPostgreSQLMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
