@@ -148,6 +148,8 @@ app.UseHangfireDashboard(); // This will be available at /hangfire
 
 app.UseMiddleware<LoggingMiddleware>();
 
+app.UseCors("AllowAll");
+
 app.UseHttpsRedirection();
 
 // Add the Exception Handling Middleware at the beginning of the pipeline

@@ -80,6 +80,11 @@ namespace TripEnjoy.Domain.Common.Errors
                 "Account.UnauthorizedRole", 
                 "This account is not authorized to use this login method.",
                 ErrorType.Forbidden);
+
+            public static readonly Error InvalidOrExpiredResetToken = new(
+                "Account.InvalidOrExpiredResetToken",
+                "The password reset token is invalid or has expired.",
+                ErrorType.Validation);
         }
 
         public static class User

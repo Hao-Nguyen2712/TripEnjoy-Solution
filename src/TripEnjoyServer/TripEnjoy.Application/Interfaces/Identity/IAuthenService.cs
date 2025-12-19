@@ -83,5 +83,6 @@ namespace TripEnjoy.Application.Interfaces.Identity
         /// <returns>A task that resolves to the access token string (JWT).</returns>
         Task<string> GenerateAccessTokenAsync(string userId);
         Task<Result<string>> GeneratePasswordResetTokenAsync(string email);
+        Task<Result> ResetPasswordAsync(string email, string newPassword);
     }
 }

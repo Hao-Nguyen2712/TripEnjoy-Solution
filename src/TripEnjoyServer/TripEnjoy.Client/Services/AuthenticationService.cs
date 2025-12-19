@@ -11,7 +11,9 @@ public interface IAuthenticationService
     Task<ApiResponse<AuthResult>> LoginStepOneAsync(LoginRequest request);
     Task<ApiResponse<AuthResult>> LoginStepTwoAsync(VerifyOtpRequest request);
     Task<ApiResponse> RegisterAsync(RegisterRequest request);
+    Task<ApiResponse> RegisterPartnerAsync(RegisterPartnerRequest request);
     Task<ApiResponse> ForgotPasswordAsync(ForgotPasswordRequest request);
+    Task<ApiResponse<string>> VerifyPasswordResetOtpAsync(VerifyPasswordResetOtpRequest request);
     Task<ApiResponse> ResetPasswordAsync(ResetPasswordRequest request);
     Task<ApiResponse<AuthResult>> RefreshTokenAsync();
     Task LogoutAsync();
@@ -80,7 +82,7 @@ public class AuthenticationService : IAuthenticationService
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("/api/v1/auth/register", request);
+            var response = await _httpClient.PostAsJsonAsync("/api/v1/auth/register-user", request);
             var result = await response.Content.ReadFromJsonAsync<ApiResponse>();
             return result ?? new ApiResponse { IsSuccess = false, Message = "Failed to parse response" };
         }
@@ -90,6 +92,25 @@ public class AuthenticationService : IAuthenticationService
             {
                 IsSuccess = false,
                 Message = "An error occurred during registration",
+                Errors = new List<string> { ex.Message }
+            };
+        }
+    }
+
+    public async Task<ApiResponse> RegisterPartnerAsync(RegisterPartnerRequest request)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("/api/v1/auth/register-partner", request);
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse>();
+            return result ?? new ApiResponse { IsSuccess = false, Message = "Failed to parse response" };
+        }
+        catch (Exception ex)
+        {
+            return new ApiResponse
+            {
+                IsSuccess = false,
+                Message = "An error occurred during partner registration",
                 Errors = new List<string> { ex.Message }
             };
         }
@@ -106,6 +127,25 @@ public class AuthenticationService : IAuthenticationService
         catch (Exception ex)
         {
             return new ApiResponse
+            {
+                IsSuccess = false,
+                Message = "An error occurred",
+                Errors = new List<string> { ex.Message }
+            };
+        }
+    }
+
+    public async Task<ApiResponse<string>> VerifyPasswordResetOtpAsync(VerifyPasswordResetOtpRequest request)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("/api/v1/auth/verify-password-reset-otp", request);
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+            return result ?? new ApiResponse<string> { IsSuccess = false, Message = "Failed to parse response" };
+        }
+        catch (Exception ex)
+        {
+            return new ApiResponse<string>
             {
                 IsSuccess = false,
                 Message = "An error occurred",

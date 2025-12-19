@@ -460,5 +460,37 @@ namespace TripEnjoy.Infrastructure.Services
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             return Result<string>.Success(token);
         }
+
+        public async Task<Result> ResetPasswordAsync(string email, string newPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Result.Failure(DomainError.Account.NotFound);
+            }
+
+            // Remove current password
+            var removePasswordResult = await _userManager.RemovePasswordAsync(user);
+            if (!removePasswordResult.Succeeded)
+            {
+                return Result.Failure(new Error(
+                    "ResetPassword.RemovePasswordFailed",
+                    "Failed to remove current password.",
+                    ErrorType.Failure));
+            }
+
+            // Add new password
+            var addPasswordResult = await _userManager.AddPasswordAsync(user, newPassword);
+            if (!addPasswordResult.Succeeded)
+            {
+                var errors = string.Join(", ", addPasswordResult.Errors.Select(e => e.Description));
+                return Result.Failure(new Error(
+                    "ResetPassword.AddPasswordFailed",
+                    $"Failed to set new password: {errors}",
+                    ErrorType.Failure));
+            }
+
+            return Result.Success();
+        }
     }
 }
