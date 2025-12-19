@@ -1,4 +1,5 @@
 using TripEnjoy.Domain.Account.ValueObjects;
+using TripEnjoy.Domain.Booking.Entities;
 using TripEnjoy.Domain.Booking.Enums;
 using TripEnjoy.Domain.Booking.ValueObjects;
 using TripEnjoy.Domain.Common.Errors;
@@ -9,6 +10,9 @@ namespace TripEnjoy.Domain.Booking
 {
     public class Booking : AggregateRoot<BookingId>
     {
+        private readonly List<BookingDetail> _bookingDetails = new();
+        private readonly List<BookingHistory> _bookingHistory = new();
+
         public UserId UserId { get; private set; }
         public PropertyId PropertyId { get; private set; }
         public DateTime CheckInDate { get; private set; }
@@ -23,6 +27,8 @@ namespace TripEnjoy.Domain.Booking
         // Navigation properties
         public Domain.Account.Entities.User User { get; private set; }
         public Domain.Property.Property Property { get; private set; }
+        public IReadOnlyCollection<BookingDetail> BookingDetails => _bookingDetails.AsReadOnly();
+        public IReadOnlyCollection<BookingHistory> BookingHistory => _bookingHistory.AsReadOnly();
 
         private Booking() : base(BookingId.CreateUnique())
         {
@@ -53,6 +59,9 @@ namespace TripEnjoy.Domain.Booking
             Status = BookingStatusEnum.Pending.ToString();
             CreatedAt = DateTime.UtcNow;
             UpdatedAt = null;
+
+            // Record initial status in history
+            AddHistoryEntry($"Booking created with status {Status}", Status);
         }
 
         public static Result<Booking> Create(
@@ -98,7 +107,26 @@ namespace TripEnjoy.Domain.Booking
             return Result<Booking>.Success(booking);
         }
 
-        public Result Confirm()
+        public Result AddBookingDetail(BookingDetail bookingDetail)
+        {
+            _bookingDetails.Add(bookingDetail);
+            RecalculateTotalPrice();
+            return Result.Success();
+        }
+
+        public void RecalculateTotalPrice()
+        {
+            TotalPrice = _bookingDetails.Sum(bd => bd.TotalPrice);
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        private void AddHistoryEntry(string description, string status, UserId? changedBy = null)
+        {
+            var historyEntry = Entities.BookingHistory.CreateEntry(Id, description, status, changedBy);
+            _bookingHistory.Add(historyEntry);
+        }
+
+        public Result Confirm(UserId? changedBy = null)
         {
             if (Status != BookingStatusEnum.Pending.ToString())
             {
@@ -107,10 +135,11 @@ namespace TripEnjoy.Domain.Booking
 
             Status = BookingStatusEnum.Confirmed.ToString();
             UpdatedAt = DateTime.UtcNow;
+            AddHistoryEntry($"Booking confirmed", Status, changedBy);
             return Result.Success();
         }
 
-        public Result Cancel()
+        public Result Cancel(UserId? changedBy = null)
         {
             if (Status == BookingStatusEnum.Cancelled.ToString() ||
                 Status == BookingStatusEnum.Completed.ToString())
@@ -120,10 +149,11 @@ namespace TripEnjoy.Domain.Booking
 
             Status = BookingStatusEnum.Cancelled.ToString();
             UpdatedAt = DateTime.UtcNow;
+            AddHistoryEntry($"Booking cancelled", Status, changedBy);
             return Result.Success();
         }
 
-        public Result CheckIn()
+        public Result CheckIn(UserId? changedBy = null)
         {
             if (Status != BookingStatusEnum.Confirmed.ToString())
             {
@@ -137,10 +167,11 @@ namespace TripEnjoy.Domain.Booking
 
             Status = BookingStatusEnum.CheckedIn.ToString();
             UpdatedAt = DateTime.UtcNow;
+            AddHistoryEntry($"Guest checked in", Status, changedBy);
             return Result.Success();
         }
 
-        public Result CheckOut()
+        public Result CheckOut(UserId? changedBy = null)
         {
             if (Status != BookingStatusEnum.CheckedIn.ToString())
             {
@@ -149,10 +180,11 @@ namespace TripEnjoy.Domain.Booking
 
             Status = BookingStatusEnum.CheckedOut.ToString();
             UpdatedAt = DateTime.UtcNow;
+            AddHistoryEntry($"Guest checked out", Status, changedBy);
             return Result.Success();
         }
 
-        public Result Complete()
+        public Result Complete(UserId? changedBy = null)
         {
             if (Status != BookingStatusEnum.CheckedOut.ToString())
             {
@@ -161,7 +193,13 @@ namespace TripEnjoy.Domain.Booking
 
             Status = BookingStatusEnum.Completed.ToString();
             UpdatedAt = DateTime.UtcNow;
+            AddHistoryEntry($"Booking completed", Status, changedBy);
             return Result.Success();
+        }
+
+        public int CalculateNights()
+        {
+            return (CheckOutDate - CheckInDate).Days;
         }
     }
 }
