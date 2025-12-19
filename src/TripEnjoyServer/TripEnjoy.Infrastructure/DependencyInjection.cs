@@ -7,11 +7,13 @@ using TripEnjoy.Application.Interfaces.External.Cache;
 using TripEnjoy.Application.Interfaces.External.CloudStorage;
 using TripEnjoy.Application.Interfaces.External.Email;
 using TripEnjoy.Application.Interfaces.Identity;
+using TripEnjoy.Application.Interfaces.Logging;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Infrastructure.Persistence;
 using TripEnjoy.Infrastructure.Persistence.Repositories;
 using TripEnjoy.Infrastructure.Services;
 using TripEnjoy.Infrastructure.Services.CloudStorage;
+using TripEnjoy.Infrastructure.Logging;
 using TripEnjoy.ShareKernel.Email;
 
 namespace TripEnjoy.Infrastructure
@@ -64,6 +66,8 @@ namespace TripEnjoy.Infrastructure
             services.AddHttpClient<CloudinaryService>();
             services.AddScoped<ICloudinaryService, CloudinaryService>();
 
+            // Enhanced Logging Service
+            services.AddSingleton<ILogService, LogService>();
 
             return services;
         }

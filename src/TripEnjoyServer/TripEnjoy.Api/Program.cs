@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using Serilog.Enrichers;
 using System.Text;
 using System.Threading.RateLimiting;
 using TripEnjoy.Api.Middleware;
@@ -15,14 +16,22 @@ using TripEnjoy.Application;
 using TripEnjoy.Infrastructure;
 using TripEnjoy.Infrastructure.Persistence;
 using TripEnjoy.Infrastructure.Persistence.Seeding;
+using TripEnjoy.Infrastructure.Logging.Enrichers;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
+// Enhanced Serilog configuration with custom enrichers
 builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
     .ReadFrom.Services(services)
-    .Enrich.FromLogContext());
+    .Enrich.FromLogContext()
+    .Enrich.With(new CorrelationIdEnricher(services.GetRequiredService<IHttpContextAccessor>()))
+    .Enrich.With(new UserInfoEnricher(services.GetRequiredService<IHttpContextAccessor>()))
+    .Enrich.WithMachineName()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithProcessId()
+    .Enrich.WithThreadId());
 
 // Add services to the container.
 builder.Services.AddApplication(configuration);
@@ -146,7 +155,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHangfireDashboard(); // This will be available at /hangfire
 
-app.UseMiddleware<LoggingMiddleware>();
+// Use Enhanced Logging Middleware (replaces old LoggingMiddleware)
+app.UseEnhancedLogging();
 
 app.UseCors("AllowAll");
 
