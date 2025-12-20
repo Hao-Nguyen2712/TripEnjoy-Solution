@@ -1,3 +1,4 @@
+using MassTransit;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -5,6 +6,8 @@ using System.Security.Claims;
 using TripEnjoy.Application.Features.Bookings.Commands;
 using TripEnjoy.Application.Interfaces.Logging;
 using TripEnjoy.Application.Interfaces.Persistence;
+using TripEnjoy.Application.Messages.Contracts;
+using TripEnjoy.Application.Messages.Events;
 using TripEnjoy.Domain.Account.ValueObjects;
 using TripEnjoy.Domain.Booking;
 using TripEnjoy.Domain.Booking.ValueObjects;
@@ -19,16 +22,19 @@ public class ConfirmBookingCommandHandler : IRequestHandler<ConfirmBookingComman
     private readonly ILogger<ConfirmBookingCommandHandler> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogService? _logService;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public ConfirmBookingCommandHandler(
         IUnitOfWork unitOfWork,
         ILogger<ConfirmBookingCommandHandler> logger,
         IHttpContextAccessor httpContextAccessor,
+        IPublishEndpoint publishEndpoint,
         ILogService? logService = null)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
+        _publishEndpoint = publishEndpoint;
         _logService = logService;
     }
 
@@ -74,6 +80,25 @@ public class ConfirmBookingCommandHandler : IRequestHandler<ConfirmBookingComman
             });
 
         _logger.LogInformation("Successfully confirmed booking {BookingId}", booking.Id.Id);
+
+        // Publish BookingConfirmed event to message queue for async processing
+        try
+        {
+            await _publishEndpoint.Publish<IBookingConfirmedEvent>(new BookingConfirmedEvent
+            {
+                BookingId = booking.Id.Id,
+                UserId = booking.UserId.Id,
+                PropertyId = booking.PropertyId.Id,
+                ConfirmedAt = DateTime.UtcNow
+            }, cancellationToken);
+
+            _logger.LogInformation("Published BookingConfirmed event for BookingId: {BookingId}", booking.Id.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish BookingConfirmed event for BookingId: {BookingId}", booking.Id.Id);
+            // Note: We don't fail the confirmation if event publishing fails
+        }
 
         return Result.Success();
     }
