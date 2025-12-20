@@ -1,3 +1,4 @@
+using MassTransit;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -5,6 +6,8 @@ using System.Security.Claims;
 using TripEnjoy.Application.Features.Bookings.Commands;
 using TripEnjoy.Application.Interfaces.Logging;
 using TripEnjoy.Application.Interfaces.Persistence;
+using TripEnjoy.Application.Messages.Contracts;
+using TripEnjoy.Application.Messages.Events;
 using TripEnjoy.Domain.Account.ValueObjects;
 using TripEnjoy.Domain.Booking;
 using TripEnjoy.Domain.Booking.ValueObjects;
@@ -19,16 +22,19 @@ public class CancelBookingCommandHandler : IRequestHandler<CancelBookingCommand,
     private readonly ILogger<CancelBookingCommandHandler> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogService? _logService;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public CancelBookingCommandHandler(
         IUnitOfWork unitOfWork,
         ILogger<CancelBookingCommandHandler> logger,
         IHttpContextAccessor httpContextAccessor,
+        IPublishEndpoint publishEndpoint,
         ILogService? logService = null)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
+        _publishEndpoint = publishEndpoint;
         _logService = logService;
     }
 
@@ -75,6 +81,26 @@ public class CancelBookingCommandHandler : IRequestHandler<CancelBookingCommand,
             });
 
         _logger.LogInformation("Successfully cancelled booking {BookingId}", booking.Id.Id);
+
+        // Publish BookingCancelled event to message queue for async processing
+        try
+        {
+            await _publishEndpoint.Publish<IBookingCancelledEvent>(new BookingCancelledEvent
+            {
+                BookingId = booking.Id.Id,
+                UserId = booking.UserId.Id,
+                PropertyId = booking.PropertyId.Id,
+                CancellationReason = request.CancellationReason,
+                CancelledAt = DateTime.UtcNow
+            }, cancellationToken);
+
+            _logger.LogInformation("Published BookingCancelled event for BookingId: {BookingId}", booking.Id.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish BookingCancelled event for BookingId: {BookingId}", booking.Id.Id);
+            // Note: We don't fail the cancellation if event publishing fails
+        }
 
         return Result.Success();
     }
