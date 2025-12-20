@@ -7,6 +7,8 @@ using TripEnjoy.Domain.Booking;
 using TripEnjoy.Domain.Booking.Entities;
 using TripEnjoy.Domain.Property;
 using TripEnjoy.Domain.Property.Entities;
+using TripEnjoy.Domain.Review;
+using TripEnjoy.Domain.Review.Entities;
 using TripEnjoy.Domain.Room;
 using TripEnjoy.Domain.Room.Entities;
 
@@ -43,6 +45,11 @@ namespace TripEnjoy.Infrastructure.Persistence
         public DbSet<BookingDetail> BookingDetails { get; set; } = null!;
         public DbSet<BookingHistory> BookingHistories { get; set; } = null!;
         public DbSet<Payment> Payments { get; set; } = null!;
+
+        // Review Aggregate
+        public DbSet<Review> Reviews { get; set; } = null!;
+        public DbSet<ReviewImage> ReviewImages { get; set; } = null!;
+        public DbSet<ReviewReply> ReviewReplies { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
