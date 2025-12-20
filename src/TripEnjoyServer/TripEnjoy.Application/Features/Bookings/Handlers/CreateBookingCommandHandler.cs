@@ -1,3 +1,4 @@
+using MassTransit;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -5,6 +6,8 @@ using System.Security.Claims;
 using TripEnjoy.Application.Features.Bookings.Commands;
 using TripEnjoy.Application.Interfaces.Logging;
 using TripEnjoy.Application.Interfaces.Persistence;
+using TripEnjoy.Application.Messages.Contracts;
+using TripEnjoy.Application.Messages.Events;
 using TripEnjoy.Domain.Account.ValueObjects;
 using TripEnjoy.Domain.Booking;
 using TripEnjoy.Domain.Booking.Entities;
@@ -22,16 +25,19 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
     private readonly ILogger<CreateBookingCommandHandler> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogService? _logService;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public CreateBookingCommandHandler(
         IUnitOfWork unitOfWork,
         ILogger<CreateBookingCommandHandler> logger,
         IHttpContextAccessor httpContextAccessor,
+        IPublishEndpoint publishEndpoint,
         ILogService? logService = null)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
+        _publishEndpoint = publishEndpoint;
         _logService = logService;
     }
 
@@ -141,6 +147,31 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
 
         _logger.LogInformation("Successfully created booking {BookingId} for user {UserId}",
             booking.Id.Id, userId.Id);
+
+        // Publish BookingCreated event to message queue for async processing
+        try
+        {
+            await _publishEndpoint.Publish<IBookingCreatedEvent>(new BookingCreatedEvent
+            {
+                BookingId = booking.Id.Id,
+                UserId = userId.Id,
+                PropertyId = propertyId.Id,
+                CheckInDate = request.CheckInDate,
+                CheckOutDate = request.CheckOutDate,
+                NumberOfGuests = request.NumberOfGuests,
+                TotalPrice = booking.TotalPrice,
+                SpecialRequests = request.SpecialRequests,
+                CreatedAt = DateTime.UtcNow
+            }, cancellationToken);
+
+            _logger.LogInformation("Published BookingCreated event for BookingId: {BookingId}", booking.Id.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish BookingCreated event for BookingId: {BookingId}. Booking was saved but event not published.", booking.Id.Id);
+            // Note: We don't fail the booking creation if event publishing fails
+            // The booking is already saved, and we can retry publishing later if needed
+        }
 
         return Result<BookingId>.Success(booking.Id);
     }

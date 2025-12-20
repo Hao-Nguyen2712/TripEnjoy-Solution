@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -10,6 +11,8 @@ using TripEnjoy.Application.Interfaces.Identity;
 using TripEnjoy.Application.Interfaces.Logging;
 using TripEnjoy.Application.Interfaces.Payment;
 using TripEnjoy.Application.Interfaces.Persistence;
+using TripEnjoy.Application.Messages.Consumers;
+using TripEnjoy.Infrastructure.MessageBroker;
 using TripEnjoy.Infrastructure.Persistence;
 using TripEnjoy.Infrastructure.Persistence.Repositories;
 using TripEnjoy.Infrastructure.Services;
@@ -74,6 +77,37 @@ namespace TripEnjoy.Infrastructure
             // Payment Services
             services.Configure<VNPayConfiguration>(configuration.GetSection("VNPay"));
             services.AddScoped<IPaymentService, VNPayPaymentService>();
+
+            // Message Broker (RabbitMQ with MassTransit)
+            var rabbitMqSettings = configuration.GetSection("RabbitMQ").Get<RabbitMqSettings>() ?? new RabbitMqSettings();
+            
+            services.AddMassTransit(x =>
+            {
+                // Add all consumers from the Application layer
+                x.AddConsumer<BookingCreatedConsumer>();
+                x.AddConsumer<BookingConfirmedConsumer>();
+                x.AddConsumer<BookingCancelledConsumer>();
+
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    cfg.Host(rabbitMqSettings.Host, rabbitMqSettings.Port, rabbitMqSettings.VirtualHost, h =>
+                    {
+                        h.Username(rabbitMqSettings.Username);
+                        h.Password(rabbitMqSettings.Password);
+                    });
+
+                    // Configure retry policy
+                    cfg.UseMessageRetry(r => r.Intervals(
+                        TimeSpan.FromSeconds(1),
+                        TimeSpan.FromSeconds(5),
+                        TimeSpan.FromSeconds(10),
+                        TimeSpan.FromSeconds(30)
+                    ));
+
+                    // Configure endpoints for consumers
+                    cfg.ConfigureEndpoints(context);
+                });
+            });
 
             return services;
         }

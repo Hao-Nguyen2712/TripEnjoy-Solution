@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TripEnjoy.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using TripEnjoy.Infrastructure.Persistence;
 namespace TripEnjoy.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TripEnjoyDbContext))]
-    partial class TripEnjoyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251219152055_AddTransactionAndSettlementEntities")]
+    partial class AddTransactionAndSettlementEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -780,126 +783,6 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
                     b.ToTable("PropertyTypes", (string)null);
                 });
 
-            modelBuilder.Entity("TripEnjoy.Domain.Review.Entities.ReviewImage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<Guid>("ReviewId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReviewId")
-                        .HasDatabaseName("IX_ReviewImages_ReviewId");
-
-                    b.ToTable("ReviewImages", (string)null);
-                });
-
-            modelBuilder.Entity("TripEnjoy.Domain.Review.Entities.ReviewReply", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ReplierId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ReplierType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<Guid>("ReviewId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReplierId")
-                        .HasDatabaseName("IX_ReviewReplies_ReplierId");
-
-                    b.HasIndex("ReviewId")
-                        .HasDatabaseName("IX_ReviewReplies_ReviewId");
-
-                    b.HasIndex("ReviewId", "ReplierId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ReviewReplies_ReviewId_ReplierId_Unique");
-
-                    b.ToTable("ReviewReplies", (string)null);
-                });
-
-            modelBuilder.Entity("TripEnjoy.Domain.Review.Review", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BookingDetailId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("RoomTypeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookingDetailId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Reviews_BookingDetailId_Unique");
-
-                    b.HasIndex("CreatedAt")
-                        .HasDatabaseName("IX_Reviews_CreatedAt");
-
-                    b.HasIndex("RoomTypeId")
-                        .HasDatabaseName("IX_Reviews_RoomTypeId");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("IX_Reviews_Status");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("IX_Reviews_UserId");
-
-                    b.ToTable("Reviews", (string)null);
-                });
-
             modelBuilder.Entity("TripEnjoy.Domain.Room.Entities.RoomAvailability", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1334,55 +1217,6 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
                     b.Navigation("PropertyType");
                 });
 
-            modelBuilder.Entity("TripEnjoy.Domain.Review.Entities.ReviewImage", b =>
-                {
-                    b.HasOne("TripEnjoy.Domain.Review.Review", "Review")
-                        .WithMany("ReviewImages")
-                        .HasForeignKey("ReviewId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Review");
-                });
-
-            modelBuilder.Entity("TripEnjoy.Domain.Review.Entities.ReviewReply", b =>
-                {
-                    b.HasOne("TripEnjoy.Domain.Review.Review", "Review")
-                        .WithMany("ReviewReplies")
-                        .HasForeignKey("ReviewId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Review");
-                });
-
-            modelBuilder.Entity("TripEnjoy.Domain.Review.Review", b =>
-                {
-                    b.HasOne("TripEnjoy.Domain.Booking.Entities.BookingDetail", "BookingDetail")
-                        .WithMany()
-                        .HasForeignKey("BookingDetailId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("TripEnjoy.Domain.Room.RoomType", "RoomType")
-                        .WithMany()
-                        .HasForeignKey("RoomTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("TripEnjoy.Domain.Account.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("BookingDetail");
-
-                    b.Navigation("RoomType");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("TripEnjoy.Domain.Room.Entities.RoomAvailability", b =>
                 {
                     b.HasOne("TripEnjoy.Domain.Room.RoomType", null)
@@ -1456,13 +1290,6 @@ namespace TripEnjoy.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("TripEnjoy.Domain.Property.Property", b =>
                 {
                     b.Navigation("PropertyImages");
-                });
-
-            modelBuilder.Entity("TripEnjoy.Domain.Review.Review", b =>
-                {
-                    b.Navigation("ReviewImages");
-
-                    b.Navigation("ReviewReplies");
                 });
 
             modelBuilder.Entity("TripEnjoy.Domain.Room.RoomType", b =>

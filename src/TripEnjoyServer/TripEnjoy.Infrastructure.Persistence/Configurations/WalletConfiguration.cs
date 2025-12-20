@@ -39,7 +39,23 @@ namespace TripEnjoy.Infrastructure.Persistence.Configurations
 
             builder.Property(w => w.CreatedAt).IsRequired();
             builder.Property(w => w.UpdatedAt).IsRequired();
-        
+
+            // Configure navigation properties
+            var navigationTransactions = builder.Metadata.FindNavigation(nameof(Wallet.Transactions));
+            navigationTransactions?.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasMany(w => w.Transactions)
+                .WithOne(t => t.Wallet)
+                .HasForeignKey("WalletId")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            var navigationSettlements = builder.Metadata.FindNavigation(nameof(Wallet.Settlements));
+            navigationSettlements?.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasMany(w => w.Settlements)
+                .WithOne(s => s.Wallet)
+                .HasForeignKey("WalletId")
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

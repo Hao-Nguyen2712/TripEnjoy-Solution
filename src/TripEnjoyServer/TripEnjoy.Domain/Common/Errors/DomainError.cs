@@ -126,6 +126,74 @@ namespace TripEnjoy.Domain.Common.Errors
                 "The transaction amount must be greater than zero.",
                 ErrorType.Validation
             );
+            public static readonly Error NotFound = new(
+                "Wallet.NotFound",
+                "The wallet was not found.",
+                ErrorType.NotFound
+            );
+        }
+
+        public static class Transaction
+        {
+            public static readonly Error NotFound = new(
+                "Transaction.NotFound",
+                "The transaction was not found.",
+                ErrorType.NotFound
+            );
+            public static readonly Error InvalidAmount = new(
+                "Transaction.InvalidAmount",
+                "The transaction amount must not be zero.",
+                ErrorType.Validation
+            );
+            public static readonly Error InvalidStatus = new(
+                "Transaction.InvalidStatus",
+                "The transaction status is invalid.",
+                ErrorType.Validation
+            );
+            public static readonly Error AlreadyCompleted = new(
+                "Transaction.AlreadyCompleted",
+                "The transaction has already been completed.",
+                ErrorType.Failure
+            );
+            public static readonly Error CannotReverse = new(
+                "Transaction.CannotReverse",
+                "Only completed transactions can be reversed.",
+                ErrorType.Failure
+            );
+        }
+
+        public static class Settlement
+        {
+            public static readonly Error NotFound = new(
+                "Settlement.NotFound",
+                "The settlement was not found.",
+                ErrorType.NotFound
+            );
+            public static readonly Error InvalidPeriod = new(
+                "Settlement.InvalidPeriod",
+                "Period end date must be after period start date.",
+                ErrorType.Validation
+            );
+            public static readonly Error InvalidAmount = new(
+                "Settlement.InvalidAmount",
+                "Settlement total amount must be greater than zero.",
+                ErrorType.Validation
+            );
+            public static readonly Error InvalidCommission = new(
+                "Settlement.InvalidCommission",
+                "Commission amount cannot be negative or exceed total amount.",
+                ErrorType.Validation
+            );
+            public static readonly Error AlreadyProcessed = new(
+                "Settlement.AlreadyProcessed",
+                "The settlement has already been processed.",
+                ErrorType.Failure
+            );
+            public static readonly Error CannotCancel = new(
+                "Settlement.CannotCancel",
+                "Only pending settlements can be cancelled.",
+                ErrorType.Failure
+            );
         }
 
         public static class RefreshToken
@@ -440,6 +508,92 @@ namespace TripEnjoy.Domain.Common.Errors
                 "RoomPromotion.PromotionExpired",
                 "The promotion has expired.",
                 ErrorType.Failure);
+        }
+
+        public static class Review
+        {
+            public static readonly Error NotFound = new(
+                "Review.NotFound",
+                "The review was not found.",
+                ErrorType.NotFound);
+
+            public static readonly Error InvalidRating = new(
+                "Review.InvalidRating",
+                "Rating must be between 1 and 5.",
+                ErrorType.Validation);
+
+            public static readonly Error CommentRequired = new(
+                "Review.CommentRequired",
+                "Review comment is required.",
+                ErrorType.Validation);
+
+            public static readonly Error BookingNotCompleted = new(
+                "Review.BookingNotCompleted",
+                "You can only review rooms after your stay is completed.",
+                ErrorType.Failure);
+
+            public static readonly Error DuplicateReview = new(
+                "Review.DuplicateReview",
+                "You have already reviewed this booking.",
+                ErrorType.Conflict);
+
+            public static readonly Error Unauthorized = new(
+                "Review.Unauthorized",
+                "You are not authorized to manage this review.",
+                ErrorType.Unauthorized);
+
+            public static readonly Error CannotUpdateDeleted = new(
+                "Review.CannotUpdateDeleted",
+                "Cannot update a deleted review.",
+                ErrorType.Failure);
+
+            public static readonly Error MaxImagesExceeded = new(
+                "Review.MaxImagesExceeded",
+                "Maximum 10 images allowed per review.",
+                ErrorType.Validation);
+
+            public static readonly Error ImageNotFound = new(
+                "Review.ImageNotFound",
+                "The specified image was not found on this review.",
+                ErrorType.NotFound);
+
+            public static readonly Error InvalidImageUrl = new(
+                "Review.InvalidImageUrl",
+                "The image URL format is invalid.",
+                ErrorType.Validation);
+        }
+
+        public static class ReviewReply
+        {
+            public static readonly Error NotFound = new(
+                "ReviewReply.NotFound",
+                "The review reply was not found.",
+                ErrorType.NotFound);
+
+            public static readonly Error ContentRequired = new(
+                "ReviewReply.ContentRequired",
+                "Reply content is required.",
+                ErrorType.Validation);
+
+            public static readonly Error DuplicateReply = new(
+                "ReviewReply.DuplicateReply",
+                "You have already replied to this review.",
+                ErrorType.Conflict);
+
+            public static readonly Error Unauthorized = new(
+                "ReviewReply.Unauthorized",
+                "You are not authorized to reply to this review.",
+                ErrorType.Unauthorized);
+
+            public static readonly Error CannotUpdateDeleted = new(
+                "ReviewReply.CannotUpdateDeleted",
+                "Cannot update a deleted reply.",
+                ErrorType.Failure);
+
+            public static readonly Error InvalidReplierType = new(
+                "ReviewReply.InvalidReplierType",
+                "Invalid replier type. Must be Partner or Admin.",
+                ErrorType.Validation);
         }
     }
 }
