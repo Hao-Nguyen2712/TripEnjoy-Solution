@@ -78,36 +78,40 @@ namespace TripEnjoy.Infrastructure
             services.Configure<VNPayConfiguration>(configuration.GetSection("VNPay"));
             services.AddScoped<IPaymentService, VNPayPaymentService>();
 
-            // Message Broker (RabbitMQ with MassTransit)
-            var rabbitMqSettings = configuration.GetSection("RabbitMQ").Get<RabbitMqSettings>() ?? new RabbitMqSettings();
-            
-            services.AddMassTransit(x =>
+            // Message Broker (RabbitMQ with MassTransit) - skip in Testing environment
+            var environment = configuration.GetValue<string>("ASPNETCORE_ENVIRONMENT") ?? "";
+            if (environment != "Testing")
             {
-                // Add all consumers from the Application layer
-                x.AddConsumer<BookingCreatedConsumer>();
-                x.AddConsumer<BookingConfirmedConsumer>();
-                x.AddConsumer<BookingCancelledConsumer>();
-
-                x.UsingRabbitMq((context, cfg) =>
+                var rabbitMqSettings = configuration.GetSection("RabbitMQ").Get<RabbitMqSettings>() ?? new RabbitMqSettings();
+                
+                services.AddMassTransit(x =>
                 {
-                    cfg.Host(rabbitMqSettings.Host, rabbitMqSettings.Port, rabbitMqSettings.VirtualHost, h =>
+                    // Add all consumers from the Application layer
+                    x.AddConsumer<BookingCreatedConsumer>();
+                    x.AddConsumer<BookingConfirmedConsumer>();
+                    x.AddConsumer<BookingCancelledConsumer>();
+
+                    x.UsingRabbitMq((context, cfg) =>
                     {
-                        h.Username(rabbitMqSettings.Username);
-                        h.Password(rabbitMqSettings.Password);
+                        cfg.Host(rabbitMqSettings.Host, rabbitMqSettings.Port, rabbitMqSettings.VirtualHost, h =>
+                        {
+                            h.Username(rabbitMqSettings.Username);
+                            h.Password(rabbitMqSettings.Password);
+                        });
+
+                        // Configure retry policy
+                        cfg.UseMessageRetry(r => r.Intervals(
+                            TimeSpan.FromSeconds(1),
+                            TimeSpan.FromSeconds(5),
+                            TimeSpan.FromSeconds(10),
+                            TimeSpan.FromSeconds(30)
+                        ));
+
+                        // Configure endpoints for consumers
+                        cfg.ConfigureEndpoints(context);
                     });
-
-                    // Configure retry policy
-                    cfg.UseMessageRetry(r => r.Intervals(
-                        TimeSpan.FromSeconds(1),
-                        TimeSpan.FromSeconds(5),
-                        TimeSpan.FromSeconds(10),
-                        TimeSpan.FromSeconds(30)
-                    ));
-
-                    // Configure endpoints for consumers
-                    cfg.ConfigureEndpoints(context);
                 });
-            });
+            }
 
             return services;
         }
