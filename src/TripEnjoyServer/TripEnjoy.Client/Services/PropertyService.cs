@@ -1,12 +1,13 @@
 using System.Net.Http.Json;
 using TripEnjoy.Client.Models;
+using TripEnjoy.ShareKernel.Dtos;
 
 namespace TripEnjoy.Client.Services;
 
 public interface IPropertyService
 {
     Task<ApiResponse<PropertyDto>> GetPropertyByIdAsync(Guid propertyId);
-    Task<ApiResponse<PagedResult<PropertySummaryDto>>> GetAllPropertiesAsync(int pageNumber = 1, int pageSize = 10);
+    Task<ApiResponse<PagedList<PropertySummaryDto>>> GetAllPropertiesAsync(int pageNumber = 1, int pageSize = 10);
     Task<ApiResponse<List<PropertySummaryDto>>> GetMyPropertiesAsync();
     Task<ApiResponse<Guid>> CreatePropertyAsync(CreatePropertyRequest request);
     Task<ApiResponse> UpdatePropertyAsync(UpdatePropertyRequest request);
@@ -41,17 +42,17 @@ public class PropertyService : IPropertyService
         }
     }
 
-    public async Task<ApiResponse<PagedResult<PropertySummaryDto>>> GetAllPropertiesAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<ApiResponse<PagedList<PropertySummaryDto>>> GetAllPropertiesAsync(int pageNumber = 1, int pageSize = 10)
     {
         try
         {
             var response = await _httpClient.GetAsync($"/api/v1/properties?pageNumber={pageNumber}&pageSize={pageSize}");
-            var result = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<PropertySummaryDto>>>();
-            return result ?? new ApiResponse<PagedResult<PropertySummaryDto>> { IsSuccess = false, Message = "Failed to parse response" };
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<PagedList<PropertySummaryDto>>>();
+            return result ?? new ApiResponse<PagedList<PropertySummaryDto>> { IsSuccess = false, Message = "Failed to parse response" };
         }
         catch (Exception ex)
         {
-            return new ApiResponse<PagedResult<PropertySummaryDto>>
+            return new ApiResponse<PagedList<PropertySummaryDto>>
             {
                 IsSuccess = false,
                 Message = "An error occurred while fetching properties",

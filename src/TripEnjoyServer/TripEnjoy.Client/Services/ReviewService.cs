@@ -10,9 +10,9 @@ public interface IReviewService
     Task<ApiResponse<bool>> UpdateReviewAsync(Guid reviewId, UpdateReviewRequest request);
     Task<ApiResponse<bool>> DeleteReviewAsync(Guid reviewId);
     Task<ApiResponse<ReviewDto>> GetReviewByIdAsync(Guid reviewId);
-    Task<ApiResponse<PagedResult<ReviewDto>>> GetReviewsByPropertyAsync(Guid propertyId, int page = 1, int pageSize = 10);
-    Task<ApiResponse<PagedResult<ReviewDto>>> GetReviewsByRoomTypeAsync(Guid roomTypeId, int page = 1, int pageSize = 10);
-    Task<ApiResponse<PagedResult<ReviewDto>>> GetUserReviewsAsync(Guid userId, int page = 1, int pageSize = 10);
+    Task<ApiResponse<PagedList<ReviewDto>>> GetReviewsByPropertyAsync(Guid propertyId, int page = 1, int pageSize = 10);
+    Task<ApiResponse<PagedList<ReviewDto>>> GetReviewsByRoomTypeAsync(Guid roomTypeId, int page = 1, int pageSize = 10);
+    Task<ApiResponse<PagedList<ReviewDto>>> GetUserReviewsAsync(Guid userId, int page = 1, int pageSize = 10);
     Task<ApiResponse<Guid>> CreateReplyAsync(Guid reviewId, CreateReplyRequest request);
     Task<ApiResponse<bool>> UpdateReplyAsync(Guid reviewId, Guid replyId, UpdateReplyRequest request);
     Task<ApiResponse<bool>> DeleteReplyAsync(Guid reviewId, Guid replyId);
@@ -83,45 +83,45 @@ public class ReviewService : IReviewService
         }
     }
 
-    public async Task<ApiResponse<PagedResult<ReviewDto>>> GetReviewsByPropertyAsync(Guid propertyId, int page = 1, int pageSize = 10)
+    public async Task<ApiResponse<PagedList<ReviewDto>>> GetReviewsByPropertyAsync(Guid propertyId, int page = 1, int pageSize = 10)
     {
         try
         {
             var response = await _httpClient.GetAsync($"/api/v1/reviews/property/{propertyId}?pageNumber={page}&pageSize={pageSize}");
-            return await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<ReviewDto>>>()
-                   ?? new ApiResponse<PagedResult<ReviewDto>> { IsSuccess = false, Message = "Failed to parse response" };
+            return await response.Content.ReadFromJsonAsync<ApiResponse<PagedList<ReviewDto>>>()
+                   ?? new ApiResponse<PagedList<ReviewDto>> { IsSuccess = false, Message = "Failed to parse response" };
         }
         catch (Exception ex)
         {
-            return new ApiResponse<PagedResult<ReviewDto>> { IsSuccess = false, Message = ex.Message };
+            return new ApiResponse<PagedList<ReviewDto>> { IsSuccess = false, Message = ex.Message };
         }
     }
 
-    public async Task<ApiResponse<PagedResult<ReviewDto>>> GetReviewsByRoomTypeAsync(Guid roomTypeId, int page = 1, int pageSize = 10)
+    public async Task<ApiResponse<PagedList<ReviewDto>>> GetReviewsByRoomTypeAsync(Guid roomTypeId, int page = 1, int pageSize = 10)
     {
         try
         {
             var response = await _httpClient.GetAsync($"/api/v1/reviews/room-type/{roomTypeId}?pageNumber={page}&pageSize={pageSize}");
-            return await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<ReviewDto>>>()
-                   ?? new ApiResponse<PagedResult<ReviewDto>> { IsSuccess = false, Message = "Failed to parse response" };
+            return await response.Content.ReadFromJsonAsync<ApiResponse<PagedList<ReviewDto>>>()
+                   ?? new ApiResponse<PagedList<ReviewDto>> { IsSuccess = false, Message = "Failed to parse response" };
         }
         catch (Exception ex)
         {
-            return new ApiResponse<PagedResult<ReviewDto>> { IsSuccess = false, Message = ex.Message };
+            return new ApiResponse<PagedList<ReviewDto>> { IsSuccess = false, Message = ex.Message };
         }
     }
 
-    public async Task<ApiResponse<PagedResult<ReviewDto>>> GetUserReviewsAsync(Guid userId, int page = 1, int pageSize = 10)
+    public async Task<ApiResponse<PagedList<ReviewDto>>> GetUserReviewsAsync(Guid userId, int page = 1, int pageSize = 10)
     {
         try
         {
             var response = await _httpClient.GetAsync($"/api/v1/reviews/user/{userId}?pageNumber={page}&pageSize={pageSize}");
-            return await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<ReviewDto>>>()
-                   ?? new ApiResponse<PagedResult<ReviewDto>> { IsSuccess = false, Message = "Failed to parse response" };
+            return await response.Content.ReadFromJsonAsync<ApiResponse<PagedList<ReviewDto>>>()
+                   ?? new ApiResponse<PagedList<ReviewDto>> { IsSuccess = false, Message = "Failed to parse response" };
         }
         catch (Exception ex)
         {
-            return new ApiResponse<PagedResult<ReviewDto>> { IsSuccess = false, Message = ex.Message };
+            return new ApiResponse<PagedList<ReviewDto>> { IsSuccess = false, Message = ex.Message };
         }
     }
 

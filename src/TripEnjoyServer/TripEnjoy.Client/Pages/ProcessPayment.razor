@@ -56,7 +56,7 @@
                 <MudButton Variant="Variant.Filled" 
                          Color="Color.Primary" 
                          FullWidth="true"
-                         OnClick="ProcessPayment"
+                         OnClick="HandleProcessPayment"
                          Disabled="@(string.IsNullOrEmpty(_selectedPaymentMethod) || _isProcessing)">
                     @if (_isProcessing)
                     {
@@ -115,7 +115,7 @@
         }
     }
 
-    private async Task ProcessPayment()
+    private async Task HandleProcessPayment()
     {
         _isProcessing = true;
         try

@@ -7,7 +7,7 @@ namespace TripEnjoy.Client.Services;
 public interface IBookingService
 {
     Task<ApiResponse<Guid>> CreateBookingAsync(CreateBookingRequest request);
-    Task<ApiResponse<PagedResult<BookingDto>>> GetMyBookingsAsync(int page = 1, int pageSize = 10);
+    Task<ApiResponse<PagedList<BookingDto>>> GetMyBookingsAsync(int page = 1, int pageSize = 10);
     Task<ApiResponse<BookingDetailDto>> GetBookingDetailsAsync(Guid bookingId);
     Task<ApiResponse<bool>> CancelBookingAsync(Guid bookingId, string? cancellationReason = null);
 }
@@ -35,17 +35,17 @@ public class BookingService : IBookingService
         }
     }
 
-    public async Task<ApiResponse<PagedResult<BookingDto>>> GetMyBookingsAsync(int page = 1, int pageSize = 10)
+    public async Task<ApiResponse<PagedList<BookingDto>>> GetMyBookingsAsync(int page = 1, int pageSize = 10)
     {
         try
         {
             var response = await _httpClient.GetAsync($"/api/v1/bookings/my-bookings?page={page}&pageSize={pageSize}");
-            return await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<BookingDto>>>()
-                   ?? new ApiResponse<PagedResult<BookingDto>> { IsSuccess = false, Message = "Failed to parse response" };
+            return await response.Content.ReadFromJsonAsync<ApiResponse<PagedList<BookingDto>>>()
+                   ?? new ApiResponse<PagedList<BookingDto>> { IsSuccess = false, Message = "Failed to parse response" };
         }
         catch (Exception ex)
         {
-            return new ApiResponse<PagedResult<BookingDto>> { IsSuccess = false, Message = ex.Message };
+            return new ApiResponse<PagedList<BookingDto>> { IsSuccess = false, Message = ex.Message };
         }
     }
 

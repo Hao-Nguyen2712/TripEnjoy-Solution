@@ -173,6 +173,16 @@
                         Complete Payment
                     </MudButton>
                 }
+                else if (_booking.Status.ToLower() == "completed" && _booking.CheckOutDate < DateTime.Now)
+                {
+                    <MudButton Variant="Variant.Filled" 
+                             Color="Color.Secondary" 
+                             FullWidth="true"
+                             Class="mt-4"
+                             Href="@($"/reviews/create?BookingId={_booking.Id}")">
+                        Write a Review
+                    </MudButton>
+                }
             </MudItem>
         </MudGrid>
     }
