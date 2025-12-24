@@ -46,6 +46,17 @@ public class TripEnjoyWebApplicationFactory : WebApplicationFactory<Program>
                 options.EnableSensitiveDataLogging();
             });
 
+            // Remove all MassTransit-related services to prevent RabbitMQ connection attempts
+            var massTransitServices = services
+                .Where(d => d.ServiceType.FullName?.Contains("MassTransit") == true ||
+                           d.ImplementationType?.FullName?.Contains("MassTransit") == true)
+                .ToList();
+            
+            foreach (var service in massTransitServices)
+            {
+                services.Remove(service);
+            }
+
             // Replace external services with test doubles (as Singletons to maintain state across requests)
             services.Replace(ServiceDescriptor.Singleton<IEmailService, TestEmailService>());
             services.Replace(ServiceDescriptor.Singleton<ICacheService, TestCacheService>());
@@ -65,7 +76,8 @@ public class TripEnjoyWebApplicationFactory : WebApplicationFactory<Program>
                 new KeyValuePair<string, string?>("JWT:Secret", "test-secret-key-that-is-long-enough-for-jwt-token-generation"),
                 new KeyValuePair<string, string?>("JWT:ValidIssuer", "TestIssuer"),
                 new KeyValuePair<string, string?>("JWT:ValidAudience", "TestAudience"),
-                new KeyValuePair<string, string?>("CacheSettings:ConnectionString", "localhost:6379")
+                new KeyValuePair<string, string?>("CacheSettings:ConnectionString", "localhost:6379"),
+                new KeyValuePair<string, string?>("ASPNETCORE_ENVIRONMENT", "Testing")
             });
         });
     }
