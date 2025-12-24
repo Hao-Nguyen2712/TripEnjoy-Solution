@@ -1,0 +1,257 @@
+@page "/bookings/{BookingId:guid}"
+@inject IBookingService BookingService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@attribute [Authorize]
+
+<PageTitle>Booking Details - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (_booking == null)
+    {
+        <MudAlert Severity="Severity.Error">Booking not found</MudAlert>
+    }
+    else
+    {
+        <MudText Typo="Typo.h4" Class="mb-4">Booking Details</MudText>
+
+        <MudGrid>
+            <MudItem xs="12" md="8">
+                <MudPaper Elevation="3" Class="pa-4 mb-4">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
+                        <MudStack>
+                            <MudText Typo="Typo.h5">@_booking.PropertyName</MudText>
+                            <MudChip T="string" Color="@GetStatusColor(_booking.Status)" Size="Size.Small">
+                                @_booking.Status
+                            </MudChip>
+                        </MudStack>
+                        @if (_booking.Status.ToLower() == "pending" || _booking.Status.ToLower() == "confirmed")
+                        {
+                            <MudButton Variant="Variant.Outlined" 
+                                     Color="Color.Error" 
+                                     OnClick="HandleCancelBooking"
+                                     Disabled="@_isCancelling">
+                                @if (_isCancelling)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                }
+                                else
+                                {
+                                    <span>Cancel Booking</span>
+                                }
+                            </MudButton>
+                        }
+                    </MudStack>
+
+                    <MudDivider Class="my-4" />
+
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Check-in</MudText>
+                            <MudText Typo="Typo.h6">@_booking.CheckInDate.ToString("MMM dd, yyyy")</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Check-out</MudText>
+                            <MudText Typo="Typo.h6">@_booking.CheckOutDate.ToString("MMM dd, yyyy")</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Nights</MudText>
+                            <MudText Typo="Typo.body1">@((_booking.CheckOutDate - _booking.CheckInDate).Days) nights</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Guests</MudText>
+                            <MudText Typo="Typo.body1">@_booking.NumberOfGuests</MudText>
+                        </MudItem>
+                    </MudGrid>
+
+                    @if (!string.IsNullOrEmpty(_booking.SpecialRequests))
+                    {
+                        <MudDivider Class="my-4" />
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Special Requests</MudText>
+                        <MudText Typo="Typo.body1">@_booking.SpecialRequests</MudText>
+                    }
+                </MudPaper>
+
+                <MudPaper Elevation="3" Class="pa-4 mb-4">
+                    <MudText Typo="Typo.h6" Class="mb-3">Room Details</MudText>
+                    @if (_booking.Items.Any())
+                    {
+                        <MudTable Items="@_booking.Items" Hover="true" Dense="true">
+                            <HeaderContent>
+                                <MudTh>Room Type</MudTh>
+                                <MudTh>Quantity</MudTh>
+                                <MudTh>Nights</MudTh>
+                                <MudTh>Price/Night</MudTh>
+                                <MudTh>Discount</MudTh>
+                                <MudTh>Total</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Room Type">@context.RoomTypeName</MudTd>
+                                <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
+                                <MudTd DataLabel="Nights">@context.Nights</MudTd>
+                                <MudTd DataLabel="Price/Night">$@context.PricePerNight.ToString("F2")</MudTd>
+                                <MudTd DataLabel="Discount">-$@context.DiscountAmount.ToString("F2")</MudTd>
+                                <MudTd DataLabel="Total"><strong>$@context.TotalPrice.ToString("F2")</strong></MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudPaper>
+
+                @if (_booking.History.Any())
+                {
+                    <MudPaper Elevation="3" Class="pa-4">
+                        <MudText Typo="Typo.h6" Class="mb-3">Booking History</MudText>
+                        <MudTimeline>
+                            @foreach (var history in _booking.History.OrderByDescending(h => h.ChangedAt))
+                            {
+                                <MudTimelineItem Color="Color.Primary" Size="Size.Small">
+                                    <MudText Typo="Typo.body2"><strong>@history.Status</strong></MudText>
+                                    <MudText Typo="Typo.caption">@history.Description</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        @history.ChangedAt.ToString("MMM dd, yyyy HH:mm")
+                                        @if (!string.IsNullOrEmpty(history.ChangedBy))
+                                        {
+                                            <span> by @history.ChangedBy</span>
+                                        }
+                                    </MudText>
+                                </MudTimelineItem>
+                            }
+                        </MudTimeline>
+                    </MudPaper>
+                }
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="3" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="mb-3">Payment Summary</MudText>
+                    <MudStack Spacing="2">
+                        <MudStack Row="true" Justify="Justify.SpaceBetween">
+                            <MudText Typo="Typo.body2">Subtotal</MudText>
+                            <MudText Typo="Typo.body2">$@_booking.TotalPrice.ToString("F2")</MudText>
+                        </MudStack>
+                        <MudDivider />
+                        <MudStack Row="true" Justify="Justify.SpaceBetween">
+                            <MudText Typo="Typo.h6">Total</MudText>
+                            <MudText Typo="Typo.h6" Color="Color.Primary">$@_booking.TotalPrice.ToString("F2")</MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+
+                <MudPaper Elevation="3" Class="pa-4 mt-4">
+                    <MudText Typo="Typo.h6" Class="mb-3">Booking Information</MudText>
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.body2">
+                            <strong>Booking ID:</strong><br />
+                            <span style="font-size: 0.75rem; word-break: break-all;">@_booking.Id</span>
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            <strong>Booked on:</strong><br />
+                            @_booking.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                        </MudText>
+                        @if (_booking.UpdatedAt.HasValue)
+                        {
+                            <MudText Typo="Typo.body2">
+                                <strong>Last updated:</strong><br />
+                                @_booking.UpdatedAt.Value.ToString("MMM dd, yyyy HH:mm")
+                            </MudText>
+                        }
+                    </MudStack>
+                </MudPaper>
+
+                @if (_booking.Status.ToLower() == "pending")
+                {
+                    <MudButton Variant="Variant.Filled" 
+                             Color="Color.Primary" 
+                             FullWidth="true"
+                             Class="mt-4"
+                             OnClick="@(() => NavigationManager.NavigateTo($"/payment/process/{_booking.Id}"))">
+                        Complete Payment
+                    </MudButton>
+                }
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid BookingId { get; set; }
+
+    private BookingDetailDto? _booking;
+    private bool _isLoading = true;
+    private bool _isCancelling = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookingDetails();
+    }
+
+    private async Task LoadBookingDetails()
+    {
+        _isLoading = true;
+        try
+        {
+            var result = await BookingService.GetBookingDetailsAsync(BookingId);
+            if (result.IsSuccess && result.Data != null)
+            {
+                _booking = result.Data;
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task HandleCancelBooking()
+    {
+        var confirmed = await DialogService.ShowMessageBox(
+            "Cancel Booking",
+            "Are you sure you want to cancel this booking? This action cannot be undone.",
+            yesText: "Cancel Booking",
+            cancelText: "Keep Booking");
+
+        if (confirmed == true)
+        {
+            _isCancelling = true;
+            try
+            {
+                var result = await BookingService.CancelBookingAsync(BookingId, "Cancelled by user");
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Booking cancelled successfully", Severity.Success);
+                    await LoadBookingDetails(); // Reload to show updated status
+                }
+                else
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+            }
+            finally
+            {
+                _isCancelling = false;
+            }
+        }
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status.ToLower() switch
+        {
+            "confirmed" => Color.Success,
+            "pending" => Color.Warning,
+            "cancelled" => Color.Error,
+            "completed" => Color.Info,
+            _ => Color.Default
+        };
+    }
+}

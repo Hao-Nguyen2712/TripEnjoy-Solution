@@ -1,0 +1,151 @@
+@page "/payment/process/{BookingId:guid}"
+@inject IPaymentService PaymentService
+@inject IBookingService BookingService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "User")]
+
+<PageTitle>Process Payment - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Elevation="4" Class="pa-8">
+        <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true">Complete Payment</MudText>
+
+        @if (_isLoading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (_booking == null)
+        {
+            <MudAlert Severity="Severity.Error">Booking not found</MudAlert>
+        }
+        else
+        {
+            <MudStack Spacing="4">
+                <MudPaper Elevation="2" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="mb-2">Booking Summary</MudText>
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.body2">
+                            <strong>Property:</strong> @_booking.PropertyName
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            <strong>Check-in:</strong> @_booking.CheckInDate.ToString("MMM dd, yyyy")
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            <strong>Check-out:</strong> @_booking.CheckOutDate.ToString("MMM dd, yyyy")
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            <strong>Guests:</strong> @_booking.NumberOfGuests
+                        </MudText>
+                        <MudDivider Class="my-2" />
+                        <MudText Typo="Typo.h6" Color="Color.Primary">
+                            Total: $@_booking.TotalPrice.ToString("F2")
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+
+                <MudSelect @bind-Value="_selectedPaymentMethod" 
+                          Label="Payment Method" 
+                          Variant="Variant.Outlined" 
+                          Required="true">
+                    <MudSelectItem Value="@("VNPay")">VNPay</MudSelectItem>
+                    <MudSelectItem Value="@("PayPal")">PayPal</MudSelectItem>
+                    <MudSelectItem Value="@("CreditCard")">Credit Card</MudSelectItem>
+                </MudSelect>
+
+                <MudButton Variant="Variant.Filled" 
+                         Color="Color.Primary" 
+                         FullWidth="true"
+                         OnClick="ProcessPayment"
+                         Disabled="@(string.IsNullOrEmpty(_selectedPaymentMethod) || _isProcessing)">
+                    @if (_isProcessing)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                        <span class="ml-2">Processing...</span>
+                    }
+                    else
+                    {
+                        <span>Proceed to Payment</span>
+                    }
+                </MudButton>
+
+                <MudButton Variant="Variant.Text" 
+                         Color="Color.Default" 
+                         FullWidth="true"
+                         OnClick="@(() => NavigationManager.NavigateTo($"/bookings/{BookingId}"))">
+                    Back to Booking
+                </MudButton>
+            </MudStack>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid BookingId { get; set; }
+
+    private BookingDetailDto? _booking;
+    private string _selectedPaymentMethod = "VNPay";
+    private bool _isLoading = true;
+    private bool _isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookingDetails();
+    }
+
+    private async Task LoadBookingDetails()
+    {
+        _isLoading = true;
+        try
+        {
+            var result = await BookingService.GetBookingDetailsAsync(BookingId);
+            if (result.IsSuccess && result.Data != null)
+            {
+                _booking = result.Data;
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ProcessPayment()
+    {
+        _isProcessing = true;
+        try
+        {
+            var returnUrl = $"{NavigationManager.BaseUri}payment/callback";
+            var request = new ProcessPaymentRequest
+            {
+                BookingId = BookingId,
+                PaymentMethod = _selectedPaymentMethod,
+                ReturnUrl = returnUrl
+            };
+
+            var result = await PaymentService.ProcessPaymentAsync(request);
+            if (result.IsSuccess && !string.IsNullOrEmpty(result.Data))
+            {
+                // Redirect to payment gateway
+                NavigationManager.NavigateTo(result.Data, true);
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? "Failed to process payment", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error processing payment: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+}

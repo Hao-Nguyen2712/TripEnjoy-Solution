@@ -1,0 +1,35 @@
+@page "/payment/success"
+@inject NavigationManager NavigationManager
+
+<PageTitle>Payment Successful - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Elevation="4" Class="pa-8" Style="text-align: center;">
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" 
+                Size="Size.Large" 
+                Color="Color.Success" 
+                Style="font-size: 80px;" 
+                Class="mb-4" />
+        
+        <MudText Typo="Typo.h4" Color="Color.Success" GutterBottom="true">
+            Payment Successful!
+        </MudText>
+        
+        <MudText Typo="Typo.body1" Class="mb-6">
+            Your booking has been confirmed. You will receive a confirmation email shortly.
+        </MudText>
+
+        <MudStack Row="true" Justify="Justify.Center" Spacing="4">
+            <MudButton Variant="Variant.Filled" 
+                     Color="Color.Primary" 
+                     Href="/bookings">
+                View My Bookings
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" 
+                     Color="Color.Primary" 
+                     Href="/">
+                Back to Home
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
