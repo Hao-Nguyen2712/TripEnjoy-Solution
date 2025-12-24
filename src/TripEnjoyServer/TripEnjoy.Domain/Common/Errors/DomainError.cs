@@ -595,5 +595,63 @@ namespace TripEnjoy.Domain.Common.Errors
                 "Invalid replier type. Must be Partner or Admin.",
                 ErrorType.Validation);
         }
+
+        public static class Voucher
+        {
+            public static readonly Error NotFound = new(
+                "Voucher.NotFound",
+                "The voucher was not found.",
+                ErrorType.NotFound);
+
+            public static readonly Error InvalidCode = new(
+                "Voucher.InvalidCode",
+                "The voucher code format is invalid.",
+                ErrorType.Validation);
+
+            public static readonly Error DuplicateCode = new(
+                "Voucher.DuplicateCode",
+                "A voucher with this code already exists.",
+                ErrorType.Conflict);
+
+            public static readonly Error InvalidDiscount = new(
+                "Voucher.InvalidDiscount",
+                "Invalid discount value. Percent must be 0-100, Amount must be positive.",
+                ErrorType.Validation);
+
+            public static readonly Error Expired = new(
+                "Voucher.Expired",
+                "This voucher has expired.",
+                ErrorType.Failure);
+
+            public static readonly Error NotStarted = new(
+                "Voucher.NotStarted",
+                "This voucher is not yet active.",
+                ErrorType.Failure);
+
+            public static readonly Error Disabled = new(
+                "Voucher.Disabled",
+                "This voucher has been disabled.",
+                ErrorType.Failure);
+
+            public static readonly Error UsageLimitReached = new(
+                "Voucher.UsageLimitReached",
+                "This voucher has reached its usage limit.",
+                ErrorType.Failure);
+
+            public static readonly Error UserUsageLimitReached = new(
+                "Voucher.UserUsageLimitReached",
+                "You have reached the usage limit for this voucher.",
+                ErrorType.Failure);
+
+            public static readonly Error InvalidScope = new(
+                "Voucher.InvalidScope",
+                "This voucher cannot be applied to the selected items.",
+                ErrorType.Failure);
+
+            public static readonly Error Unauthorized = new(
+                "Voucher.Unauthorized",
+                "You are not authorized to manage this voucher.",
+                ErrorType.Unauthorized);
+        }
     }
 }
