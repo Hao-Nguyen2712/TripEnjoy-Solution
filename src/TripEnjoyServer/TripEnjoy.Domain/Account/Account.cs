@@ -143,7 +143,7 @@ namespace TripEnjoy.Domain.Account
 
         public Result MarkAsLocked()
         {
-            if (Status != AccountStatusEnum.PendingVerification.ToString())
+            if (Status == AccountStatusEnum.Locked.ToString())
             {
                 return Result.Failure(DomainError.Account.AlreadyLocked);
             }
@@ -154,7 +154,7 @@ namespace TripEnjoy.Domain.Account
 
         public Result MarkAsBanned()
         {
-            if (Status != AccountStatusEnum.PendingVerification.ToString())
+            if (Status == AccountStatusEnum.Banned.ToString())
             {
                 return Result.Failure(DomainError.Account.AlreadyBanned);
             }
@@ -165,9 +165,8 @@ namespace TripEnjoy.Domain.Account
 
         public Result MarkAsActive()
         {
-            if (Status != AccountStatusEnum.PendingVerification.ToString())
+            if (Status == AccountStatusEnum.Active.ToString())
             {
-
                 return Result.Failure(DomainError.Account.AlreadyActivated);
             }
             Status = AccountStatusEnum.Active.ToString();

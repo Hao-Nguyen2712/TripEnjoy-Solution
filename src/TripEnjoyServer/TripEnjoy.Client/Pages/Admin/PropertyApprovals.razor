@@ -1,0 +1,122 @@
+@page "/admin/properties"
+@using TripEnjoy.Client.Services
+@using TripEnjoy.ShareKernel.Dtos
+@using MudBlazor
+@inject IAdminService AdminService
+@inject ISnackbar Snackbar
+
+<PageTitle>Property Approvals - TripEnjoy Admin</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+            <MudText Typo="Typo.h4" GutterBottom="true">Property Approvals</MudText>
+            <MudText Typo="Typo.body1" Class="mb-6">Review and approve property listings</MudText>
+
+            @if (isLoading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+            }
+            else if (properties != null && properties.Any())
+            {
+                <MudTable Items="@properties" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true">
+                    <HeaderContent>
+                        <MudTh>Property Name</MudTh>
+                        <MudTh>Address</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Submitted At</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="property">
+                        <MudTd DataLabel="Property Name">@property.Name</MudTd>
+                        <MudTd DataLabel="Address">@property.Address</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">@property.Status</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Submitted At">@property.SubmittedAt.ToString("MMM dd, yyyy")</MudTd>
+                        <MudTd DataLabel="Actions">
+                            <MudButtonGroup Size="Size.Small">
+                                <MudButton Variant="Variant.Filled" Color="Color.Success"
+                                           OnClick="@(() => HandleApprove(property.Id))">
+                                    Approve
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Error"
+                                           OnClick="@(() => HandleReject(property.Id))">
+                                    Reject
+                                </MudButton>
+                            </MudButtonGroup>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">No pending property approvals</MudAlert>
+            }
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+            <MudAlert Severity="Severity.Warning">
+                You are not authorized to access this page.
+            </MudAlert>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<PropertyApprovalDto> properties = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        var response = await AdminService.GetPendingPropertyApprovalsAsync();
+
+        if (response.IsSuccess && response.Data != null)
+        {
+            properties = response.Data;
+        }
+        else
+        {
+            Snackbar.Add(response.Message ?? "Failed to load properties", Severity.Error);
+        }
+
+        isLoading = false;
+    }
+
+    private async Task HandleApprove(Guid propertyId)
+    {
+        var response = await AdminService.ApprovePropertyAsync(propertyId);
+
+        if (response.IsSuccess)
+        {
+            Snackbar.Add("Property approved successfully", Severity.Success);
+            await LoadData();
+        }
+        else
+        {
+            Snackbar.Add(response.Message ?? "Failed to approve property", Severity.Error);
+        }
+    }
+
+    private async Task HandleReject(Guid propertyId)
+    {
+        var response = await AdminService.RejectPropertyAsync(propertyId, "Rejected by admin");
+
+        if (response.IsSuccess)
+        {
+            Snackbar.Add("Property rejected", Severity.Success);
+            await LoadData();
+        }
+        else
+        {
+            Snackbar.Add(response.Message ?? "Failed to reject property", Severity.Error);
+        }
+    }
+}

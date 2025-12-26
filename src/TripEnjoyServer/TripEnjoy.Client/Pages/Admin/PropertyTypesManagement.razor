@@ -1,0 +1,101 @@
+@page "/admin/property-types"
+@inject IPropertyService PropertyService
+@inject ISnackbar Snackbar
+
+<PageTitle>Property Types - TripEnjoy Admin</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+            <div class="d-flex justify-space-between align-center mb-6">
+                <div>
+                    <MudText Typo="Typo.h4" GutterBottom="true">Property Types Management</MudText>
+                    <MudText Typo="Typo.body1">Manage property type categories</MudText>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="ShowCreateDialog">
+                    Add Property Type
+                </MudButton>
+            </div>
+
+            @if (_loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+            }
+            else if (_propertyTypes != null && _propertyTypes.Any())
+            {
+                <MudGrid>
+                    @foreach (var propertyType in _propertyTypes)
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudCard Elevation="3">
+                                <MudCardContent>
+                                    <MudText Typo="Typo.h6">@propertyType.Name</MudText>
+                                    <MudChip T="string" Size="Size.Small" Color="@(propertyType.Status == "Active" ? Color.Success : Color.Default)">
+                                        @propertyType.Status
+                                    </MudChip>
+                                </MudCardContent>
+                                <MudCardActions>
+                                    <MudButton Size="Size.Small" Color="Color.Primary">Edit</MudButton>
+                                    <MudButton Size="Size.Small" Color="Color.Error">Delete</MudButton>
+                                </MudCardActions>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">No property types found</MudAlert>
+            }
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+            <MudAlert Severity="Severity.Warning">
+                You are not authorized to access this page.
+            </MudAlert>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<PropertyTypeDto> _propertyTypes = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPropertyTypes();
+    }
+
+    private async Task LoadPropertyTypes()
+    {
+        _loading = true;
+        try
+        {
+            var response = await PropertyService.GetPropertyTypesAsync();
+            if (response.IsSuccess && response.Data != null)
+            {
+                _propertyTypes = response.Data;
+            }
+            else
+            {
+                Snackbar.Add(response.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading property types: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ShowCreateDialog()
+    {
+        Snackbar.Add("Create property type feature coming soon", Severity.Info);
+    }
+}
