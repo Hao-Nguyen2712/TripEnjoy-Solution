@@ -1,0 +1,146 @@
+@page "/properties"
+@inject IPropertyService PropertyService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Properties - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudStack Spacing="1" Class="mb-4">
+        <MudText Typo="Typo.h4">Explore Properties</MudText>
+        <MudText Typo="Typo.body1" Color="Color.Secondary">Browse available stays across cities and property types.</MudText>
+    </MudStack>
+
+    <MudPaper Elevation="1" Class="pa-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_searchTerm"
+                              Variant="Variant.Outlined"
+                              Label="Search by name or city"
+                              Placeholder="e.g. Beach Resort, New York"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" />
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (FilteredProperties.Any())
+    {
+        <MudGrid>
+            @foreach (var property in FilteredProperties)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Elevation="3">
+                        @if (!string.IsNullOrEmpty(property.CoverImageUrl))
+                        {
+                            <MudCardMedia Image="@property.CoverImageUrl" Height="180" />
+                        }
+                        else
+                        {
+                            <MudCardMedia Height="180">
+                                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%; background-color: #f5f5f5;">
+                                    <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Default" />
+                                </MudStack>
+                            </MudCardMedia>
+                        }
+
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">@property.Name</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
+                                @property.City, @property.Country
+                            </MudText>
+                            <MudChip T="string" Color="Color.Primary" Size="Size.Small" Class="mt-2">@property.PropertyTypeName</MudChip>
+                            @if (property.AverageRating.HasValue)
+                            {
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-1">
+                                    <MudRating ReadOnly="true" SelectedValue="@((int)property.AverageRating.Value)" Size="Size.Small" />
+                                    <MudText Typo="Typo.caption">@property.AverageRating.Value.ToString("0.0")</MudText>
+                                </MudStack>
+                            }
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Text"
+                                      Color="Color.Primary"
+                                      OnClick="@(() => ViewProperty(property.Id))">
+                                View Details
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+
+        @if (_pagedResult != null && _pagedResult.TotalPages > 1)
+        {
+            <MudPagination Class="mt-4"
+                          Count="@_pagedResult.TotalPages"
+                          Selected="@_currentPage"
+                          SelectedChanged="OnPageChanged" />
+        }
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info">
+            No properties found. Try adjusting your search or check back later.
+        </MudAlert>
+    }
+</MudContainer>
+
+@code {
+    private List<PropertySummaryDto> _properties = new();
+    private PagedList<PropertySummaryDto>? _pagedResult;
+    private bool _isLoading = true;
+    private int _currentPage = 1;
+    private int _pageSize = 12;
+    private string _searchTerm = string.Empty;
+
+    private IEnumerable<PropertySummaryDto> FilteredProperties =>
+        string.IsNullOrWhiteSpace(_searchTerm)
+            ? _properties
+            : _properties.Where(p =>
+                p.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.City.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProperties();
+    }
+
+    private async Task LoadProperties()
+    {
+        _isLoading = true;
+        try
+        {
+            var result = await PropertyService.GetAllPropertiesAsync(_currentPage, _pageSize);
+            if (result.IsSuccess && result.Data != null)
+            {
+                _pagedResult = result.Data;
+                _properties = result.Data.Items;
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? "Failed to load properties", Severity.Error);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _currentPage = page;
+        await LoadProperties();
+    }
+
+    private void ViewProperty(Guid propertyId)
+    {
+        NavigationManager.NavigateTo($"/properties/{propertyId}");
+    }
+}

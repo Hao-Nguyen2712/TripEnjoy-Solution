@@ -1,0 +1,29 @@
+@page "/logout"
+@inject IAuthenticationService AuthService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Logout - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Elevation="3" Class="pa-6" Style="text-align: center;">
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Class="mb-4" />
+        <MudText Typo="Typo.h6">Signing you out...</MudText>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthService.LogoutAsync();
+
+        if (AuthStateProvider is CustomAuthenticationStateProvider customProvider)
+        {
+            customProvider.NotifyAuthenticationStateChanged();
+        }
+
+        Snackbar.Add("You have been signed out.", Severity.Success);
+        NavigationManager.NavigateTo("/", true);
+    }
+}
