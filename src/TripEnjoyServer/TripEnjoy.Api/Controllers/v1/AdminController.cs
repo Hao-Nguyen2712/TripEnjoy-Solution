@@ -131,6 +131,28 @@ public class AdminController : ApiControllerBase
         var result = await _sender.Send(command);
         return HandleResult(result, "Property rejected successfully");
     }
+
+    /// <summary>
+    /// Get all bookings
+    /// </summary>
+    [HttpGet("bookings")]
+    public async Task<IActionResult> GetAllBookings()
+    {
+        var query = new GetAllBookingsQuery();
+        var result = await _sender.Send(query);
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Get all vouchers
+    /// </summary>
+    [HttpGet("vouchers")]
+    public async Task<IActionResult> GetAllVouchers()
+    {
+        var query = new GetAllVouchersQuery();
+        var result = await _sender.Send(query);
+        return HandleResult(result);
+    }
 }
 
 public record BlockUserRequest(string Reason);

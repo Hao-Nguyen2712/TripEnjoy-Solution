@@ -1,0 +1,130 @@
+@page "/admin/bookings"
+@inject IAdminService AdminService
+@inject ISnackbar Snackbar
+
+<PageTitle>Bookings Management - TripEnjoy Admin</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+            <MudText Typo="Typo.h4" GutterBottom="true">Bookings Management</MudText>
+            <MudText Typo="Typo.body1" Class="mb-6">Monitor and manage all platform bookings</MudText>
+
+            @if (_loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+            }
+            else if (_bookings != null && _bookings.Any())
+            {
+                <MudTable Items="@_bookings" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true" Filter="new Func<BookingDetailDto, bool>(FilterBookings)">
+                    <ToolBarContent>
+                        <MudTextField @bind-Value="_searchString" Placeholder="Search bookings..." Adornment="Adornment.Start" 
+                                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        <MudSpacer />
+                        <MudChip T="string" Color="Color.Info">Total: @_bookings.Count</MudChip>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Booking ID</MudTh>
+                        <MudTh>Property</MudTh>
+                        <MudTh>Check-In</MudTh>
+                        <MudTh>Check-Out</MudTh>
+                        <MudTh>Guests</MudTh>
+                        <MudTh>Total Price</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Booked At</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="booking">
+                        <MudTd DataLabel="Booking ID">@booking.Id.ToString().Substring(0, 8)...</MudTd>
+                        <MudTd DataLabel="Property">@booking.PropertyId.ToString().Substring(0, 8)...</MudTd>
+                        <MudTd DataLabel="Check-In">@booking.CheckInDate.ToString("MMM dd, yyyy")</MudTd>
+                        <MudTd DataLabel="Check-Out">@booking.CheckOutDate.ToString("MMM dd, yyyy")</MudTd>
+                        <MudTd DataLabel="Guests">@booking.NumberOfGuests</MudTd>
+                        <MudTd DataLabel="Total Price">$@booking.TotalPrice.ToString("N2")</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(booking.Status)">
+                                @booking.Status
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Booked At">@booking.CreatedAt.ToString("MMM dd, yyyy")</MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />
+                    </PagerContent>
+                </MudTable>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">No bookings found</MudAlert>
+            }
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+            <MudAlert Severity="Severity.Warning">
+                You are not authorized to access this page.
+            </MudAlert>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<BookingDetailDto> _bookings = new();
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookings();
+    }
+
+    private async Task LoadBookings()
+    {
+        _loading = true;
+        try
+        {
+            var response = await AdminService.GetAllBookingsAsync();
+            if (response.IsSuccess && response.Data != null)
+            {
+                _bookings = response.Data.ToList();
+            }
+            else
+            {
+                Snackbar.Add(response.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading bookings: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private bool FilterBookings(BookingDetailDto booking)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        if (booking.Status.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (booking.Id.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Confirmed" => Color.Success,
+            "Pending" => Color.Warning,
+            "Cancelled" => Color.Error,
+            "Completed" => Color.Info,
+            _ => Color.Default
+        };
+    }
+}

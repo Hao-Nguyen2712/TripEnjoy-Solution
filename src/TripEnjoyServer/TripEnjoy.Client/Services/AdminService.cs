@@ -23,6 +23,12 @@ public interface IAdminService
     Task<ApiResponse<List<PropertyApprovalDto>>> GetPendingPropertyApprovalsAsync();
     Task<ApiResponse> ApprovePropertyAsync(Guid propertyId);
     Task<ApiResponse> RejectPropertyAsync(Guid propertyId, string reason);
+    
+    // Bookings Management
+    Task<ApiResponse<List<BookingDetailDto>>> GetAllBookingsAsync();
+    
+    // Vouchers Management
+    Task<ApiResponse<List<VoucherDto>>> GetAllVouchersAsync();
 }
 
 public class AdminService : IAdminService
@@ -219,6 +225,44 @@ public class AdminService : IAdminService
             {
                 IsSuccess = false,
                 Message = "An error occurred while rejecting property",
+                Errors = new List<string> { ex.Message }
+            };
+        }
+    }
+
+    public async Task<ApiResponse<List<BookingDetailDto>>> GetAllBookingsAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("/api/v1/admin/bookings");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<BookingDetailDto>>>();
+            return result ?? new ApiResponse<List<BookingDetailDto>> { IsSuccess = false, Message = "Failed to parse response" };
+        }
+        catch (Exception ex)
+        {
+            return new ApiResponse<List<BookingDetailDto>>
+            {
+                IsSuccess = false,
+                Message = "An error occurred while fetching bookings",
+                Errors = new List<string> { ex.Message }
+            };
+        }
+    }
+
+    public async Task<ApiResponse<List<VoucherDto>>> GetAllVouchersAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("/api/v1/admin/vouchers");
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<VoucherDto>>>();
+            return result ?? new ApiResponse<List<VoucherDto>> { IsSuccess = false, Message = "Failed to parse response" };
+        }
+        catch (Exception ex)
+        {
+            return new ApiResponse<List<VoucherDto>>
+            {
+                IsSuccess = false,
+                Message = "An error occurred while fetching vouchers",
                 Errors = new List<string> { ex.Message }
             };
         }

@@ -1,0 +1,152 @@
+@page "/admin/vouchers"
+@inject IAdminService AdminService
+@inject ISnackbar Snackbar
+
+<PageTitle>Vouchers Management - TripEnjoy Admin</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+            <MudText Typo="Typo.h4" GutterBottom="true">Vouchers Management</MudText>
+            <MudText Typo="Typo.body1" Class="mb-6">Monitor and manage platform vouchers</MudText>
+
+            @if (_loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+            }
+            else if (_vouchers != null && _vouchers.Any())
+            {
+                <MudTable Items="@_vouchers" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true" Filter="new Func<VoucherDto, bool>(FilterVouchers)">
+                    <ToolBarContent>
+                        <MudTextField @bind-Value="_searchString" Placeholder="Search vouchers..." Adornment="Adornment.Start" 
+                                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        <MudSpacer />
+                        <MudChip T="string" Color="Color.Info">Total: @_vouchers.Count</MudChip>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Code</MudTh>
+                        <MudTh>Description</MudTh>
+                        <MudTh>Discount</MudTh>
+                        <MudTh>Valid Period</MudTh>
+                        <MudTh>Usage</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Created</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="voucher">
+                        <MudTd DataLabel="Code">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary">@voucher.Code</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Description">@voucher.Description</MudTd>
+                        <MudTd DataLabel="Discount">
+                            @if (voucher.DiscountType == "Percentage")
+                            {
+                                <text>@voucher.DiscountValue%</text>
+                            }
+                            else
+                            {
+                                <text>$@voucher.DiscountValue</text>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Valid Period">
+                            @voucher.StartDate.ToString("MMM dd") - @voucher.EndDate.ToString("MMM dd, yyyy")
+                        </MudTd>
+                        <MudTd DataLabel="Usage">
+                            @voucher.UsedCount / @(voucher.UsageLimit?.ToString() ?? "∞")
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(voucher.Status, voucher.EndDate)">
+                                @GetStatusDisplay(voucher.Status, voucher.EndDate)
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Created">@voucher.CreatedAt.ToString("MMM dd, yyyy")</MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[]{10, 25, 50}" />
+                    </PagerContent>
+                </MudTable>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">No vouchers found</MudAlert>
+            }
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+            <MudAlert Severity="Severity.Warning">
+                You are not authorized to access this page.
+            </MudAlert>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<VoucherDto> _vouchers = new();
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVouchers();
+    }
+
+    private async Task LoadVouchers()
+    {
+        _loading = true;
+        try
+        {
+            var response = await AdminService.GetAllVouchersAsync();
+            if (response.IsSuccess && response.Data != null)
+            {
+                _vouchers = response.Data.ToList();
+            }
+            else
+            {
+                Snackbar.Add(response.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading vouchers: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private bool FilterVouchers(VoucherDto voucher)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        if (voucher.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (voucher.Description?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) == true)
+            return true;
+
+        return false;
+    }
+
+    private Color GetStatusColor(string status, DateTime endDate)
+    {
+        if (endDate < DateTime.UtcNow)
+            return Color.Default;
+
+        return status switch
+        {
+            "Active" => Color.Success,
+            "Inactive" => Color.Warning,
+            "Expired" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private string GetStatusDisplay(string status, DateTime endDate)
+    {
+        if (endDate < DateTime.UtcNow)
+            return "Expired";
+        return status;
+    }
+}
