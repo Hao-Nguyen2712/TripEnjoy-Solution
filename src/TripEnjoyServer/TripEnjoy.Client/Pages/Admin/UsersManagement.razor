@@ -1,0 +1,168 @@
+@page "/admin/users"
+@inject IAdminService AdminService
+@inject ISnackbar Snackbar
+
+<PageTitle>User Management - TripEnjoy Admin</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+            <MudText Typo="Typo.h4" GutterBottom="true">User Management</MudText>
+            <MudText Typo="Typo.body1" Class="mb-6">Manage platform users</MudText>
+
+            @if (_loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+            }
+            else if (_users != null && _users.Any())
+            {
+                <MudTable Items="@_users" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true">
+                    <HeaderContent>
+                        <MudTh>Email</MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Role</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Created At</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Email">@context.Email</MudTd>
+                        <MudTd DataLabel="Name">@context.FirstName @context.LastName</MudTd>
+                        <MudTd DataLabel="Role">
+                            <MudChip Size="Size.Small" Color="Color.Primary">@context.Role</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            @if (context.IsActive)
+                            {
+                                <MudChip Size="Size.Small" Color="Color.Success">Active</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip Size="Size.Small" Color="Color.Error">Blocked</MudChip>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Created At">@context.CreatedAt.ToString("MMM dd, yyyy")</MudTd>
+                        <MudTd DataLabel="Actions">
+                            @if (context.IsActive)
+                            {
+                                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error"
+                                           OnClick="@(() => ShowBlockUserDialog(context.Id))">
+                                    Block
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success"
+                                           OnClick="@(() => UnblockUser(context.Id))">
+                                    Unblock
+                                </MudButton>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">No users found</MudAlert>
+            }
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+            <MudAlert Severity="Severity.Warning">
+                You are not authorized to access this page.
+            </MudAlert>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<UserManagementDto> _users = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        _loading = true;
+        try
+        {
+            var response = await AdminService.GetAllUsersAsync();
+            if (response.IsSuccess && response.Data != null)
+            {
+                _users = response.Data;
+            }
+            else
+            {
+                Snackbar.Add(response.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading users: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async void ShowBlockUserDialog(Guid userId)
+    {
+        var parameters = new DialogParameters { ["UserId"] = userId };
+        var dialog = DialogService.Show<BlockUserDialog>("Block User", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is string reason)
+        {
+            await BlockUser(userId, reason);
+        }
+    }
+
+    private async Task BlockUser(Guid userId, string reason)
+    {
+        try
+        {
+            var response = await AdminService.BlockUserAsync(userId, reason);
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("User blocked successfully", Severity.Success);
+                await LoadUsers();
+            }
+            else
+            {
+                Snackbar.Add(response.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error blocking user: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task UnblockUser(Guid userId)
+    {
+        try
+        {
+            var response = await AdminService.UnblockUserAsync(userId);
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("User unblocked successfully", Severity.Success);
+                await LoadUsers();
+            }
+            else
+            {
+                Snackbar.Add(response.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error unblocking user: {ex.Message}", Severity.Error);
+        }
+    }
+
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+}

@@ -1,0 +1,246 @@
+@page "/admin/dashboard"
+@inject IAdminService AdminService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Admin Dashboard - TripEnjoy</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+            <MudText Typo="Typo.h3" GutterBottom="true">Admin Dashboard</MudText>
+            <MudText Typo="Typo.body1" Class="mb-6">Manage your platform and monitor key metrics</MudText>
+
+            @if (_loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+            }
+            else if (_stats != null)
+            {
+                <!-- Statistics Cards -->
+                <MudGrid>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudCard Elevation="3">
+                            <MudCardContent>
+                                <div class="d-flex justify-space-between align-center">
+                                    <div>
+                                        <MudText Typo="Typo.h4">@_stats.TotalUsers</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Total Users</MudText>
+                                    </div>
+                                    <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" Color="Color.Primary" />
+                                </div>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudCard Elevation="3">
+                            <MudCardContent>
+                                <div class="d-flex justify-space-between align-center">
+                                    <div>
+                                        <MudText Typo="Typo.h4">@_stats.TotalPartners</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Total Partners</MudText>
+                                    </div>
+                                    <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Success" />
+                                </div>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudCard Elevation="3">
+                            <MudCardContent>
+                                <div class="d-flex justify-space-between align-center">
+                                    <div>
+                                        <MudText Typo="Typo.h4">@_stats.TotalProperties</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Total Properties</MudText>
+                                    </div>
+                                    <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Info" />
+                                </div>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudCard Elevation="3">
+                            <MudCardContent>
+                                <div class="d-flex justify-space-between align-center">
+                                    <div>
+                                        <MudText Typo="Typo.h4">@_stats.TotalBookings</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Total Bookings</MudText>
+                                    </div>
+                                    <MudIcon Icon="@Icons.Material.Filled.Book" Size="Size.Large" Color="Color.Warning" />
+                                </div>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Revenue Statistics -->
+                <MudPaper Elevation="3" Class="pa-4 mt-6">
+                    <MudText Typo="Typo.h5" GutterBottom="true">Revenue Statistics</MudText>
+                    <MudGrid>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudText Typo="Typo.h6">Today</MudText>
+                            <MudText Typo="Typo.h4" Color="Color.Success">$@_stats.RevenueStats.Today.ToString("N2")</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudText Typo="Typo.h6">This Week</MudText>
+                            <MudText Typo="Typo.h4" Color="Color.Success">$@_stats.RevenueStats.ThisWeek.ToString("N2")</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudText Typo="Typo.h6">This Month</MudText>
+                            <MudText Typo="Typo.h4" Color="Color.Success">$@_stats.RevenueStats.ThisMonth.ToString("N2")</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudText Typo="Typo.h6">This Year</MudText>
+                            <MudText Typo="Typo.h4" Color="Color.Success">$@_stats.RevenueStats.ThisYear.ToString("N2")</MudText>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+
+                <!-- Pending Approvals -->
+                <MudGrid Class="mt-6">
+                    <MudItem xs="12" sm="6">
+                        <MudCard Elevation="3">
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6" GutterBottom="true">Pending Partner Approvals</MudText>
+                                <div class="d-flex justify-space-between align-center mt-4">
+                                    <MudText Typo="Typo.h3" Color="Color.Warning">@_stats.PendingPartnerApprovals</MudText>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                                               OnClick="@(() => NavigationManager.NavigateTo("/admin/partners"))">
+                                        View Partners
+                                    </MudButton>
+                                </div>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudCard Elevation="3">
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6" GutterBottom="true">Pending Property Approvals</MudText>
+                                <div class="d-flex justify-space-between align-center mt-4">
+                                    <MudText Typo="Typo.h3" Color="Color.Warning">@_stats.PendingPropertyApprovals</MudText>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                               OnClick="@(() => NavigationManager.NavigateTo("/admin/properties"))">
+                                        View Properties
+                                    </MudButton>
+                                </div>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Quick Actions -->
+                <MudPaper Elevation="3" Class="pa-4 mt-6">
+                    <MudText Typo="Typo.h5" GutterBottom="true">Quick Actions</MudText>
+                    <MudGrid>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                                       StartIcon="@Icons.Material.Filled.People"
+                                       OnClick="@(() => NavigationManager.NavigateTo("/admin/users"))">
+                                Manage Users
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true"
+                                       StartIcon="@Icons.Material.Filled.Business"
+                                       OnClick="@(() => NavigationManager.NavigateTo("/admin/partners"))">
+                                Manage Partners
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudButton Variant="Variant.Filled" Color="Color.Info" FullWidth="true"
+                                       StartIcon="@Icons.Material.Filled.Home"
+                                       OnClick="@(() => NavigationManager.NavigateTo("/admin/properties"))">
+                                Manage Properties
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
+                                       StartIcon="@Icons.Material.Filled.RateReview"
+                                       OnClick="@(() => NavigationManager.NavigateTo("/admin/reviews"))">
+                                Manage Reviews
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+
+                <!-- Additional Stats -->
+                <MudGrid Class="mt-6">
+                    <MudItem xs="12" sm="4">
+                        <MudCard Elevation="3">
+                            <MudCardContent>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Active Vouchers</MudText>
+                                <MudText Typo="Typo.h4">@_stats.ActiveVouchers</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudCard Elevation="3">
+                            <MudCardContent>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Reviews</MudText>
+                                <MudText Typo="Typo.h4">@_stats.TotalReviews</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudCard Elevation="3">
+                            <MudCardContent>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Revenue</MudText>
+                                <MudText Typo="Typo.h4" Color="Color.Success">$@_stats.TotalRevenue.ToString("N2")</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4">Failed to load dashboard statistics</MudAlert>
+            }
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+            <MudAlert Severity="Severity.Warning">
+                You are not authorized to access this page. Please log in as an administrator.
+            </MudAlert>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private AdminDashboardStatsDto? _stats;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardStats();
+    }
+
+    private async Task LoadDashboardStats()
+    {
+        _loading = true;
+        try
+        {
+            var response = await AdminService.GetDashboardStatsAsync();
+            if (response.IsSuccess && response.Data != null)
+            {
+                _stats = response.Data;
+            }
+            else
+            {
+                Snackbar.Add(response.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading dashboard: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

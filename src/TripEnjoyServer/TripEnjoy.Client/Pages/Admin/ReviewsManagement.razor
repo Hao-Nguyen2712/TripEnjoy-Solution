@@ -1,0 +1,50 @@
+@page "/admin/reviews"
+@inject ISnackbar Snackbar
+
+<PageTitle>Reviews Management - TripEnjoy Admin</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+            <MudText Typo="Typo.h4" GutterBottom="true">Reviews Management</MudText>
+            <MudText Typo="Typo.body1" Class="mb-6">Monitor and moderate user reviews</MudText>
+
+            <MudAlert Severity="Severity.Info" Class="mt-4">
+                Reviews management features will be available soon. You can view and moderate reviews, 
+                respond to user feedback, and ensure quality content on the platform.
+            </MudAlert>
+
+            <MudPaper Elevation="3" Class="pa-4 mt-6">
+                <MudText Typo="Typo.h6" GutterBottom="true">Planned Features:</MudText>
+                <MudList>
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle">
+                        View all reviews across all properties
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle">
+                        Filter reviews by property, rating, or date
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle">
+                        Flag inappropriate reviews for moderation
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle">
+                        Remove or hide reviews that violate policies
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle">
+                        View review statistics and trends
+                    </MudListItem>
+                </MudList>
+            </MudPaper>
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+            <MudAlert Severity="Severity.Warning">
+                You are not authorized to access this page.
+            </MudAlert>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    // Reviews management will be implemented in a future update
+}

@@ -1,0 +1,166 @@
+@page "/admin/partners"
+@inject IAdminService AdminService
+@inject ISnackbar Snackbar
+
+<PageTitle>Partner Management - TripEnjoy Admin</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+            <MudText Typo="Typo.h4" GutterBottom="true">Partner Management</MudText>
+            <MudText Typo="Typo.body1" Class="mb-6">Review and approve partner applications</MudText>
+
+            @if (_loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+            }
+            else if (_partners != null && _partners.Any())
+            {
+                <MudTable Items="@_partners" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true">
+                    <HeaderContent>
+                        <MudTh>Email</MudTh>
+                        <MudTh>Business Name</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Requested At</MudTh>
+                        <MudTh>Documents</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Email">@context.Email</MudTd>
+                        <MudTd DataLabel="Business Name">@context.BusinessName</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip Size="Size.Small" Color="Color.Warning">@context.Status</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Requested At">@context.RequestedAt.ToString("MMM dd, yyyy")</MudTd>
+                        <MudTd DataLabel="Documents">
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
+                                       OnClick="@(() => ShowDocuments(context))">
+                                View (@context.Documents.Count)
+                            </MudButton>
+                        </MudTd>
+                        <MudTd DataLabel="Actions">
+                            <MudButtonGroup Size="Size.Small">
+                                <MudButton Variant="Variant.Filled" Color="Color.Success"
+                                           OnClick="@(() => ApprovePartner(context.Id))">
+                                    Approve
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Error"
+                                           OnClick="@(() => ShowRejectDialog(context.Id))">
+                                    Reject
+                                </MudButton>
+                            </MudButtonGroup>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">No pending partner approvals</MudAlert>
+            }
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+            <MudAlert Severity="Severity.Warning">
+                You are not authorized to access this page.
+            </MudAlert>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<PartnerApprovalDto> _partners = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPartners();
+    }
+
+    private async Task LoadPartners()
+    {
+        _loading = true;
+        try
+        {
+            var response = await AdminService.GetPendingPartnerApprovalsAsync();
+            if (response.IsSuccess && response.Data != null)
+            {
+                _partners = response.Data;
+            }
+            else
+            {
+                Snackbar.Add(response.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading partners: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ShowDocuments(PartnerApprovalDto partner)
+    {
+        var parameters = new DialogParameters { ["Partner"] = partner };
+        DialogService.Show<PartnerDocumentsDialog>("Partner Documents", parameters);
+    }
+
+    private async Task ApprovePartner(Guid partnerId)
+    {
+        try
+        {
+            var response = await AdminService.ApprovePartnerAsync(partnerId);
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("Partner approved successfully", Severity.Success);
+                await LoadPartners();
+            }
+            else
+            {
+                Snackbar.Add(response.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error approving partner: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async void ShowRejectDialog(Guid partnerId)
+    {
+        var parameters = new DialogParameters { ["PartnerId"] = partnerId };
+        var dialog = DialogService.Show<RejectPartnerDialog>("Reject Partner", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is string reason)
+        {
+            await RejectPartner(partnerId, reason);
+        }
+    }
+
+    private async Task RejectPartner(Guid partnerId, string reason)
+    {
+        try
+        {
+            var response = await AdminService.RejectPartnerAsync(partnerId, reason);
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("Partner rejected successfully", Severity.Success);
+                await LoadPartners();
+            }
+            else
+            {
+                Snackbar.Add(response.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error rejecting partner: {ex.Message}", Severity.Error);
+        }
+    }
+
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+}
