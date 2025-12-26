@@ -25,27 +25,24 @@
                         <MudTh>Documents</MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Email">@context.Email</MudTd>
-                        <MudTd DataLabel="Business Name">@context.BusinessName</MudTd>
+                    <RowTemplate Context="partner">
+                        <MudTd DataLabel="Email">@partner.Email</MudTd>
+                        <MudTd DataLabel="Business Name">@partner.BusinessName</MudTd>
                         <MudTd DataLabel="Status">
-                            <MudChip Size="Size.Small" Color="Color.Warning">@context.Status</MudChip>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">@partner.Status</MudChip>
                         </MudTd>
-                        <MudTd DataLabel="Requested At">@context.RequestedAt.ToString("MMM dd, yyyy")</MudTd>
+                        <MudTd DataLabel="Requested At">@partner.RequestedAt.ToString("MMM dd, yyyy")</MudTd>
                         <MudTd DataLabel="Documents">
-                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Info"
-                                       OnClick="@(() => ShowDocuments(context))">
-                                View (@context.Documents.Count)
-                            </MudButton>
+                            <MudText Typo="Typo.body2">@partner.Documents.Count documents</MudText>
                         </MudTd>
                         <MudTd DataLabel="Actions">
                             <MudButtonGroup Size="Size.Small">
                                 <MudButton Variant="Variant.Filled" Color="Color.Success"
-                                           OnClick="@(() => ApprovePartner(context.Id))">
+                                           OnClick="@(() => ApprovePartner(partner.Id))">
                                     Approve
                                 </MudButton>
                                 <MudButton Variant="Variant.Filled" Color="Color.Error"
-                                           OnClick="@(() => ShowRejectDialog(context.Id))">
+                                           OnClick="@(() => RejectPartner(partner.Id, \"Rejected by admin\"))">
                                     Reject
                                 </MudButton>
                             </MudButtonGroup>
@@ -102,12 +99,6 @@
         }
     }
 
-    private void ShowDocuments(PartnerApprovalDto partner)
-    {
-        var parameters = new DialogParameters { ["Partner"] = partner };
-        DialogService.Show<PartnerDocumentsDialog>("Partner Documents", parameters);
-    }
-
     private async Task ApprovePartner(Guid partnerId)
     {
         try
@@ -126,18 +117,6 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error approving partner: {ex.Message}", Severity.Error);
-        }
-    }
-
-    private async void ShowRejectDialog(Guid partnerId)
-    {
-        var parameters = new DialogParameters { ["PartnerId"] = partnerId };
-        var dialog = DialogService.Show<RejectPartnerDialog>("Reject Partner", parameters);
-        var result = await dialog.Result;
-
-        if (!result.Canceled && result.Data is string reason)
-        {
-            await RejectPartner(partnerId, reason);
         }
     }
 
@@ -161,6 +140,4 @@
             Snackbar.Add($"Error rejecting partner: {ex.Message}", Severity.Error);
         }
     }
-
-    [Inject] private IDialogService DialogService { get; set; } = null!;
 }

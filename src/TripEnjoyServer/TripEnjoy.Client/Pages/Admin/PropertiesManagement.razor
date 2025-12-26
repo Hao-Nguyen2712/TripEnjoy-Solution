@@ -26,23 +26,23 @@
                         <MudTh>Submitted At</MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Property Name">@context.Name</MudTd>
-                        <MudTd DataLabel="Type">@context.PropertyTypeName</MudTd>
-                        <MudTd DataLabel="Address">@context.Address</MudTd>
-                        <MudTd DataLabel="Partner Email">@context.PartnerEmail</MudTd>
+                    <RowTemplate Context="property">
+                        <MudTd DataLabel="Property Name">@property.Name</MudTd>
+                        <MudTd DataLabel="Type">@property.PropertyTypeName</MudTd>
+                        <MudTd DataLabel="Address">@property.Address</MudTd>
+                        <MudTd DataLabel="Partner Email">@property.PartnerEmail</MudTd>
                         <MudTd DataLabel="Status">
-                            <MudChip Size="Size.Small" Color="Color.Warning">@context.Status</MudChip>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">@property.Status</MudChip>
                         </MudTd>
-                        <MudTd DataLabel="Submitted At">@context.SubmittedAt.ToString("MMM dd, yyyy")</MudTd>
+                        <MudTd DataLabel="Submitted At">@property.SubmittedAt.ToString("MMM dd, yyyy")</MudTd>
                         <MudTd DataLabel="Actions">
                             <MudButtonGroup Size="Size.Small">
                                 <MudButton Variant="Variant.Filled" Color="Color.Success"
-                                           OnClick="@(() => ApproveProperty(context.Id))">
+                                           OnClick="@(() => ApproveProperty(property.Id))">
                                     Approve
                                 </MudButton>
                                 <MudButton Variant="Variant.Filled" Color="Color.Error"
-                                           OnClick="@(() => ShowRejectDialog(context.Id))">
+                                           OnClick="@(() => RejectProperty(property.Id, \"Rejected by admin\"))">
                                     Reject
                                 </MudButton>
                             </MudButtonGroup>
@@ -120,18 +120,6 @@
         }
     }
 
-    private async void ShowRejectDialog(Guid propertyId)
-    {
-        var parameters = new DialogParameters { ["PropertyId"] = propertyId };
-        var dialog = DialogService.Show<RejectPropertyDialog>("Reject Property", parameters);
-        var result = await dialog.Result;
-
-        if (!result.Canceled && result.Data is string reason)
-        {
-            await RejectProperty(propertyId, reason);
-        }
-    }
-
     private async Task RejectProperty(Guid propertyId, string reason)
     {
         try
@@ -152,6 +140,4 @@
             Snackbar.Add($"Error rejecting property: {ex.Message}", Severity.Error);
         }
     }
-
-    [Inject] private IDialogService DialogService { get; set; } = null!;
 }

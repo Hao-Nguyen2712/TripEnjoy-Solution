@@ -32,7 +32,7 @@
                             <MudCard Elevation="3">
                                 <MudCardContent>
                                     <MudText Typo="Typo.h6">@propertyType.Name</MudText>
-                                    <MudChip Size="Size.Small" Color="@(propertyType.Status == "Active" ? Color.Success : Color.Default)">
+                                    <MudChip T="string" Size="Size.Small" Color="@(propertyType.Status == "Active" ? Color.Success : Color.Default)">
                                         @propertyType.Status
                                     </MudChip>
                                 </MudCardContent>
@@ -98,6 +98,4 @@
     {
         Snackbar.Add("Create property type feature coming soon", Severity.Info);
     }
-
-    [Inject] private IDialogService DialogService { get; set; } = null!;
 }

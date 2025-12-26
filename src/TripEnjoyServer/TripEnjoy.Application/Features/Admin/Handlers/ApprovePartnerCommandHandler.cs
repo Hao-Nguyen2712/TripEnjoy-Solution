@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using TripEnjoy.Application.Features.Admin.Commands;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Domain.Account.ValueObjects;
@@ -21,10 +20,8 @@ public class ApprovePartnerCommandHandler : IRequestHandler<ApprovePartnerComman
     {
         var partnerId = PartnerId.Create(request.PartnerId);
         
-        var account = await _unitOfWork.Repository<Domain.Account.Account>()
-            .GetQueryable()
-            .Include(a => a.Partner)
-            .FirstOrDefaultAsync(a => a.Partner != null && a.Partner.Id == partnerId, cancellationToken);
+        var accounts = await _unitOfWork.Repository<Domain.Account.Account>().GetAllAsync();
+        var account = accounts.FirstOrDefault(a => a.Partner != null && a.Partner.Id == partnerId);
 
         if (account?.Partner == null)
         {

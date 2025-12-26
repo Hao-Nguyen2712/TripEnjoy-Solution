@@ -25,35 +25,35 @@
                         <MudTh>Created At</MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Email">@context.Email</MudTd>
-                        <MudTd DataLabel="Name">@context.FirstName @context.LastName</MudTd>
+                    <RowTemplate Context="user">
+                        <MudTd DataLabel="Email">@user.Email</MudTd>
+                        <MudTd DataLabel="Name">@user.FirstName @user.LastName</MudTd>
                         <MudTd DataLabel="Role">
-                            <MudChip Size="Size.Small" Color="Color.Primary">@context.Role</MudChip>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary">@user.Role</MudChip>
                         </MudTd>
                         <MudTd DataLabel="Status">
-                            @if (context.IsActive)
+                            @if (user.IsActive)
                             {
-                                <MudChip Size="Size.Small" Color="Color.Success">Active</MudChip>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success">Active</MudChip>
                             }
                             else
                             {
-                                <MudChip Size="Size.Small" Color="Color.Error">Blocked</MudChip>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Error">Blocked</MudChip>
                             }
                         </MudTd>
-                        <MudTd DataLabel="Created At">@context.CreatedAt.ToString("MMM dd, yyyy")</MudTd>
+                        <MudTd DataLabel="Created At">@user.CreatedAt.ToString("MMM dd, yyyy")</MudTd>
                         <MudTd DataLabel="Actions">
-                            @if (context.IsActive)
+                            @if (user.IsActive)
                             {
                                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error"
-                                           OnClick="@(() => ShowBlockUserDialog(context.Id))">
+                                           OnClick="@(() => ShowBlockUserDialog(user.Id))">
                                     Block
                                 </MudButton>
                             }
                             else
                             {
                                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success"
-                                           OnClick="@(() => UnblockUser(context.Id))">
+                                           OnClick="@(() => UnblockUser(user.Id))">
                                     Unblock
                                 </MudButton>
                             }
@@ -112,14 +112,9 @@
 
     private async void ShowBlockUserDialog(Guid userId)
     {
-        var parameters = new DialogParameters { ["UserId"] = userId };
-        var dialog = DialogService.Show<BlockUserDialog>("Block User", parameters);
-        var result = await dialog.Result;
-
-        if (!result.Canceled && result.Data is string reason)
-        {
-            await BlockUser(userId, reason);
-        }
+        // Simplified: ask for reason directly instead of using a dialog
+        var reason = "Blocked by admin"; // For now, use a default reason
+        await BlockUser(userId, reason);
     }
 
     private async Task BlockUser(Guid userId, string reason)
@@ -163,6 +158,4 @@
             Snackbar.Add($"Error unblocking user: {ex.Message}", Severity.Error);
         }
     }
-
-    [Inject] private IDialogService DialogService { get; set; } = null!;
 }

@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using TripEnjoy.Application.Features.Admin.Queries;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Domain.Account.Enums;
@@ -19,14 +18,12 @@ public class GetPendingPartnerApprovalsQueryHandler : IRequestHandler<GetPending
 
     public async Task<Result<IEnumerable<PartnerApprovalDto>>> Handle(GetPendingPartnerApprovalsQuery request, CancellationToken cancellationToken)
     {
-        var accounts = await _unitOfWork.Repository<Domain.Account.Account>()
-            .GetQueryable()
-            .Include(a => a.Partner)
-                .ThenInclude(p => p!.PartnerDocuments)
+        var accounts = await _unitOfWork.Repository<Domain.Account.Account>().GetAllAsync();
+        var partners = accounts
             .Where(a => a.Partner != null && a.Partner.Status == PartnerStatusEnum.Pending.ToString())
-            .ToListAsync(cancellationToken);
+            .ToList();
 
-        var partnerDtos = accounts.Select(a => new PartnerApprovalDto
+        var partnerDtos = partners.Select(a => new PartnerApprovalDto
         {
             Id = a.Partner!.Id.Id,
             Email = a.AccountEmail,

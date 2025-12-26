@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using TripEnjoy.Application.Features.Admin.Queries;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Domain.Common.Models;
@@ -18,14 +17,10 @@ public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, Result<
 
     public async Task<Result<IEnumerable<UserManagementDto>>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
     {
-        var accounts = await _unitOfWork.Repository<Domain.Account.Account>()
-            .GetQueryable()
-            .Include(a => a.User)
-            .Include(a => a.Partner)
-            .Where(a => a.User != null)
-            .ToListAsync(cancellationToken);
+        var accounts = await _unitOfWork.Repository<Domain.Account.Account>().GetAllAsync();
+        var users = accounts.Where(a => a.User != null).ToList();
 
-        var userDtos = accounts.Select(a => new UserManagementDto
+        var userDtos = users.Select(a => new UserManagementDto
         {
             Id = a.Id.Id,
             Email = a.AccountEmail,

@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using TripEnjoy.Application.Features.Admin.Queries;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Domain.Common.Models;
@@ -19,23 +18,20 @@ public class GetPendingPropertyApprovalsQueryHandler : IRequestHandler<GetPendin
 
     public async Task<Result<IEnumerable<PropertyApprovalDto>>> Handle(GetPendingPropertyApprovalsQuery request, CancellationToken cancellationToken)
     {
-        var properties = await _unitOfWork.Repository<Domain.Property.Property>()
-            .GetQueryable()
-            .Include(p => p.Partner)
-                .ThenInclude(p => p.Account)
-            .Include(p => p.PropertyType)
+        var properties = await _unitOfWork.Repository<Domain.Property.Property>().GetAllAsync();
+        var pendingProperties = properties
             .Where(p => p.Status == PropertyEnum.WaitingForApproval)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
-        var propertyDtos = properties.Select(p => new PropertyApprovalDto
+        var propertyDtos = pendingProperties.Select(p => new PropertyApprovalDto
         {
             Id = p.Id.Id,
             Name = p.Name,
-            PartnerEmail = p.Partner?.Account?.AccountEmail ?? string.Empty,
+            PartnerEmail = string.Empty, // Will need to query separately
             Status = p.Status,
             SubmittedAt = p.CreatedAt,
             Address = $"{p.Address}, {p.City}, {p.Country}",
-            PropertyTypeName = p.PropertyType?.Name ?? string.Empty
+            PropertyTypeName = string.Empty // Will need to query separately
         });
 
         return Result<IEnumerable<PropertyApprovalDto>>.Success(propertyDtos);

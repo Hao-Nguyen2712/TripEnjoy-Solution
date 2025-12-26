@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using TripEnjoy.Application.Features.Admin.Queries;
 using TripEnjoy.Application.Interfaces.Persistence;
 using TripEnjoy.Domain.Account.Enums;
@@ -20,38 +19,31 @@ public class GetAdminDashboardStatsQueryHandler : IRequestHandler<GetAdminDashbo
 
     public async Task<Result<AdminDashboardStatsDto>> Handle(GetAdminDashboardStatsQuery request, CancellationToken cancellationToken)
     {
-        var accounts = _unitOfWork.Repository<Domain.Account.Account>().GetQueryable()
-            .Include(a => a.User)
-            .Include(a => a.Partner);
-        
-        var properties = _unitOfWork.Repository<Domain.Property.Property>().GetQueryable();
-        var bookings = _unitOfWork.Repository<Domain.Booking.Booking>().GetQueryable()
-            .Include(b => b.Payment);
-        var vouchers = _unitOfWork.Repository<Domain.Voucher.Voucher>().GetQueryable();
-        var reviews = _unitOfWork.Repository<Domain.Review.Review>().GetQueryable();
+        var accounts = await _unitOfWork.Repository<Domain.Account.Account>().GetAllAsync();
+        var properties = await _unitOfWork.Repository<Domain.Property.Property>().GetAllAsync();
+        var bookings = await _unitOfWork.Repository<Domain.Booking.Booking>().GetAllAsync();
+        var vouchers = await _unitOfWork.Repository<Domain.Voucher.Voucher>().GetAllAsync();
+        var reviews = await _unitOfWork.Repository<Domain.Review.Review>().GetAllAsync();
 
-        var totalUsers = await accounts.Where(a => a.User != null).CountAsync(cancellationToken);
-        var totalPartners = await accounts.Where(a => a.Partner != null).CountAsync(cancellationToken);
-        var totalProperties = await properties.CountAsync(cancellationToken);
-        var totalBookings = await bookings.CountAsync(cancellationToken);
+        var totalUsers = accounts.Count(a => a.User != null);
+        var totalPartners = accounts.Count(a => a.Partner != null);
+        var totalProperties = properties.Count();
+        var totalBookings = bookings.Count();
         
-        var totalRevenue = await bookings
+        var totalRevenue = bookings
             .Where(b => b.Payment != null && b.Payment.PaymentStatus == "Completed")
-            .SumAsync(b => b.TotalAmount, cancellationToken);
+            .Sum(b => b.TotalAmount);
 
-        var pendingPartnerApprovals = await accounts
-            .Where(a => a.Partner != null && a.Partner.Status == PartnerStatusEnum.Pending.ToString())
-            .CountAsync(cancellationToken);
+        var pendingPartnerApprovals = accounts
+            .Count(a => a.Partner != null && a.Partner.Status == PartnerStatusEnum.Pending.ToString());
 
-        var pendingPropertyApprovals = await properties
-            .Where(p => p.Status == PropertyEnum.WaitingForApproval)
-            .CountAsync(cancellationToken);
+        var pendingPropertyApprovals = properties
+            .Count(p => p.Status == PropertyEnum.WaitingForApproval);
 
-        var activeVouchers = await vouchers
-            .Where(v => v.Status == "Active" && v.EndDate >= DateTime.UtcNow)
-            .CountAsync(cancellationToken);
+        var activeVouchers = vouchers
+            .Count(v => v.Status == "Active" && v.EndDate >= DateTime.UtcNow);
 
-        var totalReviews = await reviews.CountAsync(cancellationToken);
+        var totalReviews = reviews.Count();
 
         var now = DateTime.UtcNow;
         var startOfToday = now.Date;
@@ -61,18 +53,18 @@ public class GetAdminDashboardStatsQueryHandler : IRequestHandler<GetAdminDashbo
 
         var revenueStats = new RevenueStatsDto
         {
-            Today = await bookings
+            Today = bookings
                 .Where(b => b.Payment != null && b.Payment.PaymentStatus == "Completed" && b.BookingDate >= startOfToday)
-                .SumAsync(b => b.TotalAmount, cancellationToken),
-            ThisWeek = await bookings
+                .Sum(b => b.TotalAmount),
+            ThisWeek = bookings
                 .Where(b => b.Payment != null && b.Payment.PaymentStatus == "Completed" && b.BookingDate >= startOfWeek)
-                .SumAsync(b => b.TotalAmount, cancellationToken),
-            ThisMonth = await bookings
+                .Sum(b => b.TotalAmount),
+            ThisMonth = bookings
                 .Where(b => b.Payment != null && b.Payment.PaymentStatus == "Completed" && b.BookingDate >= startOfMonth)
-                .SumAsync(b => b.TotalAmount, cancellationToken),
-            ThisYear = await bookings
+                .Sum(b => b.TotalAmount),
+            ThisYear = bookings
                 .Where(b => b.Payment != null && b.Payment.PaymentStatus == "Completed" && b.BookingDate >= startOfYear)
-                .SumAsync(b => b.TotalAmount, cancellationToken)
+                .Sum(b => b.TotalAmount)
         };
 
         var dashboardStats = new AdminDashboardStatsDto
