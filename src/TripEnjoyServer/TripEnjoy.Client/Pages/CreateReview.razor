@@ -1,0 +1,207 @@
+@page "/reviews/create"
+@inject IReviewService ReviewService
+@inject IBookingService BookingService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "User")]
+
+<PageTitle>Write a Review - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+    <MudPaper Elevation="4" Class="pa-8">
+        <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true">Write a Review</MudText>
+        <MudText Typo="Typo.body1" Align="Align.Center" Class="mb-6">
+            Share your experience with other travelers
+        </MudText>
+
+        <EditForm Model="@_reviewModel" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <MudStack Spacing="4">
+                <MudSelect @bind-Value="_reviewModel.BookingDetailId" 
+                          Label="Select Booking" 
+                          Variant="Variant.Outlined" 
+                          Required="true"
+                          Disabled="@_isLoading">
+                    @if (_isLoading)
+                    {
+                        <MudSelectItem Value="@Guid.Empty">Loading bookings...</MudSelectItem>
+                    }
+                    else if (_eligibleBookings.Any())
+                    {
+                        @foreach (var booking in _eligibleBookings)
+                        {
+                            <MudSelectItem Value="@booking.Id">
+                                @booking.PropertyName - @booking.CheckInDate.ToString("MMM dd, yyyy")
+                            </MudSelectItem>
+                        }
+                    }
+                    else
+                    {
+                        <MudSelectItem Value="@Guid.Empty">No eligible bookings found</MudSelectItem>
+                    }
+                </MudSelect>
+
+                @if (_reviewModel.BookingDetailId != Guid.Empty && _selectedBookingRoomTypes.Any())
+                {
+                    <MudSelect @bind-Value="_reviewModel.RoomTypeId" 
+                              Label="Select Room Type" 
+                              Variant="Variant.Outlined" 
+                              Required="true">
+                        @foreach (var roomType in _selectedBookingRoomTypes)
+                        {
+                            <MudSelectItem Value="@roomType.RoomTypeId">@roomType.RoomTypeName</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+
+                <MudStack>
+                    <MudText Typo="Typo.subtitle1">Rating *</MudText>
+                    <MudRating @bind-SelectedValue="_reviewModel.Rating" Size="Size.Large" />
+                </MudStack>
+
+                <MudTextField @bind-Value="_reviewModel.Comment" 
+                            Label="Your Review" 
+                            Variant="Variant.Outlined" 
+                            Lines="5"
+                            Required="true"
+                            Counter="1000"
+                            MaxLength="1000"
+                            HelperText="Share your experience (minimum 10 characters)" />
+
+                <MudText Typo="Typo.subtitle2">Photos (Optional)</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Note: Photo upload will be implemented with image upload service
+                </MudText>
+
+                <MudStack Row="true" Justify="Justify.SpaceBetween">
+                    <MudButton Variant="Variant.Text" 
+                             Color="Color.Default" 
+                             OnClick="@(() => NavigationManager.NavigateTo("/bookings"))">
+                        Cancel
+                    </MudButton>
+                    <MudButton ButtonType="ButtonType.Submit" 
+                             Variant="Variant.Filled" 
+                             Color="Color.Primary" 
+                             Disabled="@_isSubmitting">
+                        @if (_isSubmitting)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                        }
+                        else
+                        {
+                            <span>Submit Review</span>
+                        }
+                    </MudButton>
+                </MudStack>
+            </MudStack>
+        </EditForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public Guid? BookingId { get; set; }
+
+    private CreateReviewRequest _reviewModel = new() { Rating = 5 };
+    private List<BookingDetailDto> _eligibleBookings = new();
+    private List<BookingItemDto> _selectedBookingRoomTypes = new();
+    private bool _isLoading = true;
+    private bool _isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEligibleBookings();
+        
+        if (BookingId.HasValue)
+        {
+            _reviewModel.BookingDetailId = BookingId.Value;
+            await OnBookingSelected();
+        }
+    }
+
+    private async Task LoadEligibleBookings()
+    {
+        _isLoading = true;
+        try
+        {
+            // Load user's completed bookings
+            var result = await BookingService.GetMyBookingsAsync(1, 50);
+            if (result.IsSuccess && result.Data != null)
+            {
+                // Get detailed bookings to check room types
+                foreach (var booking in result.Data.Items.Where(b => 
+                    b.Status.ToLower() == "completed" && 
+                    b.CheckOutDate < DateTime.Now))
+                {
+                    var detailResult = await BookingService.GetBookingDetailsAsync(booking.Id);
+                    if (detailResult.IsSuccess && detailResult.Data != null)
+                    {
+                        _eligibleBookings.Add(detailResult.Data);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading bookings: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnBookingSelected()
+    {
+        var selectedBooking = _eligibleBookings.FirstOrDefault(b => b.Id == _reviewModel.BookingDetailId);
+        if (selectedBooking != null)
+        {
+            _selectedBookingRoomTypes = selectedBooking.Items;
+            if (_selectedBookingRoomTypes.Any())
+            {
+                _reviewModel.RoomTypeId = _selectedBookingRoomTypes.First().RoomTypeId;
+            }
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (_reviewModel.Rating < 1 || _reviewModel.Rating > 5)
+        {
+            Snackbar.Add("Please select a rating", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_reviewModel.Comment) || _reviewModel.Comment.Length < 10)
+        {
+            Snackbar.Add("Please write a review with at least 10 characters", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var result = await ReviewService.CreateReviewAsync(_reviewModel);
+            
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Review submitted successfully!", Severity.Success);
+                NavigationManager.NavigateTo("/bookings");
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error submitting review: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

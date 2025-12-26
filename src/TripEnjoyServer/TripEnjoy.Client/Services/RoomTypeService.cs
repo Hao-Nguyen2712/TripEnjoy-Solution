@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using TripEnjoy.Client.Models;
+using TripEnjoy.ShareKernel.Dtos;
 
 namespace TripEnjoy.Client.Services;
 

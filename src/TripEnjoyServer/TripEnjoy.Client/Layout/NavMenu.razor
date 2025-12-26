@@ -1,14 +1,25 @@
 ﻿<MudNavMenu>
     <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-    <AuthorizeView>
+    <AuthorizeView Context="mainAuth">
         <Authorized>
             <MudNavLink Href="/properties" Icon="@Icons.Material.Filled.Hotel">Properties</MudNavLink>
-            <MudNavLink Href="/bookings" Icon="@Icons.Material.Filled.BookOnline">Bookings</MudNavLink>
-            <MudNavGroup Title="Partner" Icon="@Icons.Material.Filled.Business" Expanded="false">
-                <MudNavLink Href="/partner" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
-                <MudNavLink Href="/partner/properties" Icon="@Icons.Material.Filled.Hotel">My Properties</MudNavLink>
-                <MudNavLink Href="/partner/documents" Icon="@Icons.Material.Filled.Description">Documents</MudNavLink>
-            </MudNavGroup>
+            
+            <AuthorizeView Roles="User" Context="userAuth">
+                <MudNavGroup Title="My Bookings" Icon="@Icons.Material.Filled.BookOnline" Expanded="false">
+                    <MudNavLink Href="/bookings" Icon="@Icons.Material.Filled.List">All Bookings</MudNavLink>
+                    <MudNavLink Href="/reviews/my-reviews" Icon="@Icons.Material.Filled.RateReview">My Reviews</MudNavLink>
+                    <MudNavLink Href="/reviews/create" Icon="@Icons.Material.Filled.Add">Write Review</MudNavLink>
+                </MudNavGroup>
+            </AuthorizeView>
+            
+            <AuthorizeView Roles="Partner" Context="partnerAuth">
+                <MudNavGroup Title="Partner" Icon="@Icons.Material.Filled.Business" Expanded="false">
+                    <MudNavLink Href="/partner/dashboard" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+                    <MudNavLink Href="/partner/properties" Icon="@Icons.Material.Filled.Hotel">My Properties</MudNavLink>
+                    <MudNavLink Href="/partner/reviews" Icon="@Icons.Material.Filled.Reviews">Reviews</MudNavLink>
+                    <MudNavLink Href="/partner/documents" Icon="@Icons.Material.Filled.Description">Documents</MudNavLink>
+                </MudNavGroup>
+            </AuthorizeView>
         </Authorized>
     </AuthorizeView>
 </MudNavMenu>
