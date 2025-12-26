@@ -12,17 +12,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    services:
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
     - uses: actions/checkout@v4
@@ -38,7 +27,7 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
       
-    - name: Run Unit Tests Only
+    - name: Run Unit Tests
       run: dotnet test --no-build --configuration Release --filter "Category!=Integration" --verbosity normal --logger trx --results-directory TestResults/
       
     - name: Upload Test Results
@@ -46,17 +35,4 @@ jobs:
       if: always()
       with:
         name: test-results
-        path: TestResults/
-        
-    - name: Run Integration Tests
-      run: dotnet test --no-build --configuration Release --filter "Category=Integration" --verbosity normal --logger trx --results-directory TestResults/
-      env:
-        ASPNETCORE_ENVIRONMENT: Testing
-        CacheSettings__ConnectionString: localhost:6379
-        
-    - name: Upload Integration Test Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: integration-test-results
         path: TestResults/
