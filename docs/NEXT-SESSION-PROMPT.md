@@ -45,12 +45,40 @@ Since all core features are implemented, the next session should focus on:
 - Connect to analytics platforms
 - Implement settlement processing jobs
 
-### Option 3: Frontend Enhancement
+### Option 3: Frontend Enhancement (Phase 6.5)
 **If prioritizing user experience:**
-- Complete partner dashboard (Blazor WASM)
-- Booking flow UI implementation
-- Review submission interface
-- Voucher management UI
+
+**Partner Dashboard (Blazor WASM)**:
+- Dashboard overview with revenue charts
+- Property management UI with image gallery
+- Room type CRUD with availability calendar
+- Document management interface
+
+**Booking Flow UI**:
+- Property search with map view
+- Advanced filtering (price, amenities, rating)
+- Step-by-step booking wizard
+- Payment integration UI (Stripe, VNPay)
+- My Bookings dashboard
+
+**Review Submission Interface**:
+- Star rating component (1-5 stars)
+- Category ratings (cleanliness, location, value)
+- Photo upload for reviews
+- Review reply interface for partners
+
+**Voucher Management UI**:
+- Voucher code input and application
+- Partner voucher creation form
+- Usage statistics dashboard
+
+**UI Components Needed**:
+- `PropertySearchForm.razor`, `PropertyMap.razor`
+- `BookingWizard.razor`, `DateRangePicker.razor`
+- `StarRating.razor`, `ReviewCard.razor`
+- `VoucherCard.razor`, `VoucherForm.razor`
+
+See **IMPLEMENTATION-ROADMAP.md Phase 6.5** for complete details.
 
 ### Option 4: Advanced Search & Discovery
 **If prioritizing discoverability:**

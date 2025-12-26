@@ -779,6 +779,235 @@ Since all core features are now implemented, the focus shifts to production read
    - API rate limiting refinement
    - SDK generation for clients
 
+### Phase 6.5: User Experience & Frontend Enhancement (Q2-Q3 2026)
+**Priority**: HIGH - Critical for user adoption and conversion
+
+This phase focuses on completing and enhancing the Blazor WebAssembly frontend for optimal user experience.
+
+#### 6.5.1 Partner Dashboard Enhancement (Blazor WASM)
+**Current State**: Basic dashboard exists at `/Pages/Partner/`
+**Timeline**: Q2 2026
+
+**Features to Complete**:
+1. **Dashboard Overview**
+   - Real-time booking statistics cards
+   - Revenue charts (daily, weekly, monthly)
+   - Occupancy rate visualizations
+   - Pending actions notifications
+   - Quick action buttons
+
+2. **Property Management UI**
+   - Property listing grid with search/filter
+   - Property creation wizard with multi-step form
+   - Image gallery manager with drag-drop
+   - Bulk property operations
+   - Property status toggles (active/inactive)
+
+3. **Room Type Management**
+   - Room type CRUD with pricing forms
+   - Availability calendar (interactive)
+   - Bulk availability updates
+   - Promotion creation wizard
+   - Image upload for room types
+
+4. **Document Management**
+   - Document upload interface
+   - Verification status tracking
+   - Document expiry alerts
+   - Re-upload functionality
+
+**UI Components Required**:
+- `DashboardStats.razor` - Statistics cards
+- `RevenueChart.razor` - Chart.js integration
+- `PropertyCard.razor` - Property display card
+- `AvailabilityCalendar.razor` - Interactive calendar
+- `ImageGallery.razor` - Image management
+- `DocumentUploader.razor` - File upload
+
+#### 6.5.2 Booking Flow UI Implementation
+**Current State**: Basic booking pages exist
+**Timeline**: Q2 2026
+
+**Features to Complete**:
+1. **Property Search & Discovery**
+   - Advanced search form (location, dates, guests)
+   - Map view with property markers
+   - Filter sidebar (price, amenities, rating)
+   - Sort options (price, rating, distance)
+   - Pagination and infinite scroll
+
+2. **Property Details Page**
+   - Image carousel/gallery
+   - Room type selection cards
+   - Availability calendar view
+   - Price breakdown display
+   - Reviews section with pagination
+   - Location map integration
+   - Similar properties recommendations
+
+3. **Booking Process**
+   - Step-by-step booking wizard
+   - Guest information form
+   - Room selection with quantity
+   - Date picker with availability
+   - Price summary with discounts
+   - Voucher code application
+   - Special requests input
+
+4. **Payment Flow**
+   - Payment method selection
+   - Credit card form (Stripe integration)
+   - VNPay/MoMo integration UI
+   - Payment confirmation page
+   - Booking success/failure pages
+   - Email preview
+
+5. **My Bookings Dashboard**
+   - Booking list with filters
+   - Booking detail view
+   - Cancellation flow
+   - Booking modification
+   - Download invoice/receipt
+   - Rate & review prompt
+
+**UI Components Required**:
+- `PropertySearchForm.razor` - Search inputs
+- `PropertyMap.razor` - Leaflet/Google Maps
+- `PropertyCard.razor` - Search result card
+- `RoomSelector.razor` - Room selection
+- `DateRangePicker.razor` - Check-in/out dates
+- `BookingWizard.razor` - Multi-step form
+- `PaymentForm.razor` - Payment inputs
+- `PriceSummary.razor` - Price breakdown
+
+#### 6.5.3 Review Submission Interface
+**Current State**: Basic review pages exist
+**Timeline**: Q2 2026
+
+**Features to Complete**:
+1. **Review Creation**
+   - Star rating component (1-5 stars)
+   - Category ratings (cleanliness, location, value)
+   - Text review with character count
+   - Photo upload for reviews
+   - Review preview before submit
+
+2. **Review Display**
+   - Review cards with user avatar
+   - Rating breakdown visualization
+   - Photo gallery in reviews
+   - Helpful vote buttons
+   - Report review option
+
+3. **Review Management (User)**
+   - My reviews list
+   - Edit review functionality
+   - Delete review option
+   - View reply from host
+
+4. **Review Management (Partner)**
+   - Pending reviews notification
+   - Reply to review interface
+   - Review analytics
+   - Report inappropriate reviews
+
+**UI Components Required**:
+- `StarRating.razor` - Interactive rating
+- `CategoryRating.razor` - Multiple ratings
+- `ReviewCard.razor` - Display component
+- `ReviewPhotoUpload.razor` - Image upload
+- `ReviewReplyForm.razor` - Reply input
+- `ReviewAnalytics.razor` - Statistics
+
+#### 6.5.4 Voucher Management UI
+**Current State**: Backend complete, UI needed
+**Timeline**: Q3 2026
+
+**Features to Complete**:
+1. **User Voucher Features**
+   - Available vouchers display
+   - Voucher code input field
+   - Applied voucher display
+   - Voucher terms & conditions
+   - Voucher expiry countdown
+
+2. **Partner Voucher Management**
+   - Voucher creation form
+   - Voucher listing with filters
+   - Usage statistics
+   - Voucher activation/deactivation
+   - Target audience selection
+   - Discount preview
+
+3. **Admin Voucher Management**
+   - Global voucher creation
+   - Partner voucher approval
+   - Voucher analytics dashboard
+   - Bulk voucher operations
+
+**UI Components Required**:
+- `VoucherCard.razor` - Display voucher
+- `VoucherInput.razor` - Code input
+- `VoucherForm.razor` - Create/edit
+- `VoucherStats.razor` - Usage stats
+- `VoucherTargetSelector.razor` - Targeting
+
+#### 6.5.5 UI/UX Improvements
+**Timeline**: Ongoing
+
+**General Improvements**:
+1. **Design System**
+   - Consistent color palette
+   - Typography standards
+   - Spacing guidelines
+   - Component library (buttons, inputs, cards)
+   - Dark mode support
+
+2. **Responsive Design**
+   - Mobile-first approach
+   - Tablet optimization
+   - Desktop enhancements
+   - Touch-friendly controls
+
+3. **Performance**
+   - Lazy loading components
+   - Image optimization
+   - State management (Fluxor)
+   - Caching strategies
+
+4. **Accessibility**
+   - ARIA labels
+   - Keyboard navigation
+   - Screen reader support
+   - Color contrast compliance
+
+5. **Animations & Feedback**
+   - Loading skeletons
+   - Toast notifications
+   - Form validation feedback
+   - Micro-animations
+
+**UI Libraries to Consider**:
+- MudBlazor (Material Design)
+- Radzen Blazor
+- Blazorise
+- Ant Design Blazor
+
+#### 6.5.6 Frontend Implementation Priority Matrix
+
+| Feature | Business Value | Complexity | Priority | Timeline |
+|---------|---------------|------------|----------|----------|
+| Booking Flow | ⭐⭐⭐⭐⭐ | Medium | CRITICAL | Q2 2026 |
+| Property Search | ⭐⭐⭐⭐⭐ | Medium | CRITICAL | Q2 2026 |
+| Partner Dashboard | ⭐⭐⭐⭐ | Medium | HIGH | Q2 2026 |
+| Payment Integration | ⭐⭐⭐⭐⭐ | High | CRITICAL | Q2 2026 |
+| Review Interface | ⭐⭐⭐⭐ | Low | HIGH | Q2 2026 |
+| Voucher UI | ⭐⭐⭐ | Low | MEDIUM | Q3 2026 |
+| Design System | ⭐⭐⭐ | Medium | MEDIUM | Ongoing |
+| Mobile Responsive | ⭐⭐⭐⭐ | Medium | HIGH | Q2-Q3 2026 |
+| Dark Mode | ⭐⭐ | Low | LOW | Q3 2026 |
+| Accessibility | ⭐⭐⭐ | Medium | MEDIUM | Ongoing |
+
 ---
 
 ## 🌟 Phase 7: Feature Expansion Roadmap (Q4 2026 - 2027)
