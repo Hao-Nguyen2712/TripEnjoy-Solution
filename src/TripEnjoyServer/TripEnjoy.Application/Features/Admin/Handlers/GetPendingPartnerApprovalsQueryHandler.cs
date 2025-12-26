@@ -36,7 +36,7 @@ public class GetPendingPartnerApprovalsQueryHandler : IRequestHandler<GetPending
                 DocumentType = d.DocumentType,
                 DocumentUrl = d.DocumentUrl,
                 Status = d.Status,
-                UploadedAt = d.CreatedAt
+                CreatedAt = d.CreatedAt
             }).ToList()
         });
 

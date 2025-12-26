@@ -30,9 +30,10 @@ public class GetAdminDashboardStatsQueryHandler : IRequestHandler<GetAdminDashbo
         var totalProperties = properties.Count();
         var totalBookings = bookings.Count();
         
+        // Simplified revenue calculation
         var totalRevenue = bookings
-            .Where(b => b.Payment != null && b.Payment.PaymentStatus == "Completed")
-            .Sum(b => b.TotalAmount);
+            .Where(b => b.Status == "Completed" || b.Status == "Confirmed")
+            .Sum(b => b.TotalPrice);
 
         var pendingPartnerApprovals = accounts
             .Count(a => a.Partner != null && a.Partner.Status == PartnerStatusEnum.Pending.ToString());
@@ -54,17 +55,17 @@ public class GetAdminDashboardStatsQueryHandler : IRequestHandler<GetAdminDashbo
         var revenueStats = new RevenueStatsDto
         {
             Today = bookings
-                .Where(b => b.Payment != null && b.Payment.PaymentStatus == "Completed" && b.BookingDate >= startOfToday)
-                .Sum(b => b.TotalAmount),
+                .Where(b => (b.Status == "Completed" || b.Status == "Confirmed") && b.CreatedAt >= startOfToday)
+                .Sum(b => b.TotalPrice),
             ThisWeek = bookings
-                .Where(b => b.Payment != null && b.Payment.PaymentStatus == "Completed" && b.BookingDate >= startOfWeek)
-                .Sum(b => b.TotalAmount),
+                .Where(b => (b.Status == "Completed" || b.Status == "Confirmed") && b.CreatedAt >= startOfWeek)
+                .Sum(b => b.TotalPrice),
             ThisMonth = bookings
-                .Where(b => b.Payment != null && b.Payment.PaymentStatus == "Completed" && b.BookingDate >= startOfMonth)
-                .Sum(b => b.TotalAmount),
+                .Where(b => (b.Status == "Completed" || b.Status == "Confirmed") && b.CreatedAt >= startOfMonth)
+                .Sum(b => b.TotalPrice),
             ThisYear = bookings
-                .Where(b => b.Payment != null && b.Payment.PaymentStatus == "Completed" && b.BookingDate >= startOfYear)
-                .Sum(b => b.TotalAmount)
+                .Where(b => (b.Status == "Completed" || b.Status == "Confirmed") && b.CreatedAt >= startOfYear)
+                .Sum(b => b.TotalPrice)
         };
 
         var dashboardStats = new AdminDashboardStatsDto

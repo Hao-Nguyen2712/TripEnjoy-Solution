@@ -19,7 +19,7 @@ public class BlockUserCommandHandler : IRequestHandler<BlockUserCommand, Result>
     public async Task<Result> Handle(BlockUserCommand request, CancellationToken cancellationToken)
     {
         var accountId = AccountId.Create(request.UserId);
-        var account = await _unitOfWork.AccountRepository.GetByIdAsync(accountId);
+        var account = await _unitOfWork.AccountRepository.GetByIdAsync(accountId.Id);
 
         if (account == null)
         {

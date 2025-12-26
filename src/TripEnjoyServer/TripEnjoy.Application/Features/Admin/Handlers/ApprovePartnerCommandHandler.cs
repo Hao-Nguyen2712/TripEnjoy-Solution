@@ -25,7 +25,7 @@ public class ApprovePartnerCommandHandler : IRequestHandler<ApprovePartnerComman
 
         if (account?.Partner == null)
         {
-            return Result.Failure(DomainError.Partner.NotFound);
+            return Result.Failure(new Error("Partner.NotFound", "Partner not found.", ErrorType.NotFound));
         }
 
         var result = account.Partner.Approve();

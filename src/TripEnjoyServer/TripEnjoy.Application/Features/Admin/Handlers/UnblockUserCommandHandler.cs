@@ -19,7 +19,7 @@ public class UnblockUserCommandHandler : IRequestHandler<UnblockUserCommand, Res
     public async Task<Result> Handle(UnblockUserCommand request, CancellationToken cancellationToken)
     {
         var accountId = AccountId.Create(request.UserId);
-        var account = await _unitOfWork.AccountRepository.GetByIdAsync(accountId);
+        var account = await _unitOfWork.AccountRepository.GetByIdAsync(accountId.Id);
 
         if (account == null)
         {

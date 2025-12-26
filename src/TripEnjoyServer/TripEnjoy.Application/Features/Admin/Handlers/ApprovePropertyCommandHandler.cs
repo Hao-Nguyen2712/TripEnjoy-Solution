@@ -19,7 +19,7 @@ public class ApprovePropertyCommandHandler : IRequestHandler<ApprovePropertyComm
     public async Task<Result> Handle(ApprovePropertyCommand request, CancellationToken cancellationToken)
     {
         var propertyId = PropertyId.Create(request.PropertyId);
-        var property = await _unitOfWork.Properties.GetByIdAsync(propertyId);
+        var property = await _unitOfWork.Properties.GetByIdAsync(propertyId.Id);
 
         if (property == null)
         {
