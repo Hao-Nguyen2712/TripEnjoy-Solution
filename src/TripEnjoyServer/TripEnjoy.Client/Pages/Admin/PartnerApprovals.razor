@@ -1,22 +1,25 @@
 @page "/admin/partners"
+@using TripEnjoy.Client.Services
+@using TripEnjoy.ShareKernel.Dtos
+@using MudBlazor
 @inject IAdminService AdminService
 @inject ISnackbar Snackbar
 
-<PageTitle>Partner Management - TripEnjoy Admin</PageTitle>
+<PageTitle>Partner Approvals - TripEnjoy Admin</PageTitle>
 
 <AuthorizeView Roles="Admin">
     <Authorized>
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-            <MudText Typo="Typo.h4" GutterBottom="true">Partner Management</MudText>
+            <MudText Typo="Typo.h4" GutterBottom="true">Partner Approvals</MudText>
             <MudText Typo="Typo.body1" Class="mb-6">Review and approve partner applications</MudText>
 
-            @if (_loading)
+            @if (isLoading)
             {
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
             }
-            else if (_partners != null && _partners.Any())
+            else if (partners != null && partners.Any())
             {
-                <MudTable Items="@_partners" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true">
+                <MudTable Items="@partners" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true">
                     <HeaderContent>
                         <MudTh>Email</MudTh>
                         <MudTh>Business Name</MudTh>
@@ -38,11 +41,11 @@
                         <MudTd DataLabel="Actions">
                             <MudButtonGroup Size="Size.Small">
                                 <MudButton Variant="Variant.Filled" Color="Color.Success"
-                                           OnClick="@(() => ApprovePartner(partner.Id))">
+                                           OnClick="@(() => HandleApprove(partner.Id))">
                                     Approve
                                 </MudButton>
                                 <MudButton Variant="Variant.Filled" Color="Color.Error"
-                                           OnClick="@(() => RejectPartner(partner.Id, \"Rejected by admin\"))">
+                                           OnClick="@(() => HandleReject(partner.Id))">
                                     Reject
                                 </MudButton>
                             </MudButtonGroup>
@@ -66,39 +69,39 @@
 </AuthorizeView>
 
 @code {
-    private List<PartnerApprovalDto> _partners = new();
-    private bool _loading = true;
+    private List<PartnerApprovalDto> partners = new();
+    private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadPartners();
+        await LoadData();
     }
 
-    private async Task LoadPartners()
+    private async Task LoadData()
     {
-        _loading = true;
+        isLoading = true;
         var response = await AdminService.GetPendingPartnerApprovalsAsync();
 
         if (response.IsSuccess && response.Data != null)
         {
-            _partners = response.Data;
+            partners = response.Data;
         }
         else
         {
             Snackbar.Add(response.Message ?? "Failed to load partners", Severity.Error);
         }
 
-        _loading = false;
+        isLoading = false;
     }
 
-    private async Task ApprovePartner(Guid partnerId)
+    private async Task HandleApprove(Guid partnerId)
     {
         var response = await AdminService.ApprovePartnerAsync(partnerId);
 
         if (response.IsSuccess)
         {
             Snackbar.Add("Partner approved successfully", Severity.Success);
-            await LoadPartners();
+            await LoadData();
         }
         else
         {
@@ -106,14 +109,14 @@
         }
     }
 
-    private async Task RejectPartner(Guid partnerId, string reason)
+    private async Task HandleReject(Guid partnerId)
     {
-        var response = await AdminService.RejectPartnerAsync(partnerId, reason);
+        var response = await AdminService.RejectPartnerAsync(partnerId, "Rejected by admin");
 
         if (response.IsSuccess)
         {
             Snackbar.Add("Partner rejected", Severity.Success);
-            await LoadPartners();
+            await LoadData();
         }
         else
         {
