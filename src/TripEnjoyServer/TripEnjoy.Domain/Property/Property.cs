@@ -150,5 +150,41 @@ namespace TripEnjoy.Domain.Property
             UpdatedAt = DateTime.UtcNow;
             return Result.Success();
         }
+
+        public Result Approve()
+        {
+            if (Status == PropertyEnum.Active)
+            {
+                return Result.Failure(new Error("Property.AlreadyApproved", "Property is already approved.", ErrorType.Conflict));
+            }
+
+            Status = PropertyEnum.Active;
+            UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
+        }
+
+        public Result Reject()
+        {
+            if (Status == PropertyEnum.Inactive)
+            {
+                return Result.Failure(new Error("Property.AlreadyRejected", "Property is already rejected.", ErrorType.Conflict));
+            }
+
+            Status = PropertyEnum.Inactive;
+            UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
+        }
+
+        public Result Deactivate()
+        {
+            if (Status == PropertyEnum.Inactive)
+            {
+                return Result.Failure(new Error("Property.AlreadyInactive", "Property is already inactive.", ErrorType.Conflict));
+            }
+
+            Status = PropertyEnum.Inactive;
+            UpdatedAt = DateTime.UtcNow;
+            return Result.Success();
+        }
     }
 }

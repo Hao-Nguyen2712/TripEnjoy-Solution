@@ -73,5 +73,38 @@ namespace TripEnjoy.Domain.Account.Entities
             _partnerDocuments.Add(newDocument);
             return Result.Success();
         }
+
+        public Result Approve()
+        {
+            if (Status == PartnerStatusEnum.Approved.ToString())
+            {
+                return Result.Failure(new Error("Partner.AlreadyApproved", "Partner is already approved.", ErrorType.Conflict));
+            }
+
+            Status = PartnerStatusEnum.Approved.ToString();
+            return Result.Success();
+        }
+
+        public Result Reject()
+        {
+            if (Status == PartnerStatusEnum.Rejected.ToString())
+            {
+                return Result.Failure(new Error("Partner.AlreadyRejected", "Partner is already rejected.", ErrorType.Conflict));
+            }
+
+            Status = PartnerStatusEnum.Rejected.ToString();
+            return Result.Success();
+        }
+
+        public Result Suspend()
+        {
+            if (Status != PartnerStatusEnum.Approved.ToString())
+            {
+                return Result.Failure(new Error("Partner.CannotSuspend", "Only approved partners can be suspended.", ErrorType.Validation));
+            }
+
+            Status = PartnerStatusEnum.Suspended.ToString();
+            return Result.Success();
+        }
     }
 }
