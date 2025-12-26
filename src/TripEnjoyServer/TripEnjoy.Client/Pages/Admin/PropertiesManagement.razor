@@ -19,18 +19,14 @@
                 <MudTable Items="@_properties" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true">
                     <HeaderContent>
                         <MudTh>Property Name</MudTh>
-                        <MudTh>Type</MudTh>
                         <MudTh>Address</MudTh>
-                        <MudTh>Partner Email</MudTh>
                         <MudTh>Status</MudTh>
                         <MudTh>Submitted At</MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate Context="property">
-                        <MudTd DataLabel="Property Name">@property.Name</MudTd>
-                        <MudTd DataLabel="Type">@property.PropertyTypeName</MudTd>
+                        <MudTd DataLabel="Property Name">@property.PropertyName</MudTd>
                         <MudTd DataLabel="Address">@property.Address</MudTd>
-                        <MudTd DataLabel="Partner Email">@property.PartnerEmail</MudTd>
                         <MudTd DataLabel="Status">
                             <MudChip T="string" Size="Size.Small" Color="Color.Warning">@property.Status</MudChip>
                         </MudTd>
@@ -77,67 +73,47 @@
     private async Task LoadProperties()
     {
         _loading = true;
-        try
+        var response = await AdminService.GetPendingPropertyApprovalsAsync();
+
+        if (response.IsSuccess && response.Data != null)
         {
-            var response = await AdminService.GetPendingPropertyApprovalsAsync();
-            if (response.IsSuccess && response.Data != null)
-            {
-                _properties = response.Data;
-            }
-            else
-            {
-                Snackbar.Add(response.Message, Severity.Error);
-            }
+            _properties = response.Data;
         }
-        catch (Exception ex)
+        else
         {
-            Snackbar.Add($"Error loading properties: {ex.Message}", Severity.Error);
+            Snackbar.Add(response.Message ?? "Failed to load properties", Severity.Error);
         }
-        finally
-        {
-            _loading = false;
-        }
+
+        _loading = false;
     }
 
     private async Task ApproveProperty(Guid propertyId)
     {
-        try
+        var response = await AdminService.ApprovePropertyAsync(propertyId);
+
+        if (response.IsSuccess)
         {
-            var response = await AdminService.ApprovePropertyAsync(propertyId);
-            if (response.IsSuccess)
-            {
-                Snackbar.Add("Property approved successfully", Severity.Success);
-                await LoadProperties();
-            }
-            else
-            {
-                Snackbar.Add(response.Message, Severity.Error);
-            }
+            Snackbar.Add("Property approved successfully", Severity.Success);
+            await LoadProperties();
         }
-        catch (Exception ex)
+        else
         {
-            Snackbar.Add($"Error approving property: {ex.Message}", Severity.Error);
+            Snackbar.Add(response.Message ?? "Failed to approve property", Severity.Error);
         }
     }
 
     private async Task RejectProperty(Guid propertyId, string reason)
     {
-        try
+        var response = await AdminService.RejectPropertyAsync(propertyId, reason);
+
+        if (response.IsSuccess)
         {
-            var response = await AdminService.RejectPropertyAsync(propertyId, reason);
-            if (response.IsSuccess)
-            {
-                Snackbar.Add("Property rejected successfully", Severity.Success);
-                await LoadProperties();
-            }
-            else
-            {
-                Snackbar.Add(response.Message, Severity.Error);
-            }
+            Snackbar.Add("Property rejected", Severity.Success);
+            await LoadProperties();
         }
-        catch (Exception ex)
+        else
         {
-            Snackbar.Add($"Error rejecting property: {ex.Message}", Severity.Error);
+            Snackbar.Add(response.Message ?? "Failed to reject property", Severity.Error);
         }
     }
 }
