@@ -142,6 +142,7 @@ dotnet test --verbosity detailed
 
 For more detailed information, see:
 
+- [Migration Quick Start](docs/MIGRATION-QUICKSTART.md) - Quick reference for database migrations
 - [PostgreSQL Migration Guide](docs/POSTGRESQL-MIGRATION.md) - Complete guide for PostgreSQL setup and migration
 - [Project Architecture](docs/PROJECT-ANALYSIS.md) - Architecture and design patterns
 - [Admin Features](docs/Admin-Features-Documentation.md) - Admin functionality documentation
