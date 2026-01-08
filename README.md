@@ -85,10 +85,7 @@ Before running the application, ensure you have the following installed:
    The application automatically applies migrations on startup. Alternatively, you can manually apply migrations:
    
    ```bash
-   # Navigate to the solution root directory
-   cd TripEnjoy-Solution
-   
-   # Apply migrations using EF Core CLI
+   # From the solution root directory (where TripEnjoyServer.sln is located)
    dotnet ef database update --project src/TripEnjoyServer/TripEnjoy.Infrastructure.Persistence --startup-project src/TripEnjoyServer/TripEnjoy.Api
    ```
    

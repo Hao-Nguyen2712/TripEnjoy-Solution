@@ -67,12 +67,12 @@ dotnet ef migrations add YourMigrationName \
 # Remove last migration (if not yet applied)
 dotnet ef migrations remove \
   --project src/TripEnjoyServer/TripEnjoy.Infrastructure.Persistence \
-  --startup-project src/TripEnjoy.Api
+  --startup-project src/TripEnjoyServer/TripEnjoy.Api
 
 # Rollback to specific migration
 dotnet ef database update MigrationName \
   --project src/TripEnjoyServer/TripEnjoy.Infrastructure.Persistence \
-  --startup-project src/TripEnjoy.Api
+  --startup-project src/TripEnjoyServer/TripEnjoy.Api
 ```
 
 #### 5. Generate SQL Script
@@ -80,7 +80,7 @@ dotnet ef database update MigrationName \
 # Generate SQL for all migrations
 dotnet ef migrations script \
   --project src/TripEnjoyServer/TripEnjoy.Infrastructure.Persistence \
-  --startup-project src/TripEnjoy.Api \
+  --startup-project src/TripEnjoyServer/TripEnjoy.Api \
   --output migration.sql
 ```
 
@@ -147,7 +147,7 @@ dotnet tool install --global dotnet-ef
 ```bash
 dotnet ef migrations add DescriptiveNameForChanges \
   --project src/TripEnjoyServer/TripEnjoy.Infrastructure.Persistence \
-  --startup-project src/TripEnjoy.Api
+  --startup-project src/TripEnjoyServer/TripEnjoy.Api
 ```
 
 ### Migration fails with "relation already exists"
