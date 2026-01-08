@@ -1,0 +1,51 @@
+@page "/partner/documents"
+@inject NavigationManager NavigationManager
+
+<PageTitle>Partner Documents - TripEnjoy</PageTitle>
+
+<AuthorizeView Roles="Partner" Context="authContext">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+            <MudPaper Elevation="3" Class="pa-6">
+                <MudText Typo="Typo.h4" Class="mb-2">Documents Center</MudText>
+                <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-4">
+                    Review the required verification documents for your partner account. Upload support will be available in an upcoming release.
+                </MudText>
+
+                <MudAlert Severity="Severity.Info" Class="mb-4">
+                    Tip: Prepare clear PDF scans of each document to speed up verification.
+                </MudAlert>
+
+                <MudTable Items="_documents" Hover="true" Dense="true">
+                    <HeaderContent>
+                        <MudTh>Document</MudTh>
+                        <MudTh>Description</MudTh>
+                        <MudTh>Status</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="document">
+                        <MudTd DataLabel="Document">@document.Name</MudTd>
+                        <MudTd DataLabel="Description">@document.Description</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Color="@document.StatusColor" Size="Size.Small">@document.Status</MudChip>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private readonly List<DocumentItem> _documents =
+    [
+        new("Business License", "Official business registration document.", "Required", Color.Warning),
+        new("Tax Identification", "Valid tax or VAT identification certificate.", "Required", Color.Warning),
+        new("Bank Statement", "Recent bank statement for payouts verification.", "Pending", Color.Info),
+        new("Identity Verification", "Government-issued ID for the account owner.", "Required", Color.Warning)
+    ];
+
+    private record DocumentItem(string Name, string Description, string Status, Color StatusColor);
+}

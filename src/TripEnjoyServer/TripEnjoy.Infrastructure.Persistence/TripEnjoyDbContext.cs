@@ -11,6 +11,7 @@ using TripEnjoy.Domain.Review;
 using TripEnjoy.Domain.Review.Entities;
 using TripEnjoy.Domain.Room;
 using TripEnjoy.Domain.Room.Entities;
+using TripEnjoy.Domain.Voucher.Entities;
 
 namespace TripEnjoy.Infrastructure.Persistence
 {
@@ -50,6 +51,10 @@ namespace TripEnjoy.Infrastructure.Persistence
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<ReviewImage> ReviewImages { get; set; } = null!;
         public DbSet<ReviewReply> ReviewReplies { get; set; } = null!;
+
+        // Voucher Aggregate
+        public DbSet<Domain.Voucher.Voucher> Vouchers { get; set; } = null!;
+        public DbSet<VoucherTarget> VoucherTargets { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,0 +1,404 @@
+@page "/partner/reviews"
+@inject IReviewService ReviewService
+@inject IPropertyService PropertyService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthStateProvider
+@attribute [Authorize(Roles = "Partner")]
+
+<PageTitle>Manage Reviews - TripEnjoy Partner</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">Property Reviews</MudText>
+
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else
+    {
+        <MudPaper Elevation="2" Class="pa-4 mb-4">
+            <MudSelect @bind-Value="_selectedPropertyId" 
+                      Label="Select Property" 
+                      Variant="Variant.Outlined"
+                      T="Guid">
+                <MudSelectItem Value="@Guid.Empty">All Properties</MudSelectItem>
+                @foreach (var property in _properties)
+                {
+                    <MudSelectItem Value="@property.Id">@property.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudPaper>
+
+        @if (_reviews.Any())
+        {
+            <MudGrid>
+                @foreach (var review in _reviews)
+                {
+                    <MudItem xs="12">
+                        <MudCard Elevation="3">
+                            <MudCardContent>
+                                <MudStack Spacing="2">
+                                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
+                                        <MudStack>
+                                            <MudText Typo="Typo.subtitle1"><strong>@review.UserName</strong></MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                @review.RoomTypeName
+                                            </MudText>
+                                            <MudRating ReadOnly="true" SelectedValue="@review.Rating" Size="Size.Small" />
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                @review.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                                            </MudText>
+                                        </MudStack>
+                                        <MudChip T="string" 
+                                                Color="@(review.Status == "Active" ? Color.Success : Color.Warning)" 
+                                                Size="Size.Small">
+                                            @review.Status
+                                        </MudChip>
+                                    </MudStack>
+
+                                    <MudText Typo="Typo.body2">@review.Comment</MudText>
+
+                                    @if (review.Images.Any())
+                                    {
+                                        <MudStack Row="true" Spacing="2">
+                                            @foreach (var image in review.Images.Take(5))
+                                            {
+                                                <MudImage Src="@image.FilePath" 
+                                                        Height="80" 
+                                                        Width="80" 
+                                                        ObjectFit="ObjectFit.Cover" 
+                                                        Class="rounded" />
+                                            }
+                                        </MudStack>
+                                    }
+
+                                    <MudDivider Class="my-2" />
+
+                                    <!-- Replies Section -->
+                                    @if (review.Replies.Any())
+                                    {
+                                        <MudText Typo="Typo.subtitle2" Class="mb-2">Replies:</MudText>
+                                        @foreach (var reply in review.Replies)
+                                        {
+                                            <MudPaper Elevation="0" Class="pa-3 mb-2" Style="background-color: #f5f5f5;">
+                                                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
+                                                    <MudStack>
+                                                        <MudText Typo="Typo.caption" Color="Color.Primary">
+                                                            <strong>@reply.ReplierName</strong> (@reply.ReplierType)
+                                                        </MudText>
+                                                        <MudText Typo="Typo.body2">@reply.Content</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                            @reply.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                                                        </MudText>
+                                                    </MudStack>
+                                                    <MudStack Row="true" Spacing="1">
+                                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                                                     Size="Size.Small"
+                                                                     Color="Color.Primary"
+                                                                     OnClick="@(() => EditReply(review.Id, reply))" />
+                                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                                                     Size="Size.Small"
+                                                                     Color="Color.Error"
+                                                                     OnClick="@(() => DeleteReply(review.Id, reply.Id))" />
+                                                    </MudStack>
+                                                </MudStack>
+                                            </MudPaper>
+                                        }
+                                    }
+
+                                    <!-- Reply Form -->
+                                    @if (_replyingToReviewId == review.Id)
+                                    {
+                                        <MudPaper Elevation="1" Class="pa-3">
+                                            <MudTextField @bind-Value="_replyContent" 
+                                                        Label="Your Reply" 
+                                                        Variant="Variant.Outlined" 
+                                                        Lines="3"
+                                                        MaxLength="500" />
+                                            <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-2">
+                                                <MudButton OnClick="CancelReply">Cancel</MudButton>
+                                                <MudButton Variant="Variant.Filled" 
+                                                         Color="Color.Primary" 
+                                                         OnClick="@(() => SubmitReply(review.Id))"
+                                                         Disabled="@_isSubmittingReply">
+                                                    @if (_isSubmittingReply)
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>Send Reply</span>
+                                                    }
+                                                </MudButton>
+                                            </MudStack>
+                                        </MudPaper>
+                                    }
+                                    else if (!review.Replies.Any())
+                                    {
+                                        <MudButton Variant="Variant.Outlined" 
+                                                 Color="Color.Primary" 
+                                                 Size="Size.Small"
+                                                 OnClick="@(() => StartReply(review.Id))">
+                                            Reply to this Review
+                                        </MudButton>
+                                    }
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+
+            @if (_pagedResult != null && _pagedResult.TotalPages > 1)
+            {
+                <MudPagination Class="mt-4" 
+                              Count="@_pagedResult.TotalPages" 
+                              Selected="@_currentPage" 
+                              SelectedChanged="OnPageChanged" />
+            }
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info">No reviews found for your properties.</MudAlert>
+        }
+    }
+</MudContainer>
+
+<!-- Edit Reply Dialog -->
+<MudDialog @bind-IsVisible="_showEditReplyDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Edit Reply</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_editReplyContent" 
+                    Label="Your Reply" 
+                    Variant="Variant.Outlined" 
+                    Lines="3"
+                    MaxLength="500" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CancelEditReply">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                 Variant="Variant.Filled" 
+                 OnClick="SaveEditReply"
+                 Disabled="@_isUpdatingReply">
+            @if (_isUpdatingReply)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+            }
+            else
+            {
+                <span>Save</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<PropertySummaryDto> _properties = new();
+    private List<ReviewDto> _reviews = new();
+    private PagedList<ReviewDto>? _pagedResult;
+    private Guid _selectedPropertyId = Guid.Empty;
+    private bool _isLoading = true;
+    private int _currentPage = 1;
+    private int _pageSize = 10;
+
+    // Reply state
+    private Guid _replyingToReviewId = Guid.Empty;
+    private string _replyContent = string.Empty;
+    private bool _isSubmittingReply = false;
+
+    // Edit reply state
+    private bool _showEditReplyDialog = false;
+    private Guid _editingReviewId = Guid.Empty;
+    private ReviewReplyDto? _editingReply = null;
+    private string _editReplyContent = string.Empty;
+    private bool _isUpdatingReply = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPartnerProperties();
+        await LoadReviews();
+    }
+
+    private async Task LoadPartnerProperties()
+    {
+        try
+        {
+            var result = await PropertyService.GetAllPropertiesAsync(1, 100);
+            if (result.IsSuccess && result.Data != null)
+            {
+                _properties = result.Data.Items;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading properties: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LoadReviews()
+    {
+        _isLoading = true;
+        try
+        {
+            if (_selectedPropertyId != Guid.Empty)
+            {
+                var result = await ReviewService.GetReviewsByPropertyAsync(_selectedPropertyId, _currentPage, _pageSize);
+                if (result.IsSuccess && result.Data != null)
+                {
+                    _pagedResult = result.Data;
+                    _reviews = result.Data.Items;
+                }
+                else
+                {
+                    _reviews = new List<ReviewDto>();
+                }
+            }
+            else
+            {
+                // Load reviews for all partner properties
+                _reviews = new List<ReviewDto>();
+                foreach (var property in _properties)
+                {
+                    var result = await ReviewService.GetReviewsByPropertyAsync(property.Id, 1, 100);
+                    if (result.IsSuccess && result.Data != null)
+                    {
+                        _reviews.AddRange(result.Data.Items);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _currentPage = page;
+        await LoadReviews();
+    }
+
+    private void StartReply(Guid reviewId)
+    {
+        _replyingToReviewId = reviewId;
+        _replyContent = string.Empty;
+    }
+
+    private void CancelReply()
+    {
+        _replyingToReviewId = Guid.Empty;
+        _replyContent = string.Empty;
+    }
+
+    private async Task SubmitReply(Guid reviewId)
+    {
+        if (string.IsNullOrWhiteSpace(_replyContent) || _replyContent.Length < 5)
+        {
+            Snackbar.Add("Reply must be at least 5 characters", Severity.Warning);
+            return;
+        }
+
+        _isSubmittingReply = true;
+        try
+        {
+            var request = new CreateReplyRequest
+            {
+                ReviewId = reviewId,
+                Content = _replyContent
+            };
+
+            var result = await ReviewService.CreateReplyAsync(reviewId, request);
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Reply submitted successfully", Severity.Success);
+                CancelReply();
+                await LoadReviews();
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isSubmittingReply = false;
+        }
+    }
+
+    private void EditReply(Guid reviewId, ReviewReplyDto reply)
+    {
+        _editingReviewId = reviewId;
+        _editingReply = reply;
+        _editReplyContent = reply.Content;
+        _showEditReplyDialog = true;
+    }
+
+    private void CancelEditReply()
+    {
+        _showEditReplyDialog = false;
+        _editingReviewId = Guid.Empty;
+        _editingReply = null;
+    }
+
+    private async Task SaveEditReply()
+    {
+        if (_editingReply == null) return;
+
+        if (string.IsNullOrWhiteSpace(_editReplyContent) || _editReplyContent.Length < 5)
+        {
+            Snackbar.Add("Reply must be at least 5 characters", Severity.Warning);
+            return;
+        }
+
+        _isUpdatingReply = true;
+        try
+        {
+            var request = new UpdateReplyRequest
+            {
+                ReviewReplyId = _editingReply.Id,
+                Content = _editReplyContent
+            };
+
+            var result = await ReviewService.UpdateReplyAsync(_editingReviewId, _editingReply.Id, request);
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Reply updated successfully", Severity.Success);
+                _showEditReplyDialog = false;
+                await LoadReviews();
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isUpdatingReply = false;
+        }
+    }
+
+    private async Task DeleteReply(Guid reviewId, Guid replyId)
+    {
+        try
+        {
+            var result = await ReviewService.DeleteReplyAsync(reviewId, replyId);
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Reply deleted successfully", Severity.Success);
+                await LoadReviews();
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting reply: {ex.Message}", Severity.Error);
+        }
+    }
+}

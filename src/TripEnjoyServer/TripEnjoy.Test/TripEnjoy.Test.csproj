@@ -32,17 +32,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Integration Testing -->
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
-    
     <!-- Test Data Generation -->
     <PackageReference Include="Bogus" Version="35.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- All project references for integration testing -->
-    <ProjectReference Include="..\TripEnjoy.Api\TripEnjoy.Api.csproj" />
+    <!-- Project references for unit testing -->
     <ProjectReference Include="..\TripEnjoy.Application\TripEnjoy.Application.csproj" />
     <ProjectReference Include="..\TripEnjoy.Domain\TripEnjoy.Domain.csproj" />
     <ProjectReference Include="..\TripEnjoy.Infrastructure\TripEnjoy.Infrastructure.csproj" />

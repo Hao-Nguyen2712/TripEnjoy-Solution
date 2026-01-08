@@ -1,0 +1,299 @@
+@page "/bookings/create/{PropertyId:guid}"
+@inject IPropertyService PropertyService
+@inject IRoomTypeService RoomTypeService
+@inject IBookingService BookingService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthStateProvider
+@attribute [Authorize(Roles = "User")]
+
+<PageTitle>Create Booking - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">Create Booking</MudText>
+
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (_property == null)
+    {
+        <MudAlert Severity="Severity.Error">Property not found</MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+            <MudItem xs="12" md="8">
+                <MudPaper Elevation="3" Class="pa-4">
+                    <MudText Typo="Typo.h5" GutterBottom="true">@_property.Name</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                        <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
+                        @_property.City, @_property.Country
+                    </MudText>
+
+                    <EditForm Model="@_bookingModel" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+
+                        <MudGrid>
+                            <MudItem xs="12" sm="6">
+                                <MudDatePicker Label="Check-in Date" 
+                                             @bind-Date="_checkInDate" 
+                                             MinDate="@DateTime.Today"
+                                             Required="true"
+                                             Variant="Variant.Outlined" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudDatePicker Label="Check-out Date" 
+                                             @bind-Date="_checkOutDate" 
+                                             MinDate="@(_checkInDate?.AddDays(1) ?? DateTime.Today.AddDays(1))"
+                                             Required="true"
+                                             Variant="Variant.Outlined" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudNumericField @bind-Value="_bookingModel.NumberOfGuests" 
+                                               Label="Number of Guests" 
+                                               Min="1" 
+                                               Max="100"
+                                               Variant="Variant.Outlined" 
+                                               Required="true" />
+                            </MudItem>
+                        </MudGrid>
+
+                        <MudDivider Class="my-4" />
+
+                        <MudText Typo="Typo.h6" Class="mb-2">Select Rooms</MudText>
+                        
+                        @if (_roomTypes.Any())
+                        {
+                            @foreach (var roomType in _roomTypes)
+                            {
+                                <MudCard Class="mb-3">
+                                    <MudCardContent>
+                                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                            <MudStack>
+                                                <MudText Typo="Typo.h6">@roomType.RoomTypeName</MudText>
+                                                <MudText Typo="Typo.body2">@roomType.Description</MudText>
+                                                <MudText Typo="Typo.subtitle1" Color="Color.Primary">
+                                                    $@roomType.BasePrice / night
+                                                </MudText>
+                                                <MudText Typo="Typo.caption">
+                                                    Max Guests: @roomType.Capacity | Available: @roomType.TotalQuantity
+                                                </MudText>
+                                            </MudStack>
+                                            <MudStack>
+                                                <MudNumericField @bind-Value="@_selectedRooms[roomType.Id]" 
+                                                               Label="Quantity" 
+                                                               Min="0" 
+                                                               Max="@roomType.TotalQuantity"
+                                                               Variant="Variant.Outlined"
+                                                               Style="width: 120px;" />
+                                            </MudStack>
+                                        </MudStack>
+                                    </MudCardContent>
+                                </MudCard>
+                            }
+                        }
+                        else
+                        {
+                            <MudAlert Severity="Severity.Info">No room types available for this property.</MudAlert>
+                        }
+
+                        <MudTextField @bind-Value="_bookingModel.SpecialRequests" 
+                                    Label="Special Requests (Optional)" 
+                                    Variant="Variant.Outlined" 
+                                    Lines="3"
+                                    Class="mt-4" />
+
+                        <MudButton ButtonType="ButtonType.Submit" 
+                                 Variant="Variant.Filled" 
+                                 Color="Color.Primary" 
+                                 FullWidth="true"
+                                 Disabled="@_isSubmitting"
+                                 Class="mt-4">
+                            @if (_isSubmitting)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                            }
+                            else
+                            {
+                                <span>Continue to Payment</span>
+                            }
+                        </MudButton>
+                    </EditForm>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="3" Class="pa-4">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Booking Summary</MudText>
+                    
+                    @if (_checkInDate.HasValue && _checkOutDate.HasValue)
+                    {
+                        var nights = (_checkOutDate.Value - _checkInDate.Value).Days;
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.body2">
+                                <strong>Check-in:</strong> @_checkInDate.Value.ToString("MMM dd, yyyy")
+                            </MudText>
+                            <MudText Typo="Typo.body2">
+                                <strong>Check-out:</strong> @_checkOutDate.Value.ToString("MMM dd, yyyy")
+                            </MudText>
+                            <MudText Typo="Typo.body2">
+                                <strong>Nights:</strong> @nights
+                            </MudText>
+                            <MudText Typo="Typo.body2">
+                                <strong>Guests:</strong> @_bookingModel.NumberOfGuests
+                            </MudText>
+
+                            <MudDivider Class="my-2" />
+
+                            @if (GetSelectedRooms().Any())
+                            {
+                                <MudText Typo="Typo.subtitle2" Class="mb-2">Selected Rooms:</MudText>
+                                @foreach (var (roomType, quantity) in GetSelectedRooms())
+                                {
+                                    var roomTotal = roomType.BasePrice * quantity * nights;
+                                    <MudStack Row="true" Justify="Justify.SpaceBetween">
+                                        <MudText Typo="Typo.body2">@roomType.RoomTypeName x@quantity</MudText>
+                                        <MudText Typo="Typo.body2">$@roomTotal.ToString("F2")</MudText>
+                                    </MudStack>
+                                }
+
+                                <MudDivider Class="my-2" />
+
+                                <MudStack Row="true" Justify="Justify.SpaceBetween">
+                                    <MudText Typo="Typo.h6">Total:</MudText>
+                                    <MudText Typo="Typo.h6" Color="Color.Primary">$@CalculateTotal().ToString("F2")</MudText>
+                                </MudStack>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Info" Dense="true">Please select at least one room</MudAlert>
+                            }
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info">Select dates to see booking summary</MudAlert>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid PropertyId { get; set; }
+
+    private PropertyDto? _property;
+    private List<RoomTypeDto> _roomTypes = new();
+    private CreateBookingRequest _bookingModel = new();
+    private Dictionary<Guid, int> _selectedRooms = new();
+    private DateTime? _checkInDate;
+    private DateTime? _checkOutDate;
+    private bool _isLoading = true;
+    private bool _isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPropertyAndRooms();
+    }
+
+    private async Task LoadPropertyAndRooms()
+    {
+        _isLoading = true;
+        try
+        {
+            var propertyResult = await PropertyService.GetPropertyByIdAsync(PropertyId);
+            if (propertyResult.IsSuccess && propertyResult.Data != null)
+            {
+                _property = propertyResult.Data;
+            }
+
+            var roomsResult = await RoomTypeService.GetRoomTypesByPropertyAsync(PropertyId);
+            if (roomsResult.IsSuccess && roomsResult.Data != null)
+            {
+                _roomTypes = roomsResult.Data;
+                // Initialize selection dictionary
+                foreach (var room in _roomTypes)
+                {
+                    _selectedRooms[room.Id] = 0;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private List<(RoomTypeDto roomType, int quantity)> GetSelectedRooms()
+    {
+        return _selectedRooms
+            .Where(kvp => kvp.Value > 0)
+            .Select(kvp => (_roomTypes.First(rt => rt.Id == kvp.Key), kvp.Value))
+            .ToList();
+    }
+
+    private decimal CalculateTotal()
+    {
+        if (!_checkInDate.HasValue || !_checkOutDate.HasValue)
+            return 0;
+
+        var nights = (_checkOutDate.Value - _checkInDate.Value).Days;
+        return GetSelectedRooms().Sum(sr => sr.roomType.BasePrice * sr.quantity * nights);
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!_checkInDate.HasValue || !_checkOutDate.HasValue)
+        {
+            Snackbar.Add("Please select check-in and check-out dates", Severity.Warning);
+            return;
+        }
+
+        var selectedRooms = GetSelectedRooms();
+        if (!selectedRooms.Any())
+        {
+            Snackbar.Add("Please select at least one room", Severity.Warning);
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            _bookingModel.PropertyId = PropertyId;
+            _bookingModel.CheckInDate = _checkInDate.Value;
+            _bookingModel.CheckOutDate = _checkOutDate.Value;
+            _bookingModel.Rooms = selectedRooms.Select(sr => new BookingRoomItem
+            {
+                RoomTypeId = sr.roomType.Id,
+                Quantity = sr.quantity
+            }).ToList();
+
+            var result = await BookingService.CreateBookingAsync(_bookingModel);
+            
+            if (result.IsSuccess && result.Data != Guid.Empty)
+            {
+                Snackbar.Add("Booking created successfully! Redirecting to payment...", Severity.Success);
+                NavigationManager.NavigateTo($"/payment/process/{result.Data}");
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating booking: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

@@ -1,0 +1,35 @@
+@page "/payment/failed"
+@inject NavigationManager NavigationManager
+
+<PageTitle>Payment Failed - TripEnjoy</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Elevation="4" Class="pa-8" Style="text-align: center;">
+        <MudIcon Icon="@Icons.Material.Filled.Error" 
+                Size="Size.Large" 
+                Color="Color.Error" 
+                Style="font-size: 80px;" 
+                Class="mb-4" />
+        
+        <MudText Typo="Typo.h4" Color="Color.Error" GutterBottom="true">
+            Payment Failed
+        </MudText>
+        
+        <MudText Typo="Typo.body1" Class="mb-6">
+            We couldn't process your payment. Please try again or use a different payment method.
+        </MudText>
+
+        <MudStack Row="true" Justify="Justify.Center" Spacing="4">
+            <MudButton Variant="Variant.Filled" 
+                     Color="Color.Primary" 
+                     Href="/bookings">
+                View My Bookings
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" 
+                     Color="Color.Primary" 
+                     Href="/">
+                Back to Home
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+</MudContainer>

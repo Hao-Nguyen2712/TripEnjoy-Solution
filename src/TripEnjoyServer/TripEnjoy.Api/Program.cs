@@ -111,15 +111,18 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Add Hangfire services.
-builder.Services.AddHangfire(config => config
-    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UsePostgreSqlStorage(options => 
-        options.UseNpgsqlConnection(configuration.GetConnectionString("DefaultConnection"))));
+// Add Hangfire services - skip in Testing environment
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddHangfire(config => config
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UsePostgreSqlStorage(options => 
+            options.UseNpgsqlConnection(configuration.GetConnectionString("DefaultConnection"))));
 
-builder.Services.AddHangfireServer();
+    builder.Services.AddHangfireServer();
+}
 
 var app = builder.Build();
 
@@ -154,7 +157,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHangfireDashboard(); // This will be available at /hangfire
+// Only use Hangfire dashboard in non-Testing environments
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.UseHangfireDashboard(); // This will be available at /hangfire
+}
 
 // Use Enhanced Logging Middleware (replaces old LoggingMiddleware)
 app.UseEnhancedLogging();
@@ -176,7 +183,11 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 
 app.MapControllers();
 
-app.MapHangfireDashboard();
+// Only map Hangfire dashboard in non-Testing environments
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.MapHangfireDashboard();
+}
 
 app.Run();
 
