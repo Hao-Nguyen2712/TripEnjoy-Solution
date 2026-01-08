@@ -90,9 +90,9 @@ The project has **3 PostgreSQL migrations**:
 
 | Migration Name | Date | Description |
 |----------------|------|-------------|
-| `InitialPostgreSQLMigration` | 2024-12-19 | Creates all base tables, Identity, accounts, properties, bookings |
-| `AddTransactionAndSettlementEntities` | 2024-12-19 | Adds transaction and settlement support for wallet system |
-| `AddReviewAggregate` | 2024-12-20 | Adds review system with images and replies |
+| `InitialPostgreSQLMigration` | 2025-12-19 | Creates all base tables, Identity, accounts, properties, bookings |
+| `AddTransactionAndSettlementEntities` | 2025-12-19 | Adds transaction and settlement support for wallet system |
+| `AddReviewAggregate` | 2025-12-20 | Adds review system with images and replies |
 
 ## Database Configuration
 
