@@ -43,9 +43,14 @@ Before running the application, ensure you have the following installed:
    ```bash
    docker run -d -p 6379:6379 --name tripenjoy-redis redis:7-alpine
    ```
-4. **RabbitMQ** (optional) - For message queue functionality:
+4. **RabbitMQ** (optional) - For message queue functionality. Use the provided docker-compose file:
    ```bash
+   # From the project root directory
    docker-compose -f docker-compose.rabbitmq.yml up -d
+   ```
+   Or run directly with Docker:
+   ```bash
+   docker run -d -p 5672:5672 -p 15672:15672 --name tripenjoy-rabbitmq rabbitmq:3-management-alpine
    ```
 
 ### Database Setup
@@ -80,8 +85,8 @@ Before running the application, ensure you have the following installed:
    The application automatically applies migrations on startup. Alternatively, you can manually apply migrations:
    
    ```bash
-   # Navigate to the solution root
-   cd /path/to/TripEnjoy-Solution
+   # Navigate to the solution root directory
+   cd TripEnjoy-Solution
    
    # Apply migrations using EF Core CLI
    dotnet ef database update --project src/TripEnjoyServer/TripEnjoy.Infrastructure.Persistence --startup-project src/TripEnjoyServer/TripEnjoy.Api
