@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36310.24
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Api", "src\TripEnjoyServer\TripEnjoy.Api\TripEnjoy.Api.csproj", "{BEE6F9BE-8F22-4F61-A142-8D14862A7DC1}"
 EndProject
@@ -18,6 +18,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Test", "src\TripEnjoyServer\TripEnjoy.Test\TripEnjoy.Test.csproj", "{A4DCF314-42AC-459D-B2BC-E42F01060061}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripEnjoy.Client", "src\TripEnjoyServer\TripEnjoy.Client\TripEnjoy.Client.csproj", "{46FD92E1-AE03-4398-8D1A-E084325EBFBD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{27B6D6B4-19D9-494A-B001-B7CE7CDC73B9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UI", "UI", "{85F0CFB3-B6D9-4E82-A3C4-406D6355C14A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -130,6 +134,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{A4DCF314-42AC-459D-B2BC-E42F01060061} = {27B6D6B4-19D9-494A-B001-B7CE7CDC73B9}
+		{46FD92E1-AE03-4398-8D1A-E084325EBFBD} = {85F0CFB3-B6D9-4E82-A3C4-406D6355C14A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {532E7C20-4600-493F-AA44-A26A765702F5}
