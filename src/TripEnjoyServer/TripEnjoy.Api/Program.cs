@@ -19,6 +19,10 @@ using TripEnjoy.Infrastructure.Persistence.Seeding;
 using TripEnjoy.Infrastructure.Logging.Enrichers;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add Aspire service defaults (OpenTelemetry, Health checks, Service discovery, Resilience)
+builder.AddServiceDefaults();
+
 var configuration = builder.Configuration;
 
 // Enhanced Serilog configuration with custom enrichers
@@ -175,6 +179,9 @@ app.UseExceptionHandlingMiddleware();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Map Aspire default endpoints (health checks from ServiceDefaults)
+app.MapDefaultEndpoints();
 
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
