@@ -6,6 +6,7 @@ TripEnjoy is an enterprise-grade room booking platform built with .NET 8 that co
 
 ### Backend
 - **.NET 8** - Core platform
+- **.NET Aspire 9.1** - Cloud-native orchestration and observability
 - **Entity Framework Core 8** - ORM with Npgsql provider
 - **PostgreSQL** - Database (localhost:5432)
 - **MediatR 11** - CQRS implementation
@@ -14,6 +15,7 @@ TripEnjoy is an enterprise-grade room booking platform built with .NET 8 that co
 - **Redis** - Distributed caching
 - **Hangfire** - Background jobs with PostgreSQL storage
 - **Serilog** - Structured logging
+- **OpenTelemetry** - Distributed tracing and metrics
 - **Cloudinary** - Image storage
 - **RabbitMQ** - Message broker with MassTransit
 
@@ -35,27 +37,55 @@ TripEnjoy is an enterprise-grade room booking platform built with .NET 8 that co
 Before running the application, ensure you have the following installed:
 
 1. **.NET 8 SDK** - [Download here](https://dotnet.microsoft.com/download/dotnet/8.0)
-2. **PostgreSQL 12+** - [Download here](https://www.postgresql.org/download/) or use Docker:
+2. **Docker Desktop** (Recommended for Aspire) - [Download here](https://www.docker.com/products/docker-desktop)
+   - Or manually install: **PostgreSQL 12+**, **Redis**, **RabbitMQ** (see below)
+
+### Running the Application
+
+#### Option 1: Run with .NET Aspire (Recommended) ⭐
+
+The easiest way to run the entire application stack with one command:
+
+```bash
+# Navigate to the AppHost project
+cd src/TripEnjoyServer/TripEnjoy.AppHost
+
+# Run the orchestration
+dotnet run
+```
+
+This automatically:
+- ✅ Starts PostgreSQL, Redis, and RabbitMQ in Docker containers
+- ✅ Applies database migrations
+- ✅ Starts the API and Client applications
+- ✅ Opens the Aspire Dashboard at `http://localhost:15088` for monitoring
+
+**See [Aspire Setup Guide](docs/ASPIRE-SETUP.md) for detailed information.**
+
+#### Option 2: Run Manually (Traditional Method)
+
+If you prefer to run services individually:
+
+1. **Start Infrastructure Services**
+
+   **PostgreSQL:**
    ```bash
    docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres --name tripenjoy-postgres postgres:15
    ```
-3. **Redis** - For caching [Download here](https://redis.io/download) or use Docker:
+
+   **Redis:**
    ```bash
    docker run -d -p 6379:6379 --name tripenjoy-redis redis:7-alpine
    ```
-4. **RabbitMQ** (optional) - For message queue functionality. Use the provided docker-compose file:
+
+   **RabbitMQ:**
    ```bash
-   # From the project root directory
    docker-compose -f docker-compose.rabbitmq.yml up -d
-   ```
-   Or run directly with Docker:
-   ```bash
+   # Or:
    docker run -d -p 5672:5672 -p 15672:15672 --name tripenjoy-rabbitmq rabbitmq:3-management-alpine
    ```
 
-### Database Setup
-
-1. **Create PostgreSQL Database**
+2. **Setup Database**
    ```bash
    # Connect to PostgreSQL
    psql -U postgres
@@ -67,7 +97,7 @@ Before running the application, ensure you have the following installed:
    \q
    ```
 
-2. **Configure Connection String**
+   **Configure Connection String**
    
    The connection string is already configured in `src/TripEnjoyServer/TripEnjoy.Api/appsettings.json`:
    ```json
@@ -80,7 +110,7 @@ Before running the application, ensure you have the following installed:
    
    Update the username and password if you're using different credentials.
 
-3. **Apply Database Migrations**
+   **Apply Database Migrations**
    
    The application automatically applies migrations on startup. Alternatively, you can manually apply migrations:
    
@@ -94,9 +124,7 @@ Before running the application, ensure you have the following installed:
    dotnet tool install --global dotnet-ef
    ```
 
-### Running the Application
-
-1. **Run the API**
+3. **Run the API**
    ```bash
    cd src/TripEnjoyServer/TripEnjoy.Api
    dotnet run
@@ -108,13 +136,13 @@ Before running the application, ensure you have the following installed:
    - Swagger UI: `https://localhost:7199/swagger`
    - Hangfire Dashboard: `https://localhost:7199/hangfire`
 
-2. **Run the Blazor Client** (optional)
+4. **Run the Blazor Client** (optional)
    ```bash
    cd src/TripEnjoyServer/TripEnjoy.Client
    dotnet run
    ```
 
-### Existing Migrations
+### Database Migrations
 
 The project includes the following PostgreSQL migrations:
 
@@ -139,6 +167,7 @@ dotnet test --verbosity detailed
 
 For more detailed information, see:
 
+- **[.NET Aspire Setup Guide](docs/ASPIRE-SETUP.md)** - Complete guide for Aspire orchestration and observability ⭐
 - [Migration Quick Start](docs/MIGRATION-QUICKSTART.md) - Quick reference for database migrations
 - [PostgreSQL Migration Guide](docs/POSTGRESQL-MIGRATION.md) - Complete guide for PostgreSQL setup and migration
 - [Project Architecture](docs/PROJECT-ANALYSIS.md) - Architecture and design patterns
