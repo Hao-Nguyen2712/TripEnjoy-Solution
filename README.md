@@ -58,7 +58,7 @@ This automatically:
 - ✅ Starts PostgreSQL, Redis, and RabbitMQ in Docker containers
 - ✅ Applies database migrations
 - ✅ Starts the API and Client applications
-- ✅ Opens the Aspire Dashboard at `http://localhost:15000` for monitoring
+- ✅ Opens the Aspire Dashboard at `http://localhost:15088` for monitoring
 
 **See [Aspire Setup Guide](docs/ASPIRE-SETUP.md) for detailed information.**
 

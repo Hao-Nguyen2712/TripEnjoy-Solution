@@ -51,7 +51,7 @@ dotnet run
 ```
 
 This will:
-1. Start the Aspire Dashboard at `http://localhost:15000` or `https://localhost:17000`
+1. Start the Aspire Dashboard at `http://localhost:15088` or `https://localhost:17115`
 2. Launch Docker containers for:
    - PostgreSQL database
    - Redis cache
@@ -80,7 +80,7 @@ dotnet run
 
 ## Aspire Dashboard Features
 
-When running with Aspire, you get access to the Aspire Dashboard at `http://localhost:15000` which provides:
+When running with Aspire, you get access to the Aspire Dashboard at `http://localhost:15088` which provides:
 
 ### 1. **Resources View**
 - View all running services and their status
@@ -265,7 +265,7 @@ docker logs tripenjoy-postgres
 
 ### Port Conflicts
 If Aspire Dashboard won't start:
-- Default ports: 15000 (HTTP), 17000 (HTTPS)
+- Default ports: 15088 (HTTP), 17115 (HTTPS)
 - Change in `launchSettings.json` if needed
 
 ### Service Discovery Not Working
