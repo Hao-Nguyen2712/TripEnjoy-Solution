@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TripEnjoy.ShareKernel\TripEnjoy.ShareKernel.csproj" />
-    <ProjectReference Include="..\TripEnjoy.ServiceDefaults\TripEnjoy.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
